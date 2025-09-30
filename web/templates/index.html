@@ -3,25 +3,41 @@
 {% block content %}
 
 <div class="text-center">
-  <h1>Welcome!</h1>
+  <h1>Technical Debt Analyzer</h1>
+  <p class="lead">
+    Analyze your codebase for technical debt indicators such as cyclomatic complexity.<br>
+    Enter a GitHub repository to get started!
+  </p>
 </div>
 
 <br>
 
-<form action="/submit" method="POST">
-  <div class="form-group">
-    <input name="text" class="form-control input-lg" type="text" placeholder="Enter a message" required>
+<form action="/complexity" method="GET" class="mb-4">
+  <div class="mb-3">
+    <label for="owner_input" class="form-label">Github Owner Username</label>
+    <input name="owner" type="text" class="form-control" placeholder="ex: torvalds" id="owner_input" required>
   </div>
-  <input type="submit" class="btn btn-primary btn-lg btn-block" value="Submit">
+  <div class="mb-3">
+    <label for="repo_input" class="form-label">Github Repo Name</label>
+    <input name="repo" type="text" class="form-control" placeholder="ex: linux" id="repo_input" required>
+  </div>
+  <div class="mb-3">
+    <label for="branch_input" class="form-label">Github Repo Branch Name</label>
+    <input name="repo" type="text" class="form-control" placeholder="ex: main" id="branch_input" aria-describedby="branch_optional_help">
+    <div id="branch_optional_help" class="form-text">Optional</div>
+  </div>
+
+  <button type="submit" class="btn btn-primary btn-lg btn-block">Analyze Repository</button>
 </form>
 
-<br>
 <hr>
 
-<div>
-  {% for post in posts %}
-    <h4 class="well"><strong>{{post.text}}</strong> - <em>{{post.date_posted.strftime('%Y-%m-%d')}}</em></h4>
-  {% endfor %}
+<div class="text-center">
+  <h3>Or view one of the following analyzed repositories</h3>
+  <p class="lead">
+    Analyze your codebase for technical debt indicators such as cyclomatic complexity.<br>
+    Enter a GitHub repository to get started!
+  </p>
 </div>
 
 {% endblock %}

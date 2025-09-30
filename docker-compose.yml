@@ -32,7 +32,7 @@ services:
       - postgres
     command: >
       sh -c "python3 -u ./create_db.py &&
-             gunicorn --reload -w 2 -b :8000 app:app"
+             gunicorn --timeout 300 --reload -w 2 -b :8000 app:app"
 
   postgres:
     restart: always
