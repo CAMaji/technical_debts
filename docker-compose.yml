@@ -16,8 +16,12 @@ services:
     build: ./web
     links:
       - postgres:postgres
+    volumes:
+      - ./web:/app
     environment:
-      DEBUG: False
+      PYTHONUNBUFFERED: 1
+      FLASK_ENV: development
+      DEBUG: True
       DATABASE_PORT: 5432
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -27,8 +31,8 @@ services:
     depends_on:
       - postgres
     command: >
-      sh -c "python3 ./create_db.py &&
-             gunicorn -w 2 -b :8000 app:app"
+      sh -c "python3 -u ./create_db.py &&
+             gunicorn --reload -w 2 -b :8000 app:app"
 
   postgres:
     restart: always
