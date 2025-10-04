@@ -1,5 +1,12 @@
-/* custom styles */
+.cursor-pointer {
+    cursor: pointer;
+}
 
-.container {
-  max-width: 500px;
+.cursor-text {
+    cursor: text;
+}
+
+.landing-page-container {
+    width: 500px;
+    margin: auto;
 }
