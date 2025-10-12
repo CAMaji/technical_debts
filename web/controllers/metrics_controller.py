@@ -36,15 +36,34 @@ def calculate_metrics():
     repo_url = repository_service.get_repository_url_by_repository_id(repository_id)
     commit_sha, commit_date = github_service.get_closest_commit(repo_url, branch.name, time_period)
 
+    # if no commit could be found/resolved, return a clear error instead of inserting nulls
+    if not commit_sha or not commit_date:
+        return jsonify({
+            "error": "No commit found for the selected branch and time. Please pick a later date or verify the branch.",
+            "details": {
+                "branch": branch.name,
+                "time_period": time_period
+            }
+        }), 400
+
     # check if commit already exists
     commit = commit_service.get_commit_by_sha(commit_sha)
     if not commit:
-        # convert commit_date to datetime if it’s a string
+        # Preserve original string for UI while creating DB record
+        commit_date_str = commit_date
         if isinstance(commit_date, str):
-            commit_date = datetime.strptime(commit_date, "%d/%m/%Y %H:%M")
-        commit = commit_service.create_commit(commit_sha, commit_date, branch.id)
+            commit_dt = datetime.strptime(commit_date, "%d/%m/%Y %H:%M")
+        else:
+            commit_dt = commit_date
+        commit = commit_service.create_commit(commit_sha, commit_dt, branch.id)
+    else:
+        commit_date_str = commit_date if isinstance(commit_date, str) else commit.date.strftime("%d/%m/%Y %H:%M")
 
-    metrics = {}
+    metrics = {
+        "commit_sha": commit_sha,
+        "commit_date": commit_date_str,
+        "commit_message": github_service.get_commit_message(repo_url, commit_sha),
+    }
 
     # run cyclomatic complexity analysis if requested
     if include_complexity:
@@ -103,7 +122,12 @@ def display_metrics():
     commit = commit_service.get_commit_by_sha(commit_sha)
     if not commit:
         return jsonify({"error": "No commit data found for this time period"}), 404
-    metrics = {}
+    metrics = {
+        "commit_sha": commit_sha,
+        # commit_date returned from github_service is already formatted for UI
+        "commit_date": commit_date,
+        "commit_message": github_service.get_commit_message(repo_url, commit_sha),
+    }
 
     # Get cyclomatic complexity
     if include_complexity:
@@ -118,7 +142,7 @@ def display_metrics():
                         "cyclomatic_complexity": function.complexity.value
                     })
 
-        metrics["cyclomatic_complexity_analysis"] = cyclomatic_complexity_analysis
+    metrics["cyclomatic_complexity_analysis"] = cyclomatic_complexity_analysis
 
     # --- Get FIXME / TODO occurrences (from DB if you persist them) ---
     # if include_fixme:

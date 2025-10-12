@@ -1,7 +1,4 @@
 import uuid
-from flask import Flask
-from flask import request, render_template, redirect, url_for, jsonify
-import requests
 
 from app import db
 from models import *
@@ -25,7 +22,7 @@ def create_branches_from_repository(repository_id):
         db.session.add(branch_obj)
         db.session.commit()
         branch_objs.append(branch_obj)
-    
+
     return branch_objs
 
 

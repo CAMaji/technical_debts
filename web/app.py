@@ -42,7 +42,7 @@ def dashboard(owner, name):
     try:
         repo = repository_service.get_repository_by_owner_and_name(owner, name)
         branches = branch_service.get_branches_by_repository_id(repo.id)
-        
+
         return render_template('dashboard.html', repository=repo, branches=branches)
     except Exception as e:
         print(str(e))

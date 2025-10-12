@@ -3,5 +3,4 @@ venv
 env
 __pycache__
 .env
-secrets/postgres_user.txt
-secrets/postgres_password.txt
+web/.repo_cache/*
