@@ -86,8 +86,10 @@ class File(ModelMixin, Base):
     functions = relationship("Function", back_populates="file")
     file_entities = relationship("FileEntities", back_populates="file")
     file_test_coverage = relationship("FileTestCoverage", back_populates="file")
+    
 
 
+   
 class Function(ModelMixin, Base):
     __tablename__ = "functions"
     id = Column(String(36), primary_key=True)

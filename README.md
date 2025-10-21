@@ -10,6 +10,13 @@
 6. Go to localhost in your browser
 7. To disable application type ```docker compose down```
 
+### How to run the application (Windows):
+1. Activate Docker Desktop
+2. docker compose --build (un seule fois)
+3. docker compose up -d
+4. ouvre localhost ou localhost:80 dans le browser
+
+
 ### How to generate a Github token
 
 1. Open the following url ```https://github.com/settings/tokens```

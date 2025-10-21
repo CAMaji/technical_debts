@@ -54,7 +54,7 @@ function get_period_value_for_backend() {
 }
 
 // Update calculate/display to use the formatter
-function calculate_metrics() {
+function calculate_metrics() {// Calculate fresh metrics via API
     const selected_branch_option = branch_select.options[branch_select.selectedIndex];
     const branch_id = selected_branch_option.getAttribute("data-id");
 
@@ -89,7 +89,7 @@ function calculate_metrics() {
     });
 }
 
-function display_metrics() {
+function display_metrics() { // display existing metrics from DB
     const selected_branch_option = branch_select.options[branch_select.selectedIndex];
     const branch_id = selected_branch_option.getAttribute("data-id");
 
@@ -120,7 +120,18 @@ function display_metrics() {
     .then(data => {
         console.log("Displayed Metrics (from DB):", data);
         renderCommitInfo(data);
+        
+        //let mergedMetrics = [];
+        //if (include_complexity && data.cyclomatic_complexity_analysis)
+        //    mergedMetrics = mergedMetrics.concat(data.cyclomatic_complexity_analysis);
+        //if (include_fixme && data.fixme_analysis)
+        //    mergedMetrics = mergedMetrics.concat(data.fixme_analysis);
+        //renderMetrics(mergedMetrics);
+        
+        
+        //renderMetrics(data.cyclomatic_complexity_analysis || data.fixme_analysis);
         renderMetrics(data.cyclomatic_complexity_analysis || []);
+        
         return data;
     });
 }

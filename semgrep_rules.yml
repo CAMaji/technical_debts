@@ -1,0 +1,9 @@
+  rules:
+  - id: todo-fixme-comments-anylang
+    severity: INFO
+    message: "Found TODO/FIXME comment"
+    languages: [generic]
+    pattern-either:
+      - pattern-regex: '(?i)^\s*#\s*(?:TODO|FIXME)\b.*'
+      - pattern-regex: '(?i)^\s*//\s*(?:TODO|FIXME)\b.*'
+      - pattern-regex: '(?is)^\s*/\*\s*(?:.|\n)*?(?:TODO|FIXME)\b(?:.|\n)*?\*/'

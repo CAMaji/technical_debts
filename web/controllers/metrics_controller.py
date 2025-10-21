@@ -71,7 +71,7 @@ def calculate_metrics():
         cyclomatic_complexity_analysis = []
 
         for filename, code in files:
-            # ensure file record exists
+            # ensure file record exists in DB
             file = file_service.get_file_by_filename_and_commit(filename, commit.id)
             if not file:
                 file = file_service.create_file(filename, commit.id)
@@ -84,7 +84,7 @@ def calculate_metrics():
                 if not function:
                     function = function_service.create_function(func.name, func.start_line, file.id)
 
-                # update or create complexity
+                # update or create complexity in DB
                 if function.complexity:
                     function.complexity.value = func.cyclomatic_complexity
                 else:
@@ -98,6 +98,38 @@ def calculate_metrics():
                 })
 
         metrics["cyclomatic_complexity_analysis"] = cyclomatic_complexity_analysis
+
+    if include_fixme:
+        import services.semgrep_service as semgrep_service
+        import services.entity_service as entity_service
+        
+        files = github_service.fetch_files(repo.owner, repo.name, branch.name, commit_sha)
+        fixme_todo_analysis = []
+
+        for filename, code in files:
+            # ensure file record exists in DB
+            file = file_service.get_file_by_filename_and_commit(filename, commit.id)
+            if not file:
+                file = file_service.create_file(filename, commit.id)
+
+            # analyze comments with semgrep
+            entities = semgrep_service.analyze_comments_with_semgrep(code, filename)
+            
+            for entity_type, line_number in entities:
+                # get or create entity
+                entity = entity_service.get_or_create_entity(entity_type)
+                
+                # create file entity relationship
+                file_entity = entity_service.create_file_entity(file.id, entity.id, line_number)
+                
+                fixme_todo_analysis.append({
+                    "file": filename,
+                    "entity": entity_type,
+                    "line": line_number
+                })
+
+        metrics["fixme_analysis"] = fixme_todo_analysis
+
 
     return jsonify(metrics)
 
@@ -145,16 +177,17 @@ def display_metrics():
     metrics["cyclomatic_complexity_analysis"] = cyclomatic_complexity_analysis
 
     # --- Get FIXME / TODO occurrences (from DB if you persist them) ---
-    # if include_fixme:
-    #     fixme_analysis = []
-    #     for file in commit.files:
-    #         for fe in file.file_entities:
-    #             fixme_analysis.append({
-    #                 "file": file.name,
-    #                 "entity": fe.entity.name,
-    #                 "line": fe.line_position
-    #             })
+    if include_fixme:
+        fixme_analysis = []
+        for file in commit.files:
+            for fe in file.file_entities:
+                fixme_analysis.append({
+                    "file": file.name,
+                    "entity": fe.entity.name,
+                    "line": fe.line_position
+                })
 
-    #     metrics["fixme_analysis"] = fixme_analysis
-
+    print("fixme_analysis:", fixme_analysis)
+    metrics["fixme_analysis"] = fixme_analysis
+   
     return jsonify(metrics)
