@@ -16,7 +16,7 @@ import services.commit_service as commit_service
 import services.file_service as file_service
 import services.function_service as function_service
 import services.complexity_service as complexity_service
-
+    
 
 @app.route('/calculate_metrics', methods=['POST'])
 def calculate_metrics():
@@ -105,16 +105,14 @@ def calculate_metrics():
         
         files = github_service.fetch_files(repo.owner, repo.name, branch.name, commit_sha)
         fixme_todo_analysis = []
-        print(f"DEBUG: Analyzing {len(files)} files for FIXME/TODO comments")
-        for filename, code in files:
-            # ensure file record exists in DB
-            file = file_service.get_file_by_filename_and_commit(filename, commit.id)
+
+    for filename, code in files: 
             if not file:
                 file = file_service.create_file(filename, commit.id)
 
             # analyze comments with semgrep
             entities = semgrep_service.analyze_comments_with_semgrep(code, filename)
-            print(f"DEBUG: File {filename} - Found {len(entities)} entities: {entities}")
+            
             for entity_type, line_number in entities:
                 # get or create entity
                 entity = entity_service.get_or_create_entity(entity_type)
@@ -127,8 +125,8 @@ def calculate_metrics():
                     "entity": entity_type,
                     "line": line_number
                 })
-        print(f"DEBUG: Total FIXME analysis results: {len(fixme_todo_analysis)}")
-        metrics["fixme_analysis"] = fixme_todo_analysis
+        
+    metrics["fixme_analysis"] = fixme_todo_analysis
 
 
     return jsonify(metrics)
@@ -180,13 +178,14 @@ def display_metrics():
     if include_fixme:
         fixme_analysis = []
         for file in commit.files:
+            print("in2", file.name)
             for fe in file.file_entities:
                 fixme_analysis.append({
                     "file": file.name,
                     "entity": fe.entity.name,
                     "line": fe.line_position
                 })
-
+    
     print("fixme_analysis:", fixme_analysis)
     metrics["fixme_analysis"] = fixme_analysis
    

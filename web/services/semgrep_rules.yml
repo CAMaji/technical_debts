@@ -1,0 +1,12 @@
+rules:
+  - id: todo-comment
+    pattern: "# TODO"
+    message: "TODO comment found"
+    languages: [python]
+    severity: INFO
+
+  - id: fixme-comment  
+    pattern: "# FIXME"
+    message: "FIXME comment found"
+    languages: [python]
+    severity: INFO

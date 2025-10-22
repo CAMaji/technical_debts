@@ -61,6 +61,7 @@ def fetch_files(owner, name, _branch, commit_sha):
     repo_path = ensure_local_repo(owner, name)
     files = []
     
+   
     # checkout commit
     try:
         subprocess.run(["git", "-C", repo_path, "fetch", "--depth", "1", "origin", commit_sha], check=True)

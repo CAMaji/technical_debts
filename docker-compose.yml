@@ -16,6 +16,7 @@ services:
       - postgres:postgres
     volumes:
       - ./web:/app
+      - ./web/services/semgrep_rules.yml:/app/semgrep_rules.yml 
     environment:
       PYTHONUNBUFFERED: 1
       FLASK_ENV: development

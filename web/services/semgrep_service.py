@@ -4,6 +4,7 @@ import os
 import json
 import re
 
+
 def analyze_comments_with_semgrep(code_content, filename):
     """
     Analyze code for TODO and FIXME comments using Semgrep
@@ -16,19 +17,22 @@ def analyze_comments_with_semgrep(code_content, filename):
 
     try:
         # Use the actual YML config file - adjust path as needed
-        config_file_path = 'semgrep_rules.yml'
-        
+        config_file_path = '/app/semgrep_rules.yml'
+
         # Run semgrep with the config file
         result = subprocess.run([
             'semgrep', '--config', config_file_path, 
-            '--json', code_file_path
+            '--json', code_file_path  
         ], capture_output=True, text=True, timeout=30)
         
+       
+
         entities_found = []
         
         if result.returncode == 0:
             try:
                 output = json.loads(result.stdout)
+                
                 for result_item in output.get('results', []):
                     line_number = result_item.get('start', {}).get('line', 1)
                     extra = result_item.get('extra', {})
@@ -42,6 +46,7 @@ def analyze_comments_with_semgrep(code_content, filename):
                         
             except json.JSONDecodeError:
                 print("Failed to parse Semgrep output")
+        
         
         return entities_found
         
