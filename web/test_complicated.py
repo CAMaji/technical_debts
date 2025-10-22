@@ -1,4 +1,6 @@
-# File used to add a complicated function to be evaluated for the cyclomatic complexity
+#Test TODO 
+# TEST FIXME
+## File used to add a complicated function to be evaluated for the cyclomatic complexity
 
 def complicated_function(x, y):
     result = 0
@@ -15,6 +17,7 @@ def complicated_function(x, y):
                             result += j
                         else:
                             result -= j
+                            #TODO test comment
     elif x == 0:
         if y == 0:
             result = 42
@@ -25,3 +28,4 @@ def complicated_function(x, y):
             result += x
             x += 1
     return result
+#FIXME test comment

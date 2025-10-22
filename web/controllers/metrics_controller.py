@@ -105,7 +105,7 @@ def calculate_metrics():
         
         files = github_service.fetch_files(repo.owner, repo.name, branch.name, commit_sha)
         fixme_todo_analysis = []
-
+        print(f"DEBUG: Analyzing {len(files)} files for FIXME/TODO comments")
         for filename, code in files:
             # ensure file record exists in DB
             file = file_service.get_file_by_filename_and_commit(filename, commit.id)
@@ -114,7 +114,7 @@ def calculate_metrics():
 
             # analyze comments with semgrep
             entities = semgrep_service.analyze_comments_with_semgrep(code, filename)
-            
+            print(f"DEBUG: File {filename} - Found {len(entities)} entities: {entities}")
             for entity_type, line_number in entities:
                 # get or create entity
                 entity = entity_service.get_or_create_entity(entity_type)
@@ -127,7 +127,7 @@ def calculate_metrics():
                     "entity": entity_type,
                     "line": line_number
                 })
-
+        print(f"DEBUG: Total FIXME analysis results: {len(fixme_todo_analysis)}")
         metrics["fixme_analysis"] = fixme_todo_analysis
 
 

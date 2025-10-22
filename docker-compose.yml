@@ -11,7 +11,7 @@ services:
 
   web:
     restart: always
-    build: ./web
+    build: .
     links:
       - postgres:postgres
     volumes:

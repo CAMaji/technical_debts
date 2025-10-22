@@ -1,5 +1,5 @@
 from app import db
-from ...web.models import IdentifiableEntity, FileEntities
+from models import IdentifiableEntity, FileEntities
 import uuid
 
 def get_or_create_entity(entity_name):
