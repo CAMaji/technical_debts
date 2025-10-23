@@ -16,12 +16,17 @@ import services.commit_service as commit_service
 import services.file_service as file_service
 import services.function_service as function_service
 import services.complexity_service as complexity_service
+import services.file_entity_service as file_entity_service
+import services.identifiable_entity_service as identifiable_entity_service
+
+
+import tools.todo_fixem_analysis as fixme_analysis
+
 
 
 @app.route('/calculate_metrics', methods=['POST'])
 def calculate_metrics():
     data = request.get_json()
-
     repository_id = data.get('repository_id')
     branch_id = data.get('branch_id')
     time_period = data.get('time_period')
@@ -99,8 +104,43 @@ def calculate_metrics():
 
         metrics["cyclomatic_complexity_analysis"] = cyclomatic_complexity_analysis
 
-    return jsonify(metrics)
+    # run FIXME / TODO analysis if requested
+    if include_fixme:
+            files = github_service.fetch_files(repo.owner, repo.name, branch.name, commit_sha)
+            todo_fixme_analysis = []
+            print("Files to analyze for TODO/FIXME:", [f[0] for f in files])
+            for filename, code in files:
+                # ensure file record exists
+                file = file_service.get_file_by_filename_and_commit(filename, commit.id)
+                if not file:
+                    file = file_service.create_file(filename, commit.id)
 
+                # analyze source code
+                analysis_result_list = fixme_analysis.analyse(filename, code)
+                for file_ent in analysis_result_list:
+                    print("Found for filename: ", filename)
+                    print("found: ", file_ent)
+                    # ensure file entity record exists
+                    file_entity = file_entity_service.get_file_entity_by_name_and_file(file_ent.name, file.id, file_ent.start_line)
+                    if not file_entity:
+                        file_entity = file_entity_service.create_file_entity(file_ent.name, file_ent.start_line, file.id)
+                    print("file entity saved: ", file_entity.line_position, file_entity.name, filename)
+                    # update or create identifiable entity ASK SIMON
+                    #if file_entity.entity:
+                     #  file_entity.entity.name = file_ent.kind
+                   # else:
+                    #    identifiable_entity_service.create_identifiable_entity(file_ent.kind, file_entity.id)
+
+                    todo_fixme_analysis.append({
+                        "file": filename,
+                        "start_line": file_ent.start_line,
+                        "entity_name": file_ent.name,
+                        #"entity_kind": file_ent.kind
+                    })
+           # print("metrics: ", todo_fixme_analysis)
+            metrics["todo_fixme_analysis"] = todo_fixme_analysis
+
+    return jsonify(metrics)
 
 @app.route('/display_metrics', methods=['POST'])
 def display_metrics():
@@ -145,16 +185,16 @@ def display_metrics():
     metrics["cyclomatic_complexity_analysis"] = cyclomatic_complexity_analysis
 
     # --- Get FIXME / TODO occurrences (from DB if you persist them) ---
-    # if include_fixme:
-    #     fixme_analysis = []
-    #     for file in commit.files:
-    #         for fe in file.file_entities:
-    #             fixme_analysis.append({
-    #                 "file": file.name,
-    #                 "entity": fe.entity.name,
-    #                 "line": fe.line_position
-    #             })
+    if include_fixme:
+        fixme_analysis = []
+        for file in commit.files:
+            for fe in file.file_entities:
+                fixme_analysis.append({
+                    "file": file.name,
+                    "entity": fe.name,
+                    "line": fe.line_position
+                })
 
-    #     metrics["fixme_analysis"] = fixme_analysis
-
+        metrics["fixme_analysis"] = fixme_analysis
+    print("Fixme Analysis Metrics:", metrics.get("fixme_analysis", []))
     return jsonify(metrics)

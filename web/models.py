@@ -115,6 +115,7 @@ class FileEntities(ModelMixin, Base):
     __tablename__ = "file_entities"
     id = Column(String(36), primary_key=True)
     line_position = Column(Integer)
+    name = Column(Text, nullable=False)
 
     file_id = Column(String(36), ForeignKey("files.id"))
     entity_id = Column(String(36), ForeignKey("identifiable_entities.id"))
