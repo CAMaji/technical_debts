@@ -3,6 +3,7 @@ const period_select = document.getElementById("period_select");
 const include_fixme_input = document.getElementById("include_fixme_input");
 const include_complexity_input = document.getElementById("include_complexity_input");
 
+
 // once doc is ready
 document.addEventListener("DOMContentLoaded", () => {
     init_period_select();
@@ -120,7 +121,11 @@ function display_metrics() {
     .then(data => {
         console.log("Displayed Metrics (from DB):", data);
         renderCommitInfo(data);
-        renderMetrics(data.cyclomatic_complexity_analysis || []);
+        console.log("Fixme data test: ", data.fixme_analysis);
+        //const findings = data.fixme_analysis || [];
+        //const todoFixmeMap = aggregateTodoFixme(data.fixme_analysis || []);
+
+        renderMetrics((data.cyclomatic_complexity_analysis || [])/*, todoFixmeMap*/);
         return data;
     });
 }
