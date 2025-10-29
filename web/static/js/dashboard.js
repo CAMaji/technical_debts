@@ -121,11 +121,11 @@ function display_metrics() {
     .then(data => {
         console.log("Displayed Metrics (from DB):", data);
         renderCommitInfo(data);
-        console.log("Fixme data test: ", data.fixme_analysis);
+        console.log("Fixme data test: ", data.fixme_analysis[0]?.entity);
         //const findings = data.fixme_analysis || [];
-        //const todoFixmeMap = aggregateTodoFixme(data.fixme_analysis || []);
+        const todoFixmeMap = aggregateTodoFixme(data.fixme_analysis || []);
 
-        renderMetrics((data.cyclomatic_complexity_analysis || [])/*, todoFixmeMap*/);
+        renderMetrics((data.cyclomatic_complexity_analysis || []), todoFixmeMap);
         return data;
     });
 }
@@ -152,7 +152,7 @@ function aggregateTodoFixme(findings) {
   return map; // Map<file, count>
 }
 
-function renderMetrics(metrics) {
+function renderMetrics(metrics, todoFixmeMap = new Map()) {
     const tbody = document.querySelector("#metrics-container tbody");
     const template = document.getElementById("metric-template");
 
@@ -193,6 +193,8 @@ function renderMetrics(metrics) {
     const COLSPAN = 5;
 
     groups.forEach((items, file) => {
+        const totalTodoFixme = todoFixmeMap.get(file) || 0;
+        
         // Parent file row
         const parent = document.createElement("tr");
         parent.classList.add("file-row", "table-active");
@@ -229,7 +231,6 @@ function renderMetrics(metrics) {
         // Child function rows
         const childRows = [];
         items.forEach(item => {
-            const totalTodoFixme = todoFixmeMap.get(file) || 0;
             const clone = template.cloneNode(true);
             clone.classList.remove("d-none");
             clone.id = "";
