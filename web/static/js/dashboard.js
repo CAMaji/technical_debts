@@ -141,6 +141,16 @@ function renderCommitInfo(data) {
         if (msgEl) msgEl.textContent = data.commit_message || "";
     } catch {  }
 }
+//Must verify and test this
+function aggregateTodoFixme(findings) {
+  // findings: [{ file: "path.py", ... }, ...]
+  const map = new Map();
+  (findings || []).forEach(f => {
+    const key = f.file || "(unknown file)";
+    map.set(key, (map.get(key) || 0) + 1);
+  });
+  return map; // Map<file, count>
+}
 
 function renderMetrics(metrics) {
     const tbody = document.querySelector("#metrics-container tbody");
@@ -205,15 +215,21 @@ function renderMetrics(metrics) {
         countSmall.className = "text-muted ms-2";
         countSmall.textContent = `(${items.length} function${items.length !== 1 ? 's' : ''})`;
 
+        const todoBadge = document.createElement("span");
+        todoBadge.className = "badge bg-secondary ms-3";
+        todoBadge.textContent = `TODO/FIXME: ${totalTodoFixme}`;
+
         parentTd.appendChild(toggleBtn);
         parentTd.appendChild(nameSpan);
         parentTd.appendChild(countSmall);
+        parentTd.appendChild(todoBadge);
         parent.appendChild(parentTd);
         tbody.appendChild(parent);
 
         // Child function rows
         const childRows = [];
         items.forEach(item => {
+            const totalTodoFixme = todoFixmeMap.get(file) || 0;
             const clone = template.cloneNode(true);
             clone.classList.remove("d-none");
             clone.id = "";
@@ -238,6 +254,9 @@ function renderMetrics(metrics) {
             const complexityEl = clone.querySelector(".complexity-value");
             if (complexityEl) complexityEl.textContent = item.cyclomatic_complexity ?? "-";
             
+            const todoEl = clone.querySelector(".todo-fixme-value");
+            if (todoEl) todoEl.textContent = totalTodoFixme;
+
             const bar = clone.querySelector(".progress-bar");
             const complexity = parseInt(item.cyclomatic_complexity || 0, 10);
             const progress = Math.min((complexity / 10) * 100, 100);
