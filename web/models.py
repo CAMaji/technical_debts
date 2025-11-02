@@ -86,6 +86,7 @@ class File(ModelMixin, Base):
     functions = relationship("Function", back_populates="file")
     file_entities = relationship("FileEntities", back_populates="file")
     file_test_coverage = relationship("FileTestCoverage", back_populates="file")
+    file_duplication = relationship("FileDuplication", back_populates = "file")
 
 
 class Function(ModelMixin, Base):
@@ -177,3 +178,20 @@ class FunctionTestCoverage(ModelMixin, Base):
 
     function_id = Column(String(36), ForeignKey("functions.id"))
     function = relationship("Function", back_populates="function_test_coverage")
+
+# Duplication 1-to-* FileDuplication *-to-1 File
+class FileDuplication(ModelMixin, Base): 
+    __tablename__ = "file_duplication"
+    id = Column(Integer, primary_key = True)
+    duplication_id = Column(Integer, ForeignKey("duplication.id"))
+    file_id = Column(String(36), ForeignKey("files.id"))
+    file = relationship("File", back_populates = "file_duplication")
+    duplication = relationship("Duplication", back_populates = "file_duplication")
+
+
+# Duplication 1-to-* FileDuplication
+class Duplication(ModelMixin, Base): 
+    __tablename__ = "duplication"
+    id = Column(Integer, primary_key = True)
+    text = Column(String(10000))
+    file_duplication = relationship("FileDuplication", back_populates = "duplication")
