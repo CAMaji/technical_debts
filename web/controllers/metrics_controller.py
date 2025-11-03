@@ -69,7 +69,7 @@ def calculate_metrics():
         "commit_message": github_service.get_commit_message(repo_url, commit_sha),
     }
 
-    controllers.duplication_controller.duplication_analysis(repo)
+    controllers.duplication_controller.duplication_analysis(repo, branch, commit)
 
     # run cyclomatic complexity analysis if requested
     if include_complexity:

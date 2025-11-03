@@ -182,8 +182,8 @@ class FunctionTestCoverage(ModelMixin, Base):
 # Duplication 1-to-* FileDuplication *-to-1 File
 class FileDuplication(ModelMixin, Base): 
     __tablename__ = "file_duplication"
-    id = Column(Integer, primary_key = True)
-    duplication_id = Column(Integer, ForeignKey("duplication.id"))
+    id = Column(String(36), primary_key = True)
+    duplication_id = Column(String(36), ForeignKey("duplication.id"))
     file_id = Column(String(36), ForeignKey("files.id"))
     file = relationship("File", back_populates = "file_duplication")
     duplication = relationship("Duplication", back_populates = "file_duplication")
@@ -192,6 +192,6 @@ class FileDuplication(ModelMixin, Base):
 # Duplication 1-to-* FileDuplication
 class Duplication(ModelMixin, Base): 
     __tablename__ = "duplication"
-    id = Column(Integer, primary_key = True)
+    id = Column(String(36), primary_key = True)
     text = Column(String(10000))
     file_duplication = relationship("FileDuplication", back_populates = "duplication")
