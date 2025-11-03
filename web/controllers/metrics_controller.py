@@ -5,6 +5,8 @@ from flask import request, render_template, redirect, url_for, jsonify
 from flask_sqlalchemy import SQLAlchemy
 
 from app import app
+from models import db
+from models.model import *
 
 from lizard import analyze_file
 from datetime import datetime
@@ -18,10 +20,6 @@ import services.function_service as function_service
 import services.complexity_service as complexity_service
 import services.file_entity_service as file_entity_service
 import services.identifiable_entity_service as identifiable_entity_service
-
-
-import tools.todo_fixem_analysis as fixme_analysis
-
 
 
 @app.route('/calculate_metrics', methods=['POST'])
@@ -54,7 +52,6 @@ def calculate_metrics():
     # check if commit already exists
     commit = commit_service.get_commit_by_sha(commit_sha)
     if not commit:
-        # Preserve original string for UI while creating DB record
         commit_date_str = commit_date
         if isinstance(commit_date, str):
             commit_dt = datetime.strptime(commit_date, "%d/%m/%Y %H:%M")
@@ -72,7 +69,7 @@ def calculate_metrics():
 
     # run cyclomatic complexity analysis if requested
     if include_complexity:
-        files = github_service.fetch_files(repo.owner, repo.name, branch.name, commit_sha)
+        files = github_service.fetch_files(repo.owner, repo.name, commit_sha)
         cyclomatic_complexity_analysis = []
 
         for filename, code in files:
@@ -90,8 +87,14 @@ def calculate_metrics():
                     function = function_service.create_function(func.name, func.start_line, file.id)
 
                 # update or create complexity
-                if function.complexity:
-                    function.complexity.value = func.cyclomatic_complexity
+                from web.models.model import Complexity
+                existing_complexity = db.session.query(Complexity).filter(
+                    Complexity.function_id == function.id
+                ).first()
+                
+                if existing_complexity:
+                    existing_complexity.value = func.cyclomatic_complexity
+                    db.session.commit()
                 else:
                     complexity_service.create_complexity(func.cyclomatic_complexity, function.id)
 
@@ -106,7 +109,7 @@ def calculate_metrics():
 
     # run FIXME / TODO analysis if requested
     if include_fixme:
-            files = github_service.fetch_files(repo.owner, repo.name, branch.name, commit_sha)
+            files = github_service.fetch_files(repo.owner, repo.name, commit_sha)
             todo_fixme_analysis = []
             print("Files to analyze for TODO/FIXME:", [f[0] for f in files])
             for filename, code in files:
@@ -116,7 +119,7 @@ def calculate_metrics():
                     file = file_service.create_file(filename, commit.id)
 
                 # analyze source code
-                analysis_result_list = fixme_analysis.analyse(filename, code)
+                analysis_result_list = file_entity_service.analyse(filename, code)
                 for file_ent in analysis_result_list:
                     print("Found for filename: ", filename)
                     print("found: ", file_ent)
@@ -170,31 +173,60 @@ def display_metrics():
     }
 
     # Get cyclomatic complexity
+    cyclomatic_complexity_analysis = []
     if include_complexity:
-        cyclomatic_complexity_analysis = []
-        for file in commit.files:
-            for function in file.functions:
-                if function.complexity:
+        # Query files for this commit
+        from web.models.model import File, Function, Complexity, IdentifiableEntity
+        files = db.session.query(File).filter(File.commit_id == commit.id).all()
+        
+        for file in files:
+            # Query functions for this file
+            functions = db.session.query(Function).filter(Function.file_id == file.id).all()
+            
+            for function in functions:
+                # Query complexity for this function
+                complexity = db.session.query(Complexity).filter(Complexity.function_id == function.id).first()
+                
+                if complexity:
                     cyclomatic_complexity_analysis.append({
                         "file": file.name,
                         "function": function.name,
                         "start_line": function.line_position,
-                        "cyclomatic_complexity": function.complexity.value
+                        "cyclomatic_complexity": complexity.value
                     })
 
     metrics["cyclomatic_complexity_analysis"] = cyclomatic_complexity_analysis
 
     # --- Get FIXME / TODO occurrences (from DB if you persist them) ---
+    fixme_analysis = []
     if include_fixme:
-        fixme_analysis = []
-        for file in commit.files:
-            for fe in file.file_entities:
-                fixme_analysis.append({
-                    "file": file.name,
-                    "entity": fe.name,
-                    "line": fe.line_position
-                })
+        # Models already imported above if include_complexity is true
+        if not include_complexity:
+            from web.models.model import File, FileIdentifiableIdentitty, IdentifiableEntity
+        else:
+            from web.models.model import FileIdentifiableIdentitty
+        # Query files for this commit
+        files = db.session.query(File).filter(File.commit_id == commit.id).all()
+        
+        for file in files:
+            # Query file identifiable identities for this file
+            file_entities = db.session.query(FileIdentifiableIdentitty).filter(
+                FileIdentifiableIdentitty.file_id == file.id
+            ).all()
+            
+            for fe in file_entities:
+                # Get the identifiable entity details
+                entity = db.session.query(IdentifiableEntity).filter(
+                    IdentifiableEntity.id == fe.entity_id
+                ).first()
+                
+                if entity:
+                    fixme_analysis.append({
+                        "file": file.name,
+                        "entity": entity.name,
+                        "line": getattr(fe, 'line_position', None)  # In case line_position exists
+                    })
 
-        metrics["fixme_analysis"] = fixme_analysis
+    metrics["fixme_analysis"] = fixme_analysis
     print("Fixme Analysis Metrics:", metrics.get("fixme_analysis", []))
     return jsonify(metrics)

@@ -2,24 +2,37 @@ from flask import Flask
 from flask import request, render_template, redirect, url_for, jsonify
 import requests
 from flask_sqlalchemy import SQLAlchemy
-from config import BaseConfig
+import os
 
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__)
-app.config.from_object(BaseConfig)
-db = SQLAlchemy(app)
+
+app.config['SECRET_KEY'] = "secret!"
+
+# Database configuration
+POSTGRES_USER = os.getenv('POSTGRES_USER', 'postgres')
+POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'postgres')
+POSTGRES_DB = os.getenv('POSTGRES_DB', 'postgres')
+DATABASE_PORT = os.getenv('DATABASE_PORT', '5432')
+DATABASE_HOST = os.getenv('DATABASE_HOST', 'postgres')
+
+app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{DATABASE_HOST}:{DATABASE_PORT}/{POSTGRES_DB}'
+app.config['SQLALCHEMY_ENABLE_POOL_PRE_PING'] = True
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 from models import *
+db.init_app(app)
 
 import services.repository_service as repository_service
 import services.branch_service as branch_service
 
-
 import controllers.metrics_controller
 import controllers.repository_controller
+import controllers.commit_controller
+
 
 @app.route('/', methods=['GET'])
 def index():
@@ -49,5 +62,9 @@ def dashboard(owner, name):
         return render_template('dashboard.html', repository=None, branches=None)
 
 
-if __name__ == '__main__':
-    app.run()
+# with app.app_context():
+#     print('dropping...')
+#     db.reflect()
+#     db.drop_all()
+#     db.create_all()
+#     db.session.commit()

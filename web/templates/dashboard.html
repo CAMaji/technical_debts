@@ -28,6 +28,12 @@
 						</select>
 					</div>
 					<div class="col-md-3">
+						<label class="form-label">Commit</label>
+						<select class="form-select cursor-pointer" id="commit_select">
+							
+						</select>
+					</div>
+					<div class="col-md-2">
 						<label class="form-label">Date/Time</label>
 						<input type="datetime-local" class="form-control cursor-pointer" id="period_select" />
 					</div>
@@ -57,7 +63,7 @@
 				</div>
 				<div class="row g-3 align-items-center">
 					<div class="col-md-4 d-flex align-items-end ms-auto">
-						<button class="btn btn-primary w-100" onclick="calculate_and_display_metrics()">Calculate Metrics</button>
+						<button class="btn btn-primary w-100" onclick="display_metrics()">Calculate Metrics</button>
 					</div>
 				</div>
 			</div>

@@ -1,7 +1,7 @@
 import uuid
 
-from app import db
-from models import *
+from models import db
+from models.model import *
 
 import services.github_service as github_service
 
@@ -16,7 +16,7 @@ def create_branches_from_repository(repository_id):
         branch_obj = Branch(
             id = str(uuid.uuid4()),
             repository_id = repo.id,
-            name = branch
+            name = branch,
         )
 
         db.session.add(branch_obj)
