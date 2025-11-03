@@ -205,39 +205,39 @@ def calculate_metrics():
 
     # run FIXME / TODO analysis if requested
     if include_fixme:
-        files = github_service.fetch_files(repo.owner, repo.name, commit_sha)
-        todo_fixme_analysis = []
-        print("Files to analyze for TODO/FIXME:", [f[0] for f in files])
-        for filename, code in files:
-            # ensure file record exists
-            file = file_service.get_file_by_filename_and_commit(filename, commit.id)
-            if not file:
-                file = file_service.create_file(filename, commit.id)
+            files = github_service.fetch_files(repo.owner, repo.name, commit_sha)
+            todo_fixme_analysis = []
+            print("Files to analyze for TODO/FIXME:", [f[0] for f in files])
+            for filename, code in files:
+                # ensure file record exists
+                file = file_service.get_file_by_filename_and_commit(filename, commit.id)
+                if not file:
+                    file = file_service.create_file(filename, commit.id)
 
-            # analyze source code
-            analysis_result_list = file_entity_service.analyse(filename, code)
-            for file_ent in analysis_result_list:
-                print("Found for filename: ", filename)
-                print("found: ", file_ent)
-                # ensure file entity record exists
-                file_entity = file_entity_service.get_file_entity_by_name_and_file(file_ent.name, file.id, file_ent.start_line)
-                if not file_entity:
-                    file_entity = file_entity_service.create_file_entity(file_ent.name, file_ent.start_line, file.id)
-                print("file entity saved: ", file_entity.line_position, file_entity.name, filename)
-                # update or create identifiable entity ASK SIMON
-                #if file_entity.entity:
-                    #  file_entity.entity.name = file_ent.kind
-                # else:
-                #    identifiable_entity_service.create_identifiable_entity(file_ent.kind, file_entity.id)
+                # analyze source code
+                analysis_result_list = file_entity_service.analyse(filename, code)
+                for file_ent in analysis_result_list:
+                    print("Found for filename: ", filename)
+                    print("found: ", file_ent)
+                    # ensure file entity record exists
+                    file_entity = file_entity_service.get_file_entity_by_name_and_file(file_ent.name, file.id, file_ent.start_line)
+                    if not file_entity:
+                        file_entity = file_entity_service.create_file_entity(file_ent.name, file_ent.start_line, file.id)
+                    print("file entity saved: ", file_entity.line_position, file_entity.name, filename)
+                    # update or create identifiable entity ASK SIMON
+                    #if file_entity.entity:
+                     #  file_entity.entity.name = file_ent.kind
+                   # else:
+                    #    identifiable_entity_service.create_identifiable_entity(file_ent.kind, file_entity.id)
 
-                todo_fixme_analysis.append({
-                    "file": filename,
-                    "start_line": file_ent.start_line,
-                    "entity_name": file_ent.name,
-                    #"entity_kind": file_ent.kind
-                })
-        # print("metrics: ", todo_fixme_analysis)
-        metrics["todo_fixme_analysis"] = todo_fixme_analysis
+                    todo_fixme_analysis.append({
+                        "file": filename,
+                        "start_line": file_ent.start_line,
+                        "entity_name": file_ent.name,
+                        #"entity_kind": file_ent.kind
+                    })
+           # print("metrics: ", todo_fixme_analysis)
+            metrics["todo_fixme_analysis"] = todo_fixme_analysis
 
     return jsonify(metrics)
 
