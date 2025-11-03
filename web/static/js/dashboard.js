@@ -1,5 +1,6 @@
 const branch_select = document.getElementById("branch_select");
 const period_select = document.getElementById("period_select");
+const commit_select = document.getElementById("commit_select");
 const include_fixme_input = document.getElementById("include_fixme_input");
 const include_complexity_input = document.getElementById("include_complexity_input");
 
@@ -7,51 +8,40 @@ const include_complexity_input = document.getElementById("include_complexity_inp
 // once doc is ready
 document.addEventListener("DOMContentLoaded", () => {
     init_period_select();
-    // react to changes
-    if (branch_select) branch_select.addEventListener('change', () => safe_display_or_calculate());
-    if (period_select) period_select.addEventListener('change', () => safe_display_or_calculate());
-    if (include_fixme_input) include_fixme_input.addEventListener('change', () => display_metrics());
-    if (include_complexity_input) include_complexity_input.addEventListener('change', () => display_metrics());
 
-    display_metrics();
+    // init the commits select
+    const branch_id = branch_select.options[branch_select.selectedIndex].getAttribute("data-id");
+    get_commits_by_branch_id(branch_id).then((commits) => {
+        set_commit_select_options(commits);
+    });
+
+    // refresh the list of commits when the user selects a new branch
+    branch_select.addEventListener('change', () => {
+        const branch_id = branch_select.options[branch_select.selectedIndex].getAttribute("data-id");
+        get_commits_by_branch_id(branch_id).then((commits) => {
+            set_commit_select_options(commits);
+        });
+    });
+
 });
+
+function set_commit_select_options(commits) {
+    commit_select.innerHTML = "";
+    commits.forEach((commit) => {
+        const { id, message } = commit;
+
+        const container = document.createElement("option");
+        container.setAttribute("data-id", id);
+        const truncated = message.length > 150 ? message.slice(0, 150) + "..." : message;
+        container.innerHTML = truncated;
+
+        commit_select.appendChild(container);
+    });
+}
 
 function calculate_and_display_metrics() {
     // Prefer displaying existing metrics; if not present, calculate then display
     return safe_display_or_calculate();
-}
-
-function safe_display_or_calculate() {
-    return display_metrics().catch(err => {
-        if (err && err.status === 404) {
-            return calculate_metrics().then(() => display_metrics());
-        }
-        throw err;
-    });
-}
-
-// Replace init_period_select with datetime-local support
-function init_period_select() {
-    // Set default value to now, converted to local datetime-local format
-    const now = new Date();
-    const pad = (n) => n.toString().padStart(2, '0');
-    const yyyy = now.getFullYear();
-    const MM = pad(now.getMonth() + 1);
-    const dd = pad(now.getDate());
-    const hh = pad(now.getHours());
-    const mm = pad(now.getMinutes());
-    const value = `${yyyy}-${MM}-${dd}T${hh}:${mm}`;
-    period_select.value = value;
-}
-
-function get_period_value_for_backend() {
-    // Convert datetime-local (yyyy-mm-ddThh:mm) to backend format dd/mm/yyyy hh:mm
-    const raw = period_select.value; // e.g., 2025-10-10T14:30
-    if (!raw) return '';
-    const [datePart, timePart] = raw.split('T');
-    if (!datePart || !timePart) return '';
-    const [y, m, d] = datePart.split('-');
-    return `${d}/${m}/${y} ${timePart}`;
 }
 
 // Update calculate/display to use the formatter

@@ -1,11 +1,16 @@
-from flask import Flask
-from flask import request, render_template, redirect, url_for, jsonify
-from app import app
 import requests
+
+from flask import request, redirect, url_for
+from app import app
+
+from datetime import datetime
+
 from flask_sqlalchemy import SQLAlchemy
 
 import services.repository_service as repository_service
 import services.branch_service as branch_service
+import services.github_service as github_service
+import services.commit_service as commit_service
 
 
 @app.route('/create_repository', methods=['POST'])
@@ -20,11 +25,22 @@ def create_repository():
     owner = request.form.get('owner')
     name = request.form.get('name')
 
-    # Create a repo
+    # store the repo
     repo = repository_service.create_repository(owner, name)
 
-    # Create objects for all the items
-    branch_service.create_branches_from_repository(repo.id)
+    # store all the branches
+    branches = branch_service.create_branches_from_repository(repo.id)
+
+    # store the commits for the 10 latest commits
+    for branch in branches:
+        commits = github_service.get_latest_commits(owner, name, branch.name)
+        for commit in commits:
+            sha = commit.get('hash')
+            date = datetime.fromisoformat(commit.get('date'))
+            author = commit.get('author')
+            message = commit.get('message')
+            commit_service.create_commit(sha, date, author, message, branch.id)
+    
 
     # Redirect to the repository dashboard after creating it
     return redirect(url_for('dashboard', owner=owner, name=name))

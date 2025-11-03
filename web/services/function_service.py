@@ -3,9 +3,8 @@ from flask import Flask
 from flask import request, render_template, redirect, url_for, jsonify
 import requests
 
-from app import db
-from models import *
-
+from models import db
+from models.model import *
 
 def create_function(name, line_position, file_id):
     function = Function(

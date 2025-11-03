@@ -57,7 +57,7 @@ def safe_walk_py_files(root_dir: str):
                 yield root, filename
 
 
-def fetch_files(owner, name, _branch, commit_sha):
+def fetch_files(owner, name, commit_sha):
     repo_path = ensure_local_repo(owner, name)
     files = []
     
@@ -162,7 +162,6 @@ def get_closest_commit(repo_url: str, branch: str, date_str: str) -> tuple[str |
 
     try:
         max_depth = 131072
-        fetched_since = False
         try:
             subprocess.run(
                 [
@@ -174,7 +173,6 @@ def get_closest_commit(repo_url: str, branch: str, date_str: str) -> tuple[str |
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
-            fetched_since = True
         except subprocess.CalledProcessError:
             subprocess.run(
                 [
@@ -285,3 +283,34 @@ def fetch_branches(owner, name):
         return branches
     except subprocess.CalledProcessError as e:
         return []
+
+
+from git import Repo
+def get_latest_commits(owner, name, branch_name):
+    repo_path = ensure_local_repo(owner, name)
+
+    repo = Repo(repo_path)
+    repo.remotes.origin.fetch()
+    
+    ref = next(
+        (r for r in repo.references if r.name in [branch_name, f"origin/{branch_name}"]),
+        None
+    )
+
+    if not ref:
+        raise ValueError(
+            f"Branch '{branch_name}' not found. Available refs: {[r.name for r in repo.references]}"
+        )
+
+    commits = list(repo.iter_commits(ref, max_count=10))
+    return [
+        {
+            "hash": c.hexsha,
+            "short_hash": c.hexsha[:7],
+            "author": c.author.name,
+            "email": c.author.email,
+            "date": c.committed_datetime.isoformat(),
+            "message": c.message.strip(),
+        }
+        for c in commits
+    ]
