@@ -8,7 +8,7 @@
 # 
 # COPY . .
 
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 WORKDIR /app
 
@@ -17,8 +17,10 @@ RUN apt update
 RUN apt upgrade -y
 RUN apt install openjdk-8-jdk -y
 RUN apt install software-properties-common -y
+RUN apt install git -y
 RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt update
+RUN apt install python3.10 -y
 
 # source: https://stackoverflow.com/questions/11583714/install-psycopg2-on-ubuntu
 RUN apt install libpq-dev -y

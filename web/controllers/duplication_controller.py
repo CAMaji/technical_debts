@@ -1,6 +1,8 @@
 import lizard
 import os
+import subprocess
 import services.github_service
+import xml.etree.ElementTree as ET # https://www.geeksforgeeks.org/python/xml-parsing-python/ 
 from models import Repository
 
 def duplication_analysis(repo: Repository): 
@@ -16,10 +18,25 @@ def duplication_analysis(repo: Repository):
     #    dans les objets modèles
     # 3. Inserer les objets modèles dans la DB
 
-    repo_path : str = services.github_service.repo_dir(repo.name, repo.name)
-    lizard.analyze_files()
+    repo_path : str = services.github_service.repo_dir(repo.owner, repo.name)
+    print(repo_path)
+    print('\n')
+    pmd_cmd : list[str] = ["./pmd/bin/pmd", "cpd", "--minimum-tokens", "100", "--language", "python", "--format", "xml", "--dir", repo_path]
+    # Note: 
+    # Je ne sais pas si c'est comme ça dans tout les projets git, mais on a un 
+    # dossier './web/.repo_cache' qui est une copie de notre projet. PMD va le 
+    # détecter et dire que notre projet est quasiment à 100% dupliqué. 
+    # Ajouter l'argument: "--exclude {repo_path}/.repo_cache" pour exclude la cache.
+    #
+    # https://pmd.github.io/pmd/pmd_userdocs_cpd_report_formats.html
+    
+    completed_process : subprocess.CompletedProcess = subprocess.run(pmd_cmd, capture_output=True, text=True)
+    root : ET.Element[str] = ET.fromstring(completed_process.stdout)
 
-
+    print(completed_process.stdout)
+    print('\n')
+    print(root.tag)
+    
     return
 
 def duplication_search(): 
@@ -35,3 +52,4 @@ def duplication_search():
     # 2. calculer la moyenne de duplications pour la période donnée
 
     return
+

@@ -19,9 +19,8 @@ import services.complexity_service as complexity_service
 import services.file_entity_service as file_entity_service
 import services.identifiable_entity_service as identifiable_entity_service
 
-
 import tools.todo_fixem_analysis as fixme_analysis
-
+import controllers.duplication_controller
 
 
 @app.route('/calculate_metrics', methods=['POST'])
@@ -69,6 +68,8 @@ def calculate_metrics():
         "commit_date": commit_date_str,
         "commit_message": github_service.get_commit_message(repo_url, commit_sha),
     }
+
+    controllers.duplication_controller.duplication_analysis(repo)
 
     # run cyclomatic complexity analysis if requested
     if include_complexity:
