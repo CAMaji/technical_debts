@@ -35,6 +35,6 @@ def get_file_by_filename_and_commit(filename: str, commit_id: str):
 
 
 def get_files_by_commit_id(commit_id):
-    files = File.query.filter_by(commit_id=commit_id)
+    files = File.query.filter_by(commit_id=commit_id).all()
 
     return files

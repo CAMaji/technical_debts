@@ -18,3 +18,20 @@ def create_complexity(value, function_id):
     db.session.commit()
 
     return complexity
+
+
+def get_complexity_by_file_id_verbose(file_id):
+    file = File.query.get(file_id)
+    functions = Function.query.filter_by(file_id=file_id).all()
+
+    complixities = []
+    for function in functions:
+        complexity = Complexity.query.filter_by(function_id=function.id).first()
+        complixities.append({
+            "file": file.name,
+            "function": function.name,
+            "start_line": function.line_position,
+            "cyclomatic_complexity": complexity.value,
+        })
+
+    return complixities

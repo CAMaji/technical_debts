@@ -90,11 +90,13 @@ class IdentifiableEntity(ModelMixin, db.Model):
     name = Column(Text, nullable=False)
 
 
-class FileIdentifiableIdentitty(ModelMixin, db.Model):
+class FileIdentifiableIdentity(ModelMixin, db.Model):
     __tablename__ = "file_identifiable_identity"
 
-    file_id = Column(String(36), ForeignKey("file.id"), primary_key=True)
-    entity_id = Column(String(36), ForeignKey("identifiable_entity.id"), primary_key=True)
+    id = Column(String(36), primary_key=True)
+    file_id = Column(String(36), ForeignKey("file.id"))
+    identifiable_entity_id = Column(String(36), ForeignKey("identifiable_entity.id"))
+    line_position = Column(Integer)
 
 
 class Complexity(ModelMixin, db.Model):

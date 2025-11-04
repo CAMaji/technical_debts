@@ -8,7 +8,7 @@ import services.github_service as github_service
 from models import db
 from models.model import *
 
-def _normalize_function_body(code: str, start_line: int, end_line: int) -> str:
+def _normalize_function_body(code, start_line, end_line):
     """Extract and normalize function body for comparison.
     
     Args:
@@ -26,19 +26,22 @@ def _normalize_function_body(code: str, start_line: int, end_line: int) -> str:
     normalized = []
     for line in func_lines:
         stripped = line.strip()
+
         # Skip blank lines and comments
         if not stripped or stripped.startswith('#'):
             continue
+
         # Skip docstrings (simple detection)
         if stripped.startswith('"""') or stripped.startswith("'''"):
             continue
+
         # Collapse whitespace
         normalized.append(' '.join(stripped.split()))
     
     return '\n'.join(normalized)
 
 
-def find_duplicates(owner: str, name: str, branch: str, commit_sha: str, min_lines: int = 6) -> List[Dict]:
+def find_duplicates(owner, name, commit_sha, min_lines: int = 5):
     """
     Find duplicated code blocks (functions) across Python files using Lizard.
 
@@ -90,7 +93,6 @@ def find_duplicates(owner: str, name: str, branch: str, commit_sha: str, min_lin
                     'normalized_body': normalized_body
                 })
         except Exception as e:
-            # Skip files that Lizard can't parse
             print(f"Warning: Could not analyze {filename}: {e}")
             continue
     

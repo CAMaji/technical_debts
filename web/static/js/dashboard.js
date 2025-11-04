@@ -1,23 +1,28 @@
+// search container elements
 const branch_select = document.getElementById("branch_select");
 const period_select = document.getElementById("period_select");
 const commit_select = document.getElementById("commit_select");
-const include_fixme_input = document.getElementById("include_fixme_input");
+const include_identifiable_identities_input = document.getElementById("include_identifiable_identities_input");
 const include_complexity_input = document.getElementById("include_complexity_input");
 
+// commit selected for metrics display
+const commit_sha_display = document.getElementById("commit-sha");
+const commit_date_display = document.getElementById("commit-date");
+const commit_message_display = document.getElementById("commit-message");
 
 // once doc is ready
 document.addEventListener("DOMContentLoaded", () => {
     init_period_select();
 
     // init the commits select
-    const branch_id = branch_select.options[branch_select.selectedIndex].getAttribute("data-id");
+    const branch_id = get_selected_branch_id();
     get_commits_by_branch_id(branch_id).then((commits) => {
         set_commit_select_options(commits);
     });
 
     // refresh the list of commits when the user selects a new branch
     branch_select.addEventListener('change', () => {
-        const branch_id = branch_select.options[branch_select.selectedIndex].getAttribute("data-id");
+        const branch_id = get_selected_branch_id();
         get_commits_by_branch_id(branch_id).then((commits) => {
             set_commit_select_options(commits);
         });
@@ -39,237 +44,206 @@ function set_commit_select_options(commits) {
     });
 }
 
-function calculate_and_display_metrics() {
-    // Prefer displaying existing metrics; if not present, calculate then display
-    return safe_display_or_calculate();
-}
-
-// Update calculate/display to use the formatter
-function calculate_metrics() {
-    const selected_branch_option = branch_select.options[branch_select.selectedIndex];
-    const branch_id = selected_branch_option.getAttribute("data-id");
-
-    const time_period = get_period_value_for_backend();
-
-    const include_fixme = include_fixme_input.checked;
-    const include_complexity = include_complexity_input.checked;
-
-    return fetch('/calculate_metrics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            repository_id: repository_id,
-            branch_id: branch_id,
-            time_period: time_period,
-            include_fixme: include_fixme,
-            include_complexity: include_complexity,
-        })
-    })
-    .then(async response => {
-        if (!response.ok) {
-            const err = new Error(`HTTP error! Status: ${response.status}`);
-            err.status = response.status;
-            throw err;
-        }
-        return response.json();
-    })
-    .then(data => {
-        console.log("Calculated Metrics:", data);
-        renderCommitInfo(data);
-        return data;
-    });
-}
-
 function display_metrics() {
-    const selected_branch_option = branch_select.options[branch_select.selectedIndex];
-    const branch_id = selected_branch_option.getAttribute("data-id");
-
-    const time_period = get_period_value_for_backend();
-
-    const include_fixme = include_fixme_input.checked;
+    const branch_id = get_selected_branch_id();
+    const commit_id = get_selected_commit_id();
+    const include_identifiable_identities = include_identifiable_identities_input.checked;
     const include_complexity = include_complexity_input.checked;
 
-    return fetch('/display_metrics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            repository_id: repository_id,
-            branch_id: branch_id,
-            time_period: time_period,
-            include_fixme: include_fixme,
-            include_complexity: include_complexity,
-        })
-    })
-    .then(async response => {
-        if (!response.ok) {
-            const err = new Error(`HTTP error! Status: ${response.status}`);
-            err.status = response.status;
-            throw err;
+    display_metrics_by_commit_id(repository_id, branch_id, commit_id, include_identifiable_identities, include_complexity, false).then((metrics) => {
+        const { commit_date, commit_message, commit_sha, cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis } = metrics;
+        render_commit_info(commit_sha, commit_date, commit_message);
+        console.log(metrics);
+        render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis)
+    });
+}
+
+function get_selected_branch_id() {
+    return branch_select.options[branch_select.selectedIndex].getAttribute("data-id");
+}
+
+function get_selected_commit_id() {
+    return commit_select.options[commit_select.selectedIndex].getAttribute("data-id");
+}
+
+// show the commit sha, date and message under the repo information selection
+function render_commit_info(commit_sha, commit_date, commit_message) {
+    commit_sha_display.textContent = commit_sha || "-";
+    commit_date_display.textContent = commit_date || "-";
+    commit_message_display.textContent = commit_message || "";
+}
+
+function render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis) {
+    // Process the data to group by file
+    const fileMetrics = processMetricsData(
+        cyclomatic_complexity_analysis, 
+        identifiable_identities_analysis, 
+        duplicated_code_analysis
+    );
+
+    // Initialize or refresh the table
+    const $table = $('#metrics-table');
+    
+    // Destroy existing table if it exists
+    if ($table.bootstrapTable('getOptions')) {
+        $table.bootstrapTable('destroy');
+    }
+
+    // Initialize the table with data
+    $table.bootstrapTable({
+        columns: [
+            {
+                field: 'fileName',
+                title: 'File Name',
+                sortable: true,
+                width: '40%'
+            },
+            {
+                field: 'avgComplexity',
+                title: 'Avg Complexity',
+                sortable: true,
+                align: 'center',
+                width: '20%',
+                formatter: (value) => value !== null ? value.toFixed(2) : '-'
+            },
+            {
+                field: 'identifiableIdentitiesCount',
+                title: 'Identifiable Identities',
+                sortable: true,
+                align: 'center',
+                width: '20%'
+            },
+            {
+                field: 'duplicateCodeCount',
+                title: 'Duplicate Code',
+                sortable: true,
+                align: 'center',
+                width: '20%'
+            }
+        ],
+        data: fileMetrics,
+        detailView: true,
+        detailFormatter: detailFormatter,
+        detailViewIcon: true,
+        detailViewByClick: false,
+        showColumns: false,
+        onPostBody: function() {
+            // Force visibility of detail icons
+            $table.find('.detail-icon').css({
+                'color': '#495057',
+                'font-weight': 'bold',
+                'font-size': '1.2rem'
+            });
         }
-        return response.json();
-    })
-    .then(data => {
-        console.log("Displayed Metrics (from DB):", data);
-        renderCommitInfo(data);
-        console.log("Fixme data test: ", data.fixme_analysis[0]?.entity);
-        //const findings = data.fixme_analysis || [];
-        const todoFixmeMap = aggregateTodoFixme(data.fixme_analysis || []);
-
-        renderMetrics((data.cyclomatic_complexity_analysis || []), todoFixmeMap);
-        return data;
     });
 }
 
-function renderCommitInfo(data) {
-    try {
-        const shaEl = document.getElementById("commit-sha");
-        const dateEl = document.getElementById("commit-date");
-        const msgEl = document.getElementById("commit-message");
+// Process metrics data to group by file
+function processMetricsData(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis) {
+    const fileMap = new Map();
 
-        if (shaEl) shaEl.textContent = data.commit_sha || "-";
-        if (dateEl) dateEl.textContent = data.commit_date || "-";
-        if (msgEl) msgEl.textContent = data.commit_message || "";
-    } catch {  }
-}
-//Must verify and test this
-function aggregateTodoFixme(findings) {
-  // findings: [{ file: "path.py", ... }, ...]
-  const map = new Map();
-  (findings || []).forEach(f => {
-    const key = f.file || "(unknown file)";
-    map.set(key, (map.get(key) || 0) + 1);
-  });
-  return map; // Map<file, count>
-}
+    // Process cyclomatic complexity data
+    if (cyclomatic_complexity_analysis && Array.isArray(cyclomatic_complexity_analysis)) {
+        cyclomatic_complexity_analysis.forEach(fileArray => {
+            if (Array.isArray(fileArray) && fileArray.length > 0) {
+                const fileName = fileArray[0].file;
+                
+                if (!fileMap.has(fileName)) {
+                    fileMap.set(fileName, {
+                        fileName: fileName,
+                        functions: [],
+                        avgComplexity: 0,
+                        identifiableIdentitiesCount: 0,
+                        duplicateCodeCount: 0
+                    });
+                }
 
-function renderMetrics(metrics, todoFixmeMap = new Map()) {
-    const tbody = document.querySelector("#metrics-container tbody");
-    const template = document.getElementById("metric-template");
+                const fileData = fileMap.get(fileName);
+                fileData.functions = fileArray.map(func => ({
+                    name: func.function,
+                    line: func.start_line,
+                    complexity: func.cyclomatic_complexity
+                }));
 
-    // Remove all rows except template
-    tbody.querySelectorAll("tr").forEach(row => {
-        if (row !== template) row.remove();
-    });
+                // Calculate average complexity
+                const totalComplexity = fileArray.reduce((sum, func) => sum + func.cyclomatic_complexity, 0);
+                fileData.avgComplexity = totalComplexity / fileArray.length;
+            }
+        });
+    }
 
-    if (!metrics || metrics.length === 0) return;
-
-    // Helper: create a chevron SVG icon
-    const createChevronIcon = () => {
-        const svgNS = 'http://www.w3.org/2000/svg';
-        const svg = document.createElementNS(svgNS, 'svg');
-        svg.setAttribute('width', '14');
-        svg.setAttribute('height', '14');
-        svg.setAttribute('viewBox', '0 0 16 16');
-        svg.style.transition = 'transform 120ms ease';
-        const path = document.createElementNS(svgNS, 'path');
-        path.setAttribute('d', 'M6 12l4-4-4-4');
-        path.setAttribute('fill', 'none');
-        path.setAttribute('stroke', 'currentColor');
-        path.setAttribute('stroke-width', '2');
-        path.setAttribute('stroke-linecap', 'round');
-        path.setAttribute('stroke-linejoin', 'round');
-        svg.appendChild(path);
-        return svg;
-    };
-
-    // Group by file
-    const groups = new Map();
-    metrics.forEach(item => {
-        const key = item.file || "(unknown file)";
-        if (!groups.has(key)) groups.set(key, []);
-        groups.get(key).push(item);
-    });
-
-    const COLSPAN = 5;
-
-    groups.forEach((items, file) => {
-        const totalTodoFixme = todoFixmeMap.get(file) || 0;
-        
-        // Parent file row
-        const parent = document.createElement("tr");
-        parent.classList.add("file-row", "table-active");
-        const parentTd = document.createElement("td");
-        parentTd.colSpan = COLSPAN;
-
-        const toggleBtn = document.createElement("button");
-        toggleBtn.type = "button";
-        toggleBtn.className = "btn btn-sm btn-link p-0 me-2 toggle-btn";
-        toggleBtn.setAttribute("aria-expanded", "true");
-        toggleBtn.setAttribute("aria-label", "Toggle file functions");
-        const icon = createChevronIcon();
-        toggleBtn.appendChild(icon);
-
-        const nameSpan = document.createElement("span");
-        nameSpan.className = "fw-semibold";
-        nameSpan.textContent = file;
-
-        const countSmall = document.createElement("small");
-        countSmall.className = "text-muted ms-2";
-        countSmall.textContent = `(${items.length} function${items.length !== 1 ? 's' : ''})`;
-
-        const todoBadge = document.createElement("span");
-        todoBadge.className = "badge bg-secondary ms-3";
-        todoBadge.textContent = `TODO/FIXME: ${totalTodoFixme}`;
-
-        parentTd.appendChild(toggleBtn);
-        parentTd.appendChild(nameSpan);
-        parentTd.appendChild(countSmall);
-        parentTd.appendChild(todoBadge);
-        parent.appendChild(parentTd);
-        tbody.appendChild(parent);
-
-        // Child function rows
-        const childRows = [];
-        items.forEach(item => {
-            const clone = template.cloneNode(true);
-            clone.classList.remove("d-none");
-            clone.id = "";
-            clone.classList.add("function-row");
-
-            const firstTd = clone.querySelector("td");
-            if (firstTd) firstTd.classList.add("ps-4");
-
-            // Fill cells
-            const fileNameEl = clone.querySelector(".file-name");
-            if (fileNameEl) fileNameEl.textContent = "";
-
-            const functionInfoEl = clone.querySelector(".function-info");
-            if (functionInfoEl) functionInfoEl.textContent = `Function: ${item.function} (Line: ${item.start_line})`;
-
-            const debtEl = clone.querySelector(".debt-value");
-            if (debtEl) debtEl.textContent = item.debt ?? "-";
+    // Process identifiable identities data
+    if (identifiable_identities_analysis && Array.isArray(identifiable_identities_analysis)) {
+        identifiable_identities_analysis.forEach(entity => {
+            const fileName = entity.file_name;
             
-            const bugsEl = clone.querySelector(".bugs-value");
-            if (bugsEl) bugsEl.textContent = item.bugs ?? "-";
-            
-            const complexityEl = clone.querySelector(".complexity-value");
-            if (complexityEl) complexityEl.textContent = item.cyclomatic_complexity ?? "-";
-            
-            const todoEl = clone.querySelector(".todo-fixme-value");
-            if (todoEl) todoEl.textContent = totalTodoFixme;
-
-            const bar = clone.querySelector(".progress-bar");
-            const complexity = parseInt(item.cyclomatic_complexity || 0, 10);
-            const progress = Math.min((complexity / 10) * 100, 100);
-            if (bar) {
-                bar.style.width = `${progress}%`;
-                bar.setAttribute("aria-valuenow", progress);
+            if (!fileMap.has(fileName)) {
+                fileMap.set(fileName, {
+                    fileName: fileName,
+                    functions: [],
+                    avgComplexity: null,
+                    identifiableIdentitiesCount: 0,
+                    duplicateCodeCount: 0
+                });
             }
 
-            tbody.appendChild(clone);
-            childRows.push(clone);
+            const fileData = fileMap.get(fileName);
+            fileData.identifiableIdentitiesCount++;
         });
+    }
 
-        // Toggle behavior
-        let expanded = true;
-        const setExpanded = (exp) => {
-            expanded = exp;
-            icon.style.transform = expanded ? 'rotate(90deg)' : 'rotate(0deg)';
-            childRows.forEach(r => r.classList.toggle("d-none", !expanded));
-            toggleBtn.setAttribute("aria-expanded", expanded ? "true" : "false");
-        };
-        toggleBtn.addEventListener("click", () => setExpanded(!expanded));
-        // default expanded
-        setExpanded(true);
+    // Process duplicate code data
+    if (duplicated_code_analysis && Array.isArray(duplicated_code_analysis)) {
+        duplicated_code_analysis.forEach(duplicate => {
+            const fileName = duplicate.file_name || duplicate.file;
+            
+            if (!fileMap.has(fileName)) {
+                fileMap.set(fileName, {
+                    fileName: fileName,
+                    functions: [],
+                    avgComplexity: null,
+                    identifiableIdentitiesCount: 0,
+                    duplicateCodeCount: 0
+                });
+            }
+
+            const fileData = fileMap.get(fileName);
+            fileData.duplicateCodeCount++;
+        });
+    }
+
+    return Array.from(fileMap.values());
+}
+
+// Detail formatter for expandable rows
+function detailFormatter(index, row) {
+    if (!row.functions || row.functions.length === 0) {
+        return '<div class="p-3 text-muted">No function data available</div>';
+    }
+
+    let html = '<div class="p-3"><table class="table table-sm table-striped">';
+    html += '<thead><tr>';
+    html += '<th style="width: 60%">Function Name</th>';
+    html += '<th style="width: 20%" class="text-center">Line</th>';
+    html += '<th style="width: 20%" class="text-center">Complexity</th>';
+    html += '</tr></thead>';
+    html += '<tbody>';
+
+    row.functions.forEach(func => {
+        html += '<tr>';
+        html += `<td><code>${func.name}</code></td>`;
+        html += `<td class="text-center">${func.line}</td>`;
+        html += `<td class="text-center"><span class="badge ${getComplexityBadgeClass(func.complexity)}">${func.complexity}</span></td>`;
+        html += '</tr>';
     });
+
+    html += '</tbody></table></div>';
+    return html;
+}
+
+// Helper function to get badge color based on complexity
+function getComplexityBadgeClass(complexity) {
+    if (complexity <= 5) return 'bg-success';
+    if (complexity <= 10) return 'bg-warning';
+    return 'bg-danger';
 }

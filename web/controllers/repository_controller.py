@@ -40,7 +40,6 @@ def create_repository():
             author = commit.get('author')
             message = commit.get('message')
             commit_service.create_commit(sha, date, author, message, branch.id)
-    
 
     # Redirect to the repository dashboard after creating it
     return redirect(url_for('dashboard', owner=owner, name=name))

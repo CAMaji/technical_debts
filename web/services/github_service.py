@@ -3,6 +3,7 @@ import shutil
 import subprocess
 from datetime import datetime, timezone
 
+from git import Repo
 
 def repo_cache_root():
     root = os.getenv("REPO_CACHE_DIR")
@@ -13,17 +14,17 @@ def repo_cache_root():
     return root
 
 
-def repo_dir(owner: str, name: str) -> str:
+def repo_dir(owner, name):
     safe = f"{owner.replace('/', '_')}__{name.replace('/', '_')}"
 
     return os.path.join(repo_cache_root(), safe)
 
 
-def remote_url(owner: str, name: str) -> str:
+def remote_url(owner, name):
     return f"https://github.com/{owner}/{name}.git"
 
 
-def ensure_local_repo(owner: str, name: str) -> str:
+def ensure_local_repo(owner, name):
     path = repo_dir(owner, name)
     url = remote_url(owner, name)
 
@@ -46,7 +47,7 @@ def ensure_local_repo(owner: str, name: str) -> str:
     return path
 
 
-def safe_walk_py_files(root_dir: str):
+def safe_walk_py_files(root_dir):
     for root, _, filenames in os.walk(root_dir):
         # Skip .git directory
         parts = set(root.replace("\\", "/").split("/"))
@@ -81,7 +82,7 @@ def fetch_files(owner, name, commit_sha):
     return files
 
 
-def get_closest_commit(repo_url: str, branch: str, date_str: str) -> tuple[str | None, str | None]:
+def get_closest_commit(repo_url, branch, date_str):
     """
     Find the commit on `branch` of `repo_url` whose committer date is closest to `date_str`.
 
@@ -243,7 +244,7 @@ def get_closest_commit(repo_url: str, branch: str, date_str: str) -> tuple[str |
     return None, None
 
 
-def get_commit_message(repo_url: str, sha: str) -> str | None:
+def get_commit_message(repo_url, sha):
     """Return the commit subject (first line) for the given SHA, or None if unavailable."""
     if not sha:
         return None
@@ -267,11 +268,13 @@ def fetch_branches(owner, name):
     """Return list of branch names for the repo using the local cached clone."""
     try:
         repo_path = ensure_local_repo(owner, name)
+
         # Update refs from origin (quietly)
         try:
             subprocess.run(["git", "-C", repo_path, "fetch", "--prune", "origin"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         except subprocess.CalledProcessError:
             pass
+
         # List remote heads and parse branch names
         out = subprocess.check_output(["git", "-C", repo_path, "ls-remote", "--heads", "origin"], text=True)
         branches = []
@@ -285,7 +288,6 @@ def fetch_branches(owner, name):
         return []
 
 
-from git import Repo
 def get_latest_commits(owner, name, branch_name):
     repo_path = ensure_local_repo(owner, name)
 
