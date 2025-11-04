@@ -9,6 +9,8 @@ import services.file_service as file_service
 import services.complexity_service as complexity_service
 import services.identifiable_entity_service as identifiable_entity_service
 import services.metrics_service as metrics_service
+import services.branch_service as branch_service
+import services.file_duplication_service as file_duplication_service
 
 
 @app.route('/api/display_metrics_by_commit_id', methods=['POST'])
@@ -21,6 +23,7 @@ def display_metrics_by_commit_id():
     include_identifiable_identities = data.get('include_identifiable_identities')
     include_code_duplication = data.get('include_code_duplication')
 
+    branch = branch_service.get_branch_by_branch_id(branch_id)
     commit = commit_service.get_commit_by_commit_id(commit_id)
     repo = repository_service.get_repository_by_repository_id(repository_id)
 
@@ -42,6 +45,8 @@ def display_metrics_by_commit_id():
             # calculate the various metrics here
             cyclomatic_complexity_analysis = metrics_service.calculate_cyclomatic_complexity_analysis(file, code)
             identifiable_identities_analysis = metrics_service.calculate_identifiable_identities_analysis(file, code)
+            metrics_service.calculate_duplication_analysis(repo, branch, commit)
+            code_duplication_analysis = file_duplication_service.file_duplication_get_json_from_commit(commit)
     else:
         for file in files:
             cyclomatic_complexity_analysis.append(complexity_service.get_complexity_by_file_id_verbose(file.id))

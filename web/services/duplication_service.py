@@ -1,6 +1,6 @@
 import uuid
 from app import db
-from models import *
+from models.model import *
 
 # Creates and commits a Duplication row.
 def duplication_create(text : str): 
@@ -14,5 +14,6 @@ def duplication_create(text : str):
 
     return duplication
 
-def duplication_get_all(): 
-    return db.session.query(Duplication)
+# Obtains a duplication object from id 
+def duplication_get_from_id(id):
+    return db.session.query(Duplication).filter_by(duplication_id=id).first()
