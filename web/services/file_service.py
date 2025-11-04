@@ -3,8 +3,8 @@ from flask import Flask
 from flask import request, render_template, redirect, url_for, jsonify
 import requests
 
-from app import db
-from models import *
+from models import db
+from models.model import *
 
 import services.github_service as github_service
 
@@ -32,3 +32,9 @@ def get_file_by_filename_and_commit(filename: str, commit_id: str):
         .filter(File.name == filename, File.commit_id == commit_id)
         .first()
     )
+
+
+def get_files_by_commit_id(commit_id):
+    files = File.query.filter_by(commit_id=commit_id).all()
+
+    return files

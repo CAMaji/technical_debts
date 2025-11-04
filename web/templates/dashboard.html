@@ -28,24 +28,27 @@
 						</select>
 					</div>
 					<div class="col-md-3">
+						<label class="form-label">Commit</label>
+						<select class="form-select cursor-pointer" id="commit_select">
+							
+						</select>
+					</div>
+					<div class="col-md-2">
 						<label class="form-label">Date/Time</label>
 						<input type="datetime-local" class="form-control cursor-pointer" id="period_select" />
 					</div>
 					<div class="col-md-2 d-flex align-items-end">
 						<div class="form-check form-switch">
-							<input class="form-check-input cursor-pointer" type="checkbox" id="include_fixme_input" checked>
-							<label class="form-check-label" for="include_fixme_input">Inclure TODO/FIXME</label>
+							<input class="form-check-input cursor-pointer" type="checkbox" id="include_identifiable_identities_input" checked>
+							<label class="form-check-label" for="include_identifiable_identities_input">Inclure Identitées Remarquables</label>
 						</div>
 					</div>
 					<div class="col-md-2 d-flex align-items-end">
 						<div class="form-check form-switch">
 							<input class="form-check-input cursor-pointer" type="checkbox" id="include_complexity_input" checked>
-							<label class="form-check-label" for="include_complexity_input">Inclure complexité</label>
+							<label class="form-check-label" for="include_complexity_input">Inclure Complexité</label>
 						</div>
 					</div>
-					<!-- <div class="col-md-1 d-flex align-items-end">
-						<button class="btn btn-primary w-100">Affiner</button>
-					</div> -->
 				</div>
 				<div class="row g-3 align-items-center mt-2">
 					<div class="col-md-12">
@@ -57,40 +60,12 @@
 				</div>
 				<div class="row g-3 align-items-center">
 					<div class="col-md-4 d-flex align-items-end ms-auto">
-						<button class="btn btn-primary w-100" onclick="calculate_and_display_metrics()">Calculate Metrics</button>
+						<button class="btn btn-primary w-100" onclick="display_metrics()">Calculate Metrics</button>
 					</div>
 				</div>
 			</div>
 		</div>
-
-		<!-- Metrics Cards -->
-		<div class="row g-3 d-none metrics">
-			<div class="col-md-3">
-				<div class="card shadow-sm text-center p-3">
-					<h5>Total instances de dette</h5>
-					<h3>1,248</h3>
-				</div>
-			</div>
-			<div class="col-md-3">
-				<div class="card shadow-sm text-center p-3">
-					<h5>Fichiers à risque élevé</h5>
-					<h3>37</h3>
-				</div>
-			</div>
-			<div class="col-md-3">
-				<div class="card shadow-sm text-center p-3">
-					<h5>Bogues liés</h5>
-					<h3>112</h3>
-				</div>
-			</div>
-			<div class="col-md-3">
-				<div class="card shadow-sm text-center p-3">
-					<h5>Coût de maintenance (tendance)</h5>
-					<h3 class="text-success">+18%</h3>
-				</div>
-			</div>
-		</div>
-
+	</div>
 
 	<div class="container my-4">
 		<div class="card shadow-sm">
@@ -101,7 +76,7 @@
 					<table class="table table-hover table-sm align-middle" id="metrics-container">
 						<thead>
 							<tr id="metrics-container-header">
-								<th>FILENAME</th>
+								<th>Nom de fichier</th>
 								<th class="text-center d-none d-lg-table-cell">DEBT</th>
 								<th class="text-center d-none d-lg-table-cell">BUGS</th>
 								<th class="text-center">COMPLEXITY</th>
@@ -109,27 +84,31 @@
 							</tr>
 						</thead>
 						<tbody>
-							<!-- Template row (hidden) -->
-							<tr id="metric-template" class="d-none">
-								<td class="text-wrap">
-									<div class="fw-semibold file-name text-break">FILENAME</div>
-									<div class="text-muted function-info text-break">Function: FUNCTION_NAME (Line: LINE_NUMBER)</div>
-								</td>
-								<td class="text-center debt-value d-none d-lg-table-cell">DEBT</td>
-								<td class="text-center bugs-value d-none d-lg-table-cell">BUGS</td>
-								<td class="text-center complexity-value">COMPLEXITY</td>
-								<td class="d-none d-md-table-cell" style="width: 120px;">
-									<div class="progress" style="height: 8px;">
-										<div class="progress-bar bg-primary" role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
-									</div>
-								</td>
-							</tr>
+
 						</tbody>
 					</table>
 				</div>
 			</div>
 		</div>
 	</div>
+
+	<!-- Technical Debt Metrics Table Section -->
+	<div class="container my-4">
+		<div class="card shadow-sm">
+			<div class="card-body">
+				<h3 class="card-title fw-bold mb-4">Technical Debt Metrics</h3>
+				<div class="table-responsive">
+					<table 
+						id="metrics-table"
+						data-toggle="table"
+						data-detail-view="true"
+						data-detail-formatter="detailFormatter">
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+
 {% else %}
 	<div class="container my-4">
 		<div class="text-center mb-4">
@@ -141,10 +120,6 @@
 		</div>
 	</div>
 {% endif %}
-
-<script>
-	const repository_id = "{{ repository.id }}";
-</script>
 
 <script src="{{ url_for('static', filename='/js/dashboard.js') }}" type="text/javascript"></script>
 {% endblock %}
