@@ -2,6 +2,8 @@
 const branch_select = document.getElementById("branch_select");
 const period_select = document.getElementById("period_select");
 const commit_select = document.getElementById("commit_select");
+
+const include_identifiable_identities_label = document.getElementById("include_identifiable_identities_label");
 const include_identifiable_identities_input = document.getElementById("include_identifiable_identities_input");
 const include_complexity_input = document.getElementById("include_complexity_input");
 
@@ -21,13 +23,27 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // refresh the list of commits when the user selects a new branch
-    branch_select.addEventListener('change', () => {
+    branch_select.addEventListener("change", () => {
         const branch_id = get_selected_branch_id();
         get_commits_by_branch_id(branch_id).then((commits) => {
             set_commit_select_options(commits);
         });
     });
 
+    // init the identifiable identities list to show the users the ones he can select/deselect
+    
+    const identifiable_identities_list_tippy = tippy(include_identifiable_identities_label, {
+        allowHTML: true,
+        arrow: false,
+        interactive: true,
+        placement: "bottom",
+        content: `
+            
+        `,
+    });
+    include_identifiable_identities_label.addEventListener("click", () => {
+        identifiable_identities_list_tippy.show();
+    });
 });
 
 function set_commit_select_options(commits) {

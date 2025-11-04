@@ -39,10 +39,10 @@ def calculate_identifiable_identities_analysis(file, code):
     identifiable_entity_analysis = []
 
     # get all the identifiable identities to search for
-    identities = identifiable_entity_service.get_all_identifiable_identities()
+    identities = identifiable_entity_service.get_all_identifiable_entities()
     for identity in identities:
         # search the file for the identity (e.g. <TODO>, <FIXME>)
-        found_identities = identifiable_entity_service.search_identifable_identity(code, identity.name)
+        found_identities = identifiable_entity_service.search_identifable_entity(code, identity.name)
 
         # link the found identity to the file it was found in
         for line in found_identities:

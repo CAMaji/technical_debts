@@ -29,9 +29,10 @@ db.init_app(app)
 import services.repository_service as repository_service
 import services.branch_service as branch_service
 
+import controllers.identifiable_entity_controller
+import controllers.commit_controller
 import controllers.metrics_controller
 import controllers.repository_controller
-import controllers.commit_controller
 
 
 @app.route('/', methods=['GET'])
@@ -61,7 +62,7 @@ def dashboard(owner, name):
         print(str(e))
         return render_template('dashboard.html', repository=None, branches=None)
 
-import services.identifiable_entity_service as identifiable_entity_service
+# import services.identifiable_entity_service as identifiable_entity_service
 # with app.app_context():
 #     print('dropping...')
 #     db.reflect()
