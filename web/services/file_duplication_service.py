@@ -15,3 +15,5 @@ def file_duplication_create(file_id : str, duplication_id : int):
 
     return file_duplication
 
+def file_duplication_get_all(): 
+    return db.session.query(FileDuplication)

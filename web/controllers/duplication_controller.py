@@ -92,5 +92,13 @@ def duplication_search():
     #   b. calculer le nombre total d'instances de duplications dans le commit
     # 2. calculer la moyenne de duplications pour la période donnée
 
+    file_duplications = SFDS.file_duplication_get_all()
+    for fd in file_duplications:
+        print(fd)
+
+    duplications = SDS.duplication_get_all()
+    for d in duplications: 
+        print(d)
+
     return
 

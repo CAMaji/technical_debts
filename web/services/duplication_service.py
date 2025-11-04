@@ -13,3 +13,6 @@ def duplication_create(text : str):
     db.session.commit()
 
     return duplication
+
+def duplication_get_all(): 
+    return db.session.query(Duplication)
