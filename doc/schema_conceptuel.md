@@ -1,32 +1,33 @@
 ## Schéma conceptuel
 
 ```plantuml
-class Repository {
+
+object Repository {
 	gitLink : string
 }
-class Branch {
+object Branch {
 	name: string
 }
-class Commit {
+object Commit {
 	sha : string
     date : date
     author : string
     message : string
 }
-class "File" {
+object "File" {
 	path : string
 }
-class Function {
+object Function {
     signature : string
     linePosition : number
 }
-class Complexity {
+object Complexity {
 	value : number
 }
-class IdentifiableEntity {
+object IdentifiableEntity {
 	entity : string
 }
-class Duplication {
+object Duplication {
     text : string
 }
 
@@ -34,8 +35,8 @@ Repository "1" -down-> "*" Commit : "saves"
 Commit "1..*" -right-> "1..*" Branch : "describes"
 Commit "1" -down-> "1..*" "File" : "makes version of"
 "File" "1" -right-> "*" Function : "contains"
-"File" "*" -down-> "*" IdentifiableEntity : contains
+"File" "1..*" -down-> "*" IdentifiableEntity : contains
 Complexity "1" -up-> "1" Function : "mesures"
-Duplication "*" -right-> "*" File
+"File" "1..*" -left-> "*" Duplication : "contains"
 
 ```
