@@ -64,7 +64,7 @@ def calculate_identifiable_identities_analysis(file, code):
 
 
 # mettre dans metric services
-def calculate_duplication_analysis(repo: Repository, branch : Branch, commit : Commit): 
+def calculate_duplication_analysis(repo: Repository, commit : Commit): 
     # prérequis : 
     # 1. avoir cloné un repo localement
     # 2. avoir inséré les infos de fichiers dans la DB
@@ -77,8 +77,9 @@ def calculate_duplication_analysis(repo: Repository, branch : Branch, commit : C
     #    dans les objets modèles
     # 3. Inserer les objets modèles dans la DB
 
-    github_service.fetch_files(repo.owner, repo.name, branch.name, commit.sha)
+    github_service.fetch_files(repo.owner, repo.name, commit.sha)
     repo_path : str = github_service.repo_dir(repo.owner, repo.name)
+    print(repo_path)
 
     # https://pmd.github.io/pmd/pmd_userdocs_cpd_report_formats.html
     # Note: PMD-CDP supporte plusieurs langages, mais pour faire simple
@@ -96,10 +97,12 @@ def calculate_duplication_analysis(repo: Repository, branch : Branch, commit : C
 
     for xml_node in xml_root:
         # tag <duplication>
+        print(xml_node.tag)
         if xml_node.tag == pmd_duplication_tag: 
             list_of_file : list[File] = []
 
             for xml_sub_node in xml_node: 
+                print(xml_sub_node.tag)
                 # tag <file> qui indique le fichier trouvé par PMD dans le 
                 # dossier spécifié.
                 if xml_sub_node.tag == pmd_file_tag : 

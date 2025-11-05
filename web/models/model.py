@@ -149,4 +149,4 @@ class FileDuplication(ModelMixin, db.Model):
 class Duplication(ModelMixin, db.Model): 
     __tablename__ = "duplication"
     id = Column(String(36), primary_key = True)
-    text = Column(String(10000))
+    text = Column(Text)

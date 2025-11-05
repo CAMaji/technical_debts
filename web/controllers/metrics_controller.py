@@ -23,7 +23,9 @@ def display_metrics_by_commit_id():
     include_identifiable_identities = data.get('include_identifiable_identities')
     include_code_duplication = data.get('include_code_duplication')
 
-    branch = branch_service.get_branch_by_branch_id(branch_id)
+    print("--------------------------------------------------")
+
+    #branch = branch_service.get_branch_by_branch_id(branch_id)
     commit = commit_service.get_commit_by_commit_id(commit_id)
     repo = repository_service.get_repository_by_repository_id(repository_id)
 
@@ -45,8 +47,6 @@ def display_metrics_by_commit_id():
             # calculate the various metrics here
             cyclomatic_complexity_analysis = metrics_service.calculate_cyclomatic_complexity_analysis(file, code)
             identifiable_identities_analysis = metrics_service.calculate_identifiable_identities_analysis(file, code)
-            metrics_service.calculate_duplication_analysis(repo, branch, commit)
-            code_duplication_analysis = file_duplication_service.file_duplication_get_json_from_commit(commit)
     else:
         for file in files:
             cyclomatic_complexity_analysis.append(complexity_service.get_complexity_by_file_id_verbose(file.id))
@@ -72,6 +72,30 @@ def display_metrics_by_commit_id():
         metrics["identifiable_identities_analysis"] = identifiable_identities_analysis
 
     if include_code_duplication: 
+        # Le lancement de l'analyse avec PMD doit absolument se faire indépendament des autres métriques qu'on 
+        # calcule. PMD trouve un bout de code dupliqué et l'associe avec chaque fichier qui le contient. 
+        # De plus, PMD retourne un XML qui doit être parsé. 
+        
+        # Lance PMD et crée les rangées dans la DB
+        metrics_service.calculate_duplication_analysis(repo, commit)
+        
+        # Lance la recherche de duplication pour un commit.
+        code_duplication_analysis = file_duplication_service.file_duplication_get_json_from_commit(commit)
+        
+        # file_duplication_get_json_from_commit retourne un JSON qui contient les champs suivants: 
+        #
+        # {
+        #    "file_duplications": [
+        #       {
+        #           "filename": "filename.py",
+        #           "count": 3,
+        #           "duplication_ids": ["id1", ...]
+        #       },
+        #       ...
+        #    ],
+        #    "unique_duplication_ids" = ["id1", ...]
+        # }
+        #
         metrics["duplicated_code_analysis"] = code_duplication_analysis
 
     return jsonify(metrics)

@@ -15,7 +15,7 @@ def file_duplication_create(file_id, duplication_id):
     db.session.add(file_duplication)
     db.session.commit()
 
-    return file_duplication
+    return file_duplication 
 
 # Obtains all file-duplication objects for a given file id
 def file_duplication_get_from_file(file_id):
@@ -29,7 +29,7 @@ def file_duplication_to_json(file : File, file_duplications : list[FileDuplicati
 
     return {
         "filename": file.name,
-        "count": file_duplications.count(),
+        "count": len(file_duplications),
         "duplication_ids": json.dumps(duplication_id_list)
     }
 
@@ -37,7 +37,7 @@ def file_duplication_to_json(file : File, file_duplications : list[FileDuplicati
 def file_duplication_get_json_from_commit(commit : Commit): 
     json_list = []
     files : list[File] = file_service.get_files_by_commit_id(commit.id)
-    duplications : set = []
+    duplications : set = set()
 
     for f in files: 
         file_duplications : list[FileDuplication] = file_duplication_get_from_file(f.id)
