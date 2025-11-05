@@ -62,13 +62,11 @@ def dashboard(owner, name):
         return render_template('dashboard.html', repository=None, branches=None)
 
 import services.identifiable_entity_service as identifiable_entity_service
-# with app.app_context():
-#     print('dropping...')
-#     db.reflect()
-#     db.drop_all()
-#     db.create_all()
-
-    # identifiable_entity_service.create_identifiable_entity("todo")
-    # identifiable_entity_service.create_identifiable_entity("fixme")
-
-#     db.session.commit()
+#with app.app_context():
+#    print('dropping...')
+#    db.reflect()
+#    db.drop_all()
+#    db.create_all()
+#    identifiable_entity_service.create_identifiable_entity("todo")
+#    identifiable_entity_service.create_identifiable_entity("fixme")
+#    db.session.commit()
