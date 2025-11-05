@@ -71,4 +71,7 @@ def display_metrics_by_commit_id():
     if include_identifiable_identities:
         metrics["identifiable_identities_analysis"] = identifiable_identities_analysis
 
+    if include_code_duplication: 
+        metrics["duplicated_code_analysis"] = code_duplication_analysis
+
     return jsonify(metrics)
