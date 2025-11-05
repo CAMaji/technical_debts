@@ -31,7 +31,7 @@ def create_file_entity(identifiable_entity_id, file_id, line_position):
     return file_entity
 
 
-def get_all_identifiable_identities():
+def get_all_identifiable_entities():
     return IdentifiableEntity.query.all()
 
 
@@ -62,19 +62,19 @@ def get_file_entity_by_name_and_file(name: str, file_id: str, line_position: int
     return FileIdentifiableIdentity.query.filter_by(name=name, file_id=file_id, line_position=line_position).first()
 
 
-def search_identifable_identity(code, identifiable_identity):
+def search_identifable_entity(code, identifiable_entity):
     """
     Search for a string sequence in file content.
     
     Args:
         code: File content as string (from Lizard or other source)
-        identifiable_identity: String sequence to search for
+        identifiable_entity: String sequence to search for
     
     Returns:
         List of objects with line numbers where the string was found
     """
 
-    pattern = re.compile(rf'(?im)\b(?P<tag>{re.escape(identifiable_identity)})\b\s*:?\s*(?P<rest>.*)')
+    pattern = re.compile(rf'(?im)\b(?P<tag>{re.escape(identifiable_entity)})\b\s*:?\s*(?P<rest>.*)')
     findings = []
     for i, line in enumerate(code.splitlines(), start=1):
 
