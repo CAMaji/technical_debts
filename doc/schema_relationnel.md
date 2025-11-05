@@ -1,7 +1,5 @@
 ## Schéma relationnel (PostgreSQL)
 
-
-
 ```plantuml
 
 !define primary_key(x) <b><color:#b8861b><&key></color> x</b>
