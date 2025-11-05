@@ -18,6 +18,98 @@
 4. Generate the token
 5. Copy the token to the .env file
 
+## Component Diagram
+
+```mermaid
+flowchart LR
+	%% Clients
+	Browser[Browser / User]
+
+	%% Docker Compose Services
+	subgraph Docker[Docker Compose]
+		direction LR
+
+		subgraph Nginx[nginx container]
+			direction TB
+			RP[Nginx Reverse Proxy]
+			StaticVol[(Mounted static volume)]
+		end
+
+		subgraph Web[web container]
+			direction TB
+			Gunicorn[Gunicorn + Flask app]
+
+			subgraph Controllers
+				direction TB
+				repoCtrl[repository_controller]
+				metricsCtrl[metrics_controller]
+				commitCtrl[commit_controller]
+				identCtrl[identifiable_entity_controller]
+			end
+
+			subgraph Services
+				direction TB
+				repoSvc[repository_service]
+				branchSvc[branch_service]
+				commitSvc[commit_service]
+				metricsSvc[metrics_service]
+				complexitySvc[complexity_service]
+				duplicateSvc[duplicate_code_service]
+				fileSvc[file_service]
+				funcSvc[function_service]
+				identSvc[identifiable_entity_service]
+				ghSvc[github_service]
+			end
+
+			subgraph Models[SQLAlchemy models]
+				direction TB
+				ormModels[(tables & ORM)]
+			end
+		end
+
+		subgraph DB[postgres container]
+			direction TB
+			Postgres[(PostgreSQL)]
+		end
+	end
+
+	%% External dependency
+	GitHub[(GitHub Repos/API)]
+
+	%% Flows
+	Browser -->|HTTP| RP
+	RP -->|proxy_pass| Gunicorn
+	RP -->|/static| StaticVol
+
+	Gunicorn --> repoCtrl
+	Gunicorn --> metricsCtrl
+	Gunicorn --> commitCtrl
+	Gunicorn --> identCtrl
+
+	repoCtrl --> repoSvc
+	metricsCtrl --> metricsSvc
+	commitCtrl --> commitSvc
+	identCtrl --> identSvc
+
+	repoSvc --> ormModels
+	branchSvc --> ormModels
+	commitSvc --> ormModels
+	metricsSvc --> ormModels
+	complexitySvc --> ormModels
+	duplicateSvc --> ormModels
+	fileSvc --> ormModels
+	funcSvc --> ormModels
+	identSvc --> ormModels
+
+	ormModels -->|SQL| Postgres
+	Gunicorn -->|SQLAlchemy| Postgres
+
+	ghSvc -->|clone/fetch| GitHub
+	commitSvc --> ghSvc
+	branchSvc --> ghSvc
+	repoSvc --> ghSvc
+```
+
 ## Class Diagram
 
 ```mermaid
