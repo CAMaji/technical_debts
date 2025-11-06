@@ -18,7 +18,7 @@ def create_identifiable_entity(name):
 
 
 def create_file_entity(identifiable_entity_id, file_id, line_position):
-    file_entity = FileIdentifiableIdentity(
+    file_entity = FileIdentifiableEntity(
         id = str(uuid.uuid4()),
         identifiable_entity_id = identifiable_entity_id,
         file_id = file_id,
@@ -41,7 +41,7 @@ def get_identifiable_entity_by_name(name):
 
 def get_identifiable_entity_by_file_id_verbose(file_id):
     verbose = []
-    file_identities = FileIdentifiableIdentity.query.filter_by(file_id=file_id).all()
+    file_identities = FileIdentifiableEntity.query.filter_by(file_id=file_id).all()
     for file_identity in file_identities:
         file = File.query.get(file_identity.file_id)
         identity = IdentifiableEntity.query.get(file_identity.identifiable_entity_id)
@@ -55,11 +55,11 @@ def get_identifiable_entity_by_file_id_verbose(file_id):
 
 
 def get_file_entity_by_name(name):
-    return FileIdentifiableIdentity.query.filter_by(name=name).first()
+    return FileIdentifiableEntity.query.filter_by(name=name).first()
 
 
 def get_file_entity_by_name_and_file(name: str, file_id: str, line_position: int):
-    return FileIdentifiableIdentity.query.filter_by(name=name, file_id=file_id, line_position=line_position).first()
+    return FileIdentifiableEntity.query.filter_by(name=name, file_id=file_id, line_position=line_position).first()
 
 
 def search_identifable_entity(code, identifiable_entity):

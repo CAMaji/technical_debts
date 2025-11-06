@@ -36,7 +36,6 @@ def display_metrics_by_commit_id():
 
         # store the files in db
         for filename, code in remote_files:
-            print(filename)
             file = file_service.create_file(filename, commit.id)
             
             # calculate the various metrics here
@@ -67,3 +66,10 @@ def display_metrics_by_commit_id():
         metrics["identifiable_identities_analysis"] = identifiable_identities_analysis
 
     return jsonify(metrics)
+
+
+@app.route('/api/display_debt_evolution', methods=['POST'])
+def display_debt_evolution():
+    data = request.get_json()
+
+    return

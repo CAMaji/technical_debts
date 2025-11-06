@@ -1,6 +1,8 @@
 import os
 import shutil
 import subprocess
+import requests
+
 from datetime import datetime, timezone
 
 from git import Repo
@@ -316,3 +318,58 @@ def get_latest_commits(owner, name, branch_name):
         }
         for c in commits
     ]
+
+
+def get_commits_in_date_range(owner, name, branch_name, start_date, end_date):
+    """
+    Get all commits from a specific GitHub branch between two dates (no authentication).
+
+    Args:
+        owner (str): Repository owner (e.g. "torvalds")
+        name (str): Repository name (e.g. "linux")
+        branch_name (str): Branch name (e.g. "main")
+        start_date (str): Start date "dd/mm/YYYY HH:MM"
+        end_date (str): End date "dd/mm/YYYY HH:MM"
+
+    Returns:
+        list[dict]: List of commits with sha, message, author, and date.
+    """
+    # Convert to ISO 8601 for GitHub API
+    start_dt = datetime.strptime(start_date, "%d/%m/%Y %H:%M").isoformat() + "Z"
+    end_dt = datetime.strptime(end_date, "%d/%m/%Y %H:%M").isoformat() + "Z"
+
+    url = f"https://api.github.com/repos/{owner}/{name}/commits"
+    params = {
+        "sha": branch_name,
+        "since": start_dt,
+        "until": end_dt,
+        "per_page": 100,
+    }
+
+    all_commits = []
+    page = 1
+
+    while True:
+        params["page"] = page
+        response = requests.get(url, params=params)
+
+        if response.status_code != 200:
+            raise Exception(f"GitHub API error: {response.status_code} {response.text}")
+
+        commits = response.json()
+        if not commits:
+            break
+
+        for c in commits:
+            commit_data = c["commit"]
+            all_commits.append({
+                "sha": c["sha"],
+                "author": commit_data["author"]["name"] if commit_data.get("author") else None,
+                "date": commit_data["author"]["date"] if commit_data.get("author") else None,
+                "message": commit_data["message"],
+                "url": c["html_url"],
+            })
+
+        page += 1
+
+    return all_commits

@@ -90,13 +90,32 @@ class IdentifiableEntity(ModelMixin, db.Model):
     name = Column(Text, nullable=False)
 
 
-class FileIdentifiableIdentity(ModelMixin, db.Model):
-    __tablename__ = "file_identifiable_identity"
+class FileIdentifiableEntity(ModelMixin, db.Model):
+    __tablename__ = "file_identifiable_entity"
 
     id = Column(String(36), primary_key=True)
     file_id = Column(String(36), ForeignKey("file.id"))
     identifiable_entity_id = Column(String(36), ForeignKey("identifiable_entity.id"))
     line_position = Column(Integer)
+
+
+class IdentifiableEntityCount(ModelMixin, db.Model):
+    __tablename__ = "identifiable_entity_count"
+    id = Column(String(36), primary_key=True)
+    count = Column(Integer)
+
+    identifiable_entity_id = Column(String(36), ForeignKey("identifiable_entity.id"))
+    commit_id = Column(String(36), ForeignKey("commit.id"))
+
+
+class ComplexityCount(ModelMixin, db.Model):
+    __tablename__ = "complexity_count"
+    id = Column(String(36), primary_key=True)
+    total_complexity = Column(Integer)
+    function_count = Column(Integer)
+    average_complexity = Column(Float)
+
+    commit_id = Column(String(36), ForeignKey("commit.id"))
 
 
 class Complexity(ModelMixin, db.Model):
@@ -138,3 +157,4 @@ class FileTestCoverage(ModelMixin, db.Model):
     value = Column(Integer)
 
     file_id = Column(String(36), ForeignKey("file.id"))
+
