@@ -11,6 +11,12 @@
 				Showing dashboard for 
 				<strong>{{ repository.owner }}</strong>/<strong>{{ repository.name }}</strong>
 			</p>
+			<div class="mt-3">
+				<a href="{{ url_for('debt_evolution', owner=repository.owner, name=repository.name) }}" 
+				   class="btn btn-outline-primary">
+					<i class="bi bi-graph-up"></i> View Debt Evolution
+				</a>
+			</div>
 		</div>
 
 		<!-- Filters Section -->
@@ -109,6 +115,7 @@
 		</div>
 	</div>
 
+	<!-- Debt evolution diagram -->
 {% else %}
 	<div class="container my-4">
 		<div class="text-center mb-4">
