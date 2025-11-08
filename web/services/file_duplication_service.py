@@ -5,9 +5,11 @@ import services.file_service as file_service
 import json
 
 # Creates and commits a FileDuplication row.
-def file_duplication_create(file_id, duplication_id): 
+def file_duplication_create(file_id, duplication_id, start_line, end_line): 
     file_duplication = FileDuplication(
         id = str(uuid.uuid4()),
+        start_line=start_line,
+        end_line=end_line,
         file_id = file_id,
         duplication_id = duplication_id
     )

@@ -69,8 +69,17 @@ def calculate_identifiable_identities_analysis(file, code):
     return identifiable_entity_analysis
 
 
-# mettre dans metric services
 def calculate_duplication_analysis(repo: Repository, commit : Commit): 
+    class FileObject: 
+        path : str
+        start_line : int
+        end_line : int
+
+        def __init__(self):
+            self.path = ""
+            self.start_line = 0
+            self.end_line = 0
+
     # prérequis : 
     # 1. avoir cloné un repo localement
     # 2. avoir inséré les infos de fichiers dans la DB
@@ -83,7 +92,7 @@ def calculate_duplication_analysis(repo: Repository, commit : Commit):
     #    dans les objets modèles
     # 3. Inserer les objets modèles dans la DB
 
-    github_service.fetch_files(repo.owner, repo.name, commit.sha)
+    #github_service.fetch_files(repo.owner, repo.name, commit.sha)
     repo_path : str = github_service.repo_dir(repo.owner, repo.name)
     print(repo_path)
 
@@ -105,7 +114,7 @@ def calculate_duplication_analysis(repo: Repository, commit : Commit):
         # tag <duplication>
         print(xml_node.tag)
         if xml_node.tag == pmd_duplication_tag: 
-            list_of_file : list[File] = []
+            list_of_file : list[FileObject] = []
 
             for xml_sub_node in xml_node: 
                 print(xml_sub_node.tag)
@@ -123,19 +132,22 @@ def calculate_duplication_analysis(repo: Repository, commit : Commit):
                     # - line
                     # - path
 
-                    filename = xml_sub_node.get("path")
-                    file : File = file_service.get_file_by_filename_and_commit(filename, commit.id)
-                    if not file: 
-                        file = file_service.create_file(filename, commit.id)
-                    list_of_file.append(file)
-                
+                    fo = FileObject()
+                    fo.path = xml_sub_node.get("path")
+                    fo.start_line = xml_sub_node.get("line")
+                    fo.end_line = xml_sub_node.get("endline")
+                    list_of_file.append(fo)
+                    
                 # tag <codefragment> qui contient le texte dupliqué. Si aucune
                 # duplication est trouvée, le XML retourné par PMD n'aura pas de 
                 # <codefragment>. 
                 elif xml_sub_node.tag == pmd_codefragment_tag:
                     instance_duplication : Duplication = duplication_service.duplication_create(xml_sub_node.text)
-                    for file in list_of_file:
-                        file_duplication_service.file_duplication_create(file.id, instance_duplication.id)
+                    for fo in list_of_file:
+                        file = file_service.get_file_by_filename_and_commit(fo.path, commit.id)
+                        if not file:
+                            file = file_service.create_file(fo.path, commit.id)
+                        file_duplication_service.file_duplication_create(file.id, instance_duplication.id, fo.start_line, fo.end_line)
     return
 
 # get all the commits in the specified range of date
@@ -182,7 +194,7 @@ def ensure_metric_snapshots(repo_id, commit_id):
 
     try:
         # the snapshot has not yet been calculated, so we calculate it
-        remote_files = github_service.fetch_files(repo.owner, repo.name, commit.sha)
+        remote_files = github_service.fetch_files(repo.owner, repo.name, commit.sha) 
 
         # Initialize counters for each identifiable entity type
         identifiable_entities = identifiable_entity_service.get_all_identifiable_entities()

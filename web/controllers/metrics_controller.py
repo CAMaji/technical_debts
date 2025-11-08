@@ -70,6 +70,7 @@ def display_metrics_by_commit_id():
     if include_identifiable_identities:
         metrics["identifiable_identities_analysis"] = identifiable_identities_analysis
 
+    include_code_duplication = True
     if include_code_duplication: 
         # Le lancement de l'analyse avec PMD doit absolument se faire indépendament des autres métriques qu'on 
         # calcule. PMD trouve un bout de code dupliqué et l'associe avec chaque fichier qui le contient. 
@@ -95,6 +96,7 @@ def display_metrics_by_commit_id():
         #    "unique_duplication_ids" = ["id1", ...]
         # }
         #
+        print(code_duplication_analysis)
         metrics["duplicated_code_analysis"] = code_duplication_analysis
 
     return jsonify(metrics)

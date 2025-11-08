@@ -161,6 +161,8 @@ class FileTestCoverage(ModelMixin, db.Model):
 class FileDuplication(ModelMixin, db.Model): 
     __tablename__ = "file_duplication"
     id = Column(String(36), primary_key = True)
+    start_line = Column(Integer)
+    end_line = Column(Integer)
     
     duplication_id = Column(String(36), ForeignKey("duplication.id"))
     file_id = Column(String(36), ForeignKey("file.id"))
