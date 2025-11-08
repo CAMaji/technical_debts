@@ -1,6 +1,4 @@
-## Schéma relationnel (PostgreSQL)
-
-```plantuml
+@startuml Schéma relationnel
 
 !define primary_key(x) <b><color:#b8861b><&key></color> x</b>
 !define foreign_key(x) <color:#aaaaaa><&key></color> x
@@ -85,6 +83,9 @@ table(file_duplication) {
     ---
     foreign_key(file_id) : String(36) fkey
     foreign_key(duplication_id) : String(36) fkey
+    ---
+    column(start_line) : Integer
+    column(end_line) : Integer
 }
 
 table(duplication) {
@@ -103,8 +104,5 @@ file_duplication "*" -down-> "1" duplication
 file_identifiable_entity "*" -up-> "1" file
 file_identifiable_entity "*" -down-> "1" identifiable_entity
 
-```
----
-
-#### Référence pour la base du style: 
-Diakogiannis, A. D. (2024, March 8). Database modeling tutorial using PlantUML. JEE.gr. https://jee.gr/database-modeling-tutorial-using-plantuml/
+' Référence pour la base du style: 
+' Diakogiannis, A. D. (2024, March 8). Database modeling tutorial using PlantUML. JEE.gr. https://jee.gr/database-modeling-tutorial-using-plantuml/

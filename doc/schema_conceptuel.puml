@@ -1,6 +1,4 @@
-## Schéma conceptuel
-
-```plantuml
+@startuml Schéma conceptuel
 
 object Repository {
 	gitLink : string
@@ -14,7 +12,7 @@ object Commit {
     author : string
     message : string
 }
-object "File" {
+object File {
 	path : string
 }
 object Function {
@@ -33,10 +31,10 @@ object Duplication {
 
 Repository "1" -down-> "*" Commit : "saves"
 Commit "1..*" -right-> "1..*" Branch : "describes"
-Commit "1" -down-> "1..*" "File" : "makes version of"
+Commit "1" -down-> "1..*" File : "makes version of"
 "File" "1" -right-> "*" Function : "contains"
 "File" "1..*" -down-> "*" IdentifiableEntity : contains
 Complexity "1" -up-> "1" Function : "mesures"
 "File" "1..*" -left-> "*" Duplication : "contains"
 
-```
+@enduml
