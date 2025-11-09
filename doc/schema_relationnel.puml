@@ -38,6 +38,25 @@ table(commit) {
     column(message) : Text nullable
 }
 
+table(complexity_count) {
+    primary_key(id) : String(36) pkey
+    ---
+    foreign_key(commit_id) : String(36) fkey
+    --- 
+    column(total_complexity) : Integer
+    column(function_count) : Integer
+    column(average_complexity) : Float
+}
+
+table(identifiable_entity_count) {
+    primary_key(id) : String(36) pkey
+    ---
+    foreign_key(commit_id) : String(36) fkey
+    foreign_key(identifiable_entity_id) : String(36) fkey
+    ---
+    column(count) : Integer
+}
+
 table(file) {
     primary_key(id) : String(36) pkey
     ---
@@ -60,6 +79,14 @@ table(complexity) {
     ---
     foreign_key(function_id) : String(36) fkey
     ---
+    column(value) : Integer
+}
+
+table(size) {
+    primary_key(id) : String(36) pkey
+    ---
+    foreign_key(function_id) : String(36) fkey
+    --- 
     column(value) : Integer
 }
 
@@ -91,13 +118,17 @@ table(file_duplication) {
 table(duplication) {
     primary_key(id) : String(36) pkey
     ---
-    column(text) : String(10000)
+    column(text) : Text
 }
 
 branch "1..*" -up-> "1" repository
 commit "1..*" -up-> "1" branch
+complexity_count "1" -right-> "1" commit : space
+identifiable_entity_count "1" -right-> "1" commit
+identifiable_entity_count "1" -down-> "1" identifiable_entity
 file "1..*" -up-> "1" commit
 function "0..*" -left-> "1" file : space
+size "1" -up-> "1" function
 complexity "1" -up-> "1" function
 file_duplication "*" -up-> "1" file
 file_duplication "*" -down-> "1" duplication
