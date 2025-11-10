@@ -132,8 +132,10 @@ def calculate_duplication_analysis(repo: Repository, commit : Commit):
                     # - line
                     # - path
 
+
                     fo = FileObject()
                     fo.path = xml_sub_node.get("path")
+                    fo.path = fo.path.removeprefix(repo_path + "/")
                     fo.start_line = xml_sub_node.get("line")
                     fo.end_line = xml_sub_node.get("endline")
                     list_of_file.append(fo)

@@ -124,8 +124,8 @@ table(duplication) {
 branch "1..*" -up-> "1" repository
 commit "1..*" -up-> "1" branch
 complexity_count "1" -right-> "1" commit : space
-identifiable_entity_count "1" -right-> "1" commit
-identifiable_entity_count "1" -down-> "1" identifiable_entity
+identifiable_entity_count "*" -right-> "1" commit
+identifiable_entity_count "*" -down-> "1" identifiable_entity
 file "1..*" -up-> "1" commit
 function "0..*" -left-> "1" file : space
 size "1" -up-> "1" function

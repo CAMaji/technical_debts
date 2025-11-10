@@ -42,13 +42,13 @@ services:
       POSTGRES_DB: postgres
     expose:
       - "5433"
-    # hostname: postgres
+    hostname: postgres
 
-  #adminer:
-  #  image: adminer
-  #  restart: always
-  #  ports:
-  #    - 8080:8080
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
 
 volumes:
   db-data:
