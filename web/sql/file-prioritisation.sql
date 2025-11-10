@@ -11,7 +11,7 @@ with m as ( -- on 'précalcule' une table avec le nombre de todo et le nombre de
         join commit on commit.id = file.commit_id
         left join file_identifiable_entity on file_identifiable_entity.file_id = file.id
         left join file_duplication on file_duplication.file_id = file.id
-        where file.commit_id like '0384e614-1d9a-4c97-89f9-6f6b821225ca' -- un ID de commit en exemple
+        where file.commit_id like '@' -- on remplace le '@' par un ID de commit
         group by file.id
     ) r
     left join (

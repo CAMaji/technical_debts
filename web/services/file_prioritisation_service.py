@@ -1,25 +1,31 @@
 from models.model import *
 import json
 
-# contains the sql query that calculates the priority of a file
+# contains the template sql query that calculates the priority of a file
 # for a given commit. 
-prioritisation_query = None
+prioritisation_query = ""
 
 def get_file_prioritisation_for_commit(commit : Commit): 
-    if prioritisation_query == None:
-        with open("./web/sql/file-prioritisation.sql") as f:
+    global prioritisation_query
+    if prioritisation_query == "":
+        with open("/app/sql/file-prioritisation.sql") as f:
             prioritisation_query = f.read()
-
+    
+    # copies the query and replace the wildcard by the commit id
+    commit_specific_query = prioritisation_query.replace("@", commit.id)
+    
     db = get_db()
-    result = db.session.execute(prioritisation_query)
+    result = db.session.execute(commit_specific_query)
     json_list = []
 
     # source: https://stackoverflow.com/a/22084672 
     for r in result: 
+        score : float = float(r['score'])
+        filename : str = str(r['file_name'])
         json_list.append({
-            "filename": r['file_name'],
-            "score": r['score']
+            "filename": filename,
+            "score": score 
         })
-    
+     
     return json.dumps(json_list)
 

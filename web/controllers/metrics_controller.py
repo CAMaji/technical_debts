@@ -11,6 +11,7 @@ import services.identifiable_entity_service as identifiable_entity_service
 import services.metrics_service as metrics_service
 import services.branch_service as branch_service
 import services.file_duplication_service as file_duplication_service
+import services.file_prioritisation_service as file_priorisation_service
 
 
 @app.route('/api/display_metrics_by_commit_id', methods=['POST'])
@@ -81,21 +82,11 @@ def display_metrics_by_commit_id():
         
         # Lance la recherche de duplication pour un commit.
         code_duplication_analysis = file_duplication_service.file_duplication_get_json_from_commit(commit)
-        
-        # file_duplication_get_json_from_commit retourne un JSON qui contient les champs suivants: 
-        #
-        # {
-        #    "file_duplications": [
-        #       {
-        #           "filename": "filename.py",
-        #           "count": 3,
-        #           "duplication_ids": ["id1", ...]
-        #       },
-        #       ...
-        #    ],
-        #    "unique_duplication_ids" = ["id1", ...]
-        # }
-        #
+
+        # test priorisation
+        priorisation = file_priorisation_service.get_file_prioritisation_for_commit(commit)
+        print(priorisation)
+
         print(code_duplication_analysis)
         metrics["duplicated_code_analysis"] = code_duplication_analysis
 

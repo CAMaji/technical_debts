@@ -37,6 +37,21 @@ def file_duplication_to_json(file : File, file_duplications : list[FileDuplicati
 
 # Obtains a json object of duplications for each files in a commit
 def file_duplication_get_json_from_commit(commit : Commit): 
+    # retourne un JSON qui contient les champs suivants: 
+    #
+    # {
+    #    "file_duplications": [
+    #       {
+    #           "filename": "filename.py",
+    #           "count": 3,
+    #           "duplication_ids": ["id1", ...]
+    #       },
+    #       ...
+    #    ],
+    #    "unique_duplication_ids" = ["id1", ...]
+    # }
+    #
+
     json_list = []
     files : list[File] = file_service.get_files_by_commit_id(commit.id)
     duplications : set = set()
