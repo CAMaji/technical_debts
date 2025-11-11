@@ -66,6 +66,7 @@ def dashboard(owner, name):
 
 @app.route('/debt_evolution/<owner>/<name>/', methods=['GET'])
 def debt_evolution(owner, name):
+    
     """
         Return the debt evolution page for a repository with Plotly visualization.
     """
@@ -103,6 +104,8 @@ def debt_evolution(owner, name):
                 end_date
             )
 
+        print("Print test:", debt_data)
+
         return render_template('debt_evolution.html', 
             repository=repo, 
             branches=branches, 
@@ -116,15 +119,16 @@ def debt_evolution(owner, name):
             repository=None, 
             branches=None, 
             error=str(e))
+"""
+import services.identifiable_entity_service as identifiable_entity_service
+with app.app_context():
+    print('dropping...')
+    db.reflect()
+    db.drop_all()
+    db.create_all()
 
-# import services.identifiable_entity_service as identifiable_entity_service
-# with app.app_context():
-#     print('dropping...')
-#     db.reflect()
-#     db.drop_all()
-#     db.create_all()
+    identifiable_entity_service.create_identifiable_entity("todo")
+    identifiable_entity_service.create_identifiable_entity("fixme")
 
-#     identifiable_entity_service.create_identifiable_entity("todo")
-#     identifiable_entity_service.create_identifiable_entity("fixme")
-
-#     db.session.commit()
+    db.session.commit()
+    """

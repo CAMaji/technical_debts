@@ -16,6 +16,7 @@ import services.file_service as file_service
 
 
 def calculate_cyclomatic_complexity_analysis(file, code):
+    
     cyclomatic_complexity_analysis = []
     analysis = analyze_file.analyze_source_code(file.name, code)
     for func in analysis.function_list:
@@ -67,6 +68,10 @@ def calculate_identifiable_identities_analysis(file, code):
 
 # get all the commits in the specified range of date
 # commits_in_range = github_service.get_commits_in_date_range(repo.owner, repo.name, branch.name, start_date, end_date)
+
+
+
+
 
 def ensure_branch_commit_history(repo_id, branch_id, commits_in_range):
     # check if the database contains each commit
@@ -259,7 +264,64 @@ def get_complexity_counts_for_commits(commit_ids):
     return result
 
 
+def _is_bug_related(message: str) -> bool:
+    if not message:
+        return False
+    msg = message.lower()
+    return ("bug" in msg) or ("fix" in msg)
+
+    
+
+"""
+def calculate_bug_counts_in_range(commits_in_range):
+    print("Calculating ...")
+    results = []
+    bug_related_count = 0
+
+    for c in commits_in_range:
+        message = c.get("message", "")
+        is_bug = _is_bug_related(message)
+        bug_related_count += 1 if is_bug else 0
+
+        results.append({
+            "commit_sha": c.get("sha"),
+            "commit_date": c.get("date"),
+            "commit_author": c.get("author"),
+            "commit_message": message,
+            "is_bug_related": is_bug
+        })
+
+    total = len(commits_in_range)
+    return {
+        "total_commits": total,
+        "bug_related_commits": bug_related_count,
+        "bug_related_ratio": (bug_related_count / total) if total else 0.0,
+        "by_commit": results
+    }
+"""
+
+
+import re
+
+def calculate_bug_counts_in_range(commits):
+    """
+    Receives a list of commits (each being a dict with a 'message' field)
+    Counts how many commit messages contain 'bug' or 'fix' (case-insensitive)
+    Returns a dict like: {"total": 7}
+    """
+    count = 10
+   # pattern = re.compile(r'\b(bug|fix|fixes|fixed)\b', re.IGNORECASE)
+
+    #for commit in commits:
+     #   message = commit.get("message", "")
+      #  if pattern.search(message):
+       #     count += 1
+
+    return {"total": count}
+
+
 def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
+    print("Calculating bug-related commit counts...")
     """
     Calculate the evolution of technical debt (identifiable entities) over time.
     
@@ -283,8 +345,6 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
             repo.owner, repo.name, branch.name, start_date, end_date
         )
         
-        print(f"Found {len(commits_in_range)} commits from GitHub API in date range")
-        
         # Ensure all commits are in database with calculated metrics
         ensure_branch_commit_history(repo_id, branch_id, commits_in_range)
         
@@ -307,9 +367,8 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
                 missing_commits.append(commit_data["sha"])
         
         if missing_commits:
-            print(f"Warning: {len(missing_commits)} commits were not found in database: {missing_commits[:5]}{'...' if len(missing_commits) > 5 else ''}")
+            print(f"Warning: commits were not found in database: {missing_commits[:5]}{'...' if len(missing_commits) > 5 else ''}")
         
-        print(f"Processing {len(commit_ids)} commits found in database")
         
         # Get entity counts for all commits
         entity_counts = get_identifiable_entity_counts_for_commits(commit_ids)
@@ -317,6 +376,11 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
         # Get complexity counts for all commits
         complexity_counts = get_complexity_counts_for_commits(commit_ids)
         
+        # Calculate linked bug of comits in range
+        print("test before going in the function")
+        linked_bugs = calculate_bug_counts_in_range(commits_in_range)
+        
+
         # Build evolution data - include all commits even if they don't have entity data
         for commit_id in commit_ids:
             commit_info = commit_lookup[commit_id]
@@ -345,12 +409,15 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
                 "commit_message": commit_info["message"],
                 "total_identifiable_entities": total_debt,
                 "entity_breakdown": counts,
-                "complexity_data": complexity_data
+                "complexity_data": complexity_data,
+                "linked_bugs_total": linked_bugs["total"]
             })
+        
         
         # Sort by date
         debt_evolution.sort(key=lambda x: x["commit_date"] or "")
         
+        #debt_evolution.append({"linked_bugs_total": linked_bugs["total"]})
     except Exception as e:
         print(f"Error calculating debt evolution: {str(e)}")
         raise

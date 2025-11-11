@@ -29,6 +29,7 @@ services:
       - postgres
     command: >
       sh -c "gunicorn --timeout 300 --reload -w 2 -b :8000 app:app"
+  
   postgres:
     restart: always
     image: postgres:latest

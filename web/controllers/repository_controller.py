@@ -25,6 +25,7 @@ def create_repository():
     owner = request.form.get('owner')
     name = request.form.get('name')
 
+    
     # store the repo
     repo = repository_service.create_repository(owner, name)
 
@@ -34,12 +35,15 @@ def create_repository():
     # store the commits for the 10 latest commits
     for branch in branches:
         commits = github_service.get_latest_commits(owner, name, branch.name)
+
         for commit in commits:
             sha = commit.get('hash')
             date = datetime.fromisoformat(commit.get('date'))
             author = commit.get('author')
             message = commit.get('message')
             commit_service.create_commit(sha, date, author, message, branch.id)
+    
+            
 
     # Redirect to the repository dashboard after creating it
     return redirect(url_for('dashboard', owner=owner, name=name))
