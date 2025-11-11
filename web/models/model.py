@@ -117,46 +117,12 @@ class ComplexityCount(ModelMixin, db.Model):
 
     commit_id = Column(String(36), ForeignKey("commit.id"))
 
-
 class Complexity(ModelMixin, db.Model):
     __tablename__ = "complexity"
     id = Column(String(36), primary_key=True)
     value = Column(Integer)
 
     function_id = Column(String(36), ForeignKey("function.id"))
-
-
-class Coverage(ModelMixin, db.Model):
-    __tablename__ = "coverage"
-    id = Column(String(36), primary_key=True)
-    value = Column(Integer)
-
-    function_id = Column(String(36), ForeignKey("function.id"))
-
-
-class Size(ModelMixin, db.Model):
-    __tablename__ = "size"
-    id = Column(String(36), primary_key=True)
-    value = Column(Integer)
-
-    function_id = Column(String(36), ForeignKey("function.id"))
-
-
-class Tests(ModelMixin, db.Model):
-    __tablename__ = "test"
-    id = Column(String(36), primary_key=True)
-    passing_test_number = Column(Integer)
-    failing_test_number = Column(Integer)
-
-    branch_id = Column(String(36), ForeignKey("branch.id"))
-
-
-class FileTestCoverage(ModelMixin, db.Model):
-    __tablename__ = "file_test_coverage"
-    id = Column(String(36), primary_key=True)
-    value = Column(Integer)
-
-    file_id = Column(String(36), ForeignKey("file.id"))
 
 class FileDuplication(ModelMixin, db.Model): 
     __tablename__ = "file_duplication"
