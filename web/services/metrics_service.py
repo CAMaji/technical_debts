@@ -13,11 +13,6 @@ import services.repository_service as repository_service
 import services.branch_service as branch_service
 import services.commit_service as commit_service
 import services.file_service as file_service
-import xml.etree.ElementTree as ElementTree # https://www.geeksforgeeks.org/python/xml-parsing-python/
-import services.file_duplication_service as file_duplication_service
-import services.duplication_service as duplication_service
-import subprocess
-
 
 def calculate_cyclomatic_complexity_analysis(file, code):
     cyclomatic_complexity_analysis = []
@@ -68,89 +63,6 @@ def calculate_identifiable_identities_analysis(file, code):
 
     return identifiable_entity_analysis
 
-
-def calculate_duplication_analysis(repo: Repository, commit : Commit): 
-    class FileObject: 
-        path : str
-        start_line : int
-        end_line : int
-
-        def __init__(self):
-            self.path = ""
-            self.start_line = 0
-            self.end_line = 0
-
-    # prérequis : 
-    # 1. avoir cloné un repo localement
-    # 2. avoir inséré les infos de fichiers dans la DB
-    # 3. avoir sélectionné un commit/branche (checkout) sur lequel lancer l'analyse
-
-    # todo : 
-    # 1. lancer PMD pour qu'il analyse les fichiers du commit 
-    #    pour de la duplication de code. 
-    # 2. lire le résultat donné par PMD et insérer les données
-    #    dans les objets modèles
-    # 3. Inserer les objets modèles dans la DB
-
-    #github_service.fetch_files(repo.owner, repo.name, commit.sha)
-    repo_path : str = github_service.repo_dir(repo.owner, repo.name)
-    print(repo_path)
-
-    # https://pmd.github.io/pmd/pmd_userdocs_cpd_report_formats.html
-    # Note: PMD-CDP supporte plusieurs langages, mais pour faire simple
-    # et avoir une base, python est hard codé dans la ligne de commande.
-    pmd_cmd : list[str] = ["./tools/pmd/bin/pmd", "cpd", "--minimum-tokens", "20", "--language", "python", "--format", "xml", "--dir", repo_path]
-    completed_process : subprocess.CompletedProcess = subprocess.run(pmd_cmd, capture_output=True, text=True)
-    xml_root : ElementTree.Element[str] = ElementTree.fromstring(completed_process.stdout)
-    
-    # Constantes. Le parser XML ajoute le lien ci-dessous aux tags du XML...
-    # Je ne sais pas pourquoi.
-    pmd_schema_link = "https://pmd-code.org/schema/cpd-report"
-    pmd_duplication_tag = "{" + pmd_schema_link + "}duplication"
-    pmd_file_tag = "{" + pmd_schema_link + "}file"
-    pmd_codefragment_tag = "{" + pmd_schema_link + "}codefragment"
-
-    for xml_node in xml_root:
-        # tag <duplication>
-        print(xml_node.tag)
-        if xml_node.tag == pmd_duplication_tag: 
-            list_of_file : list[FileObject] = []
-
-            for xml_sub_node in xml_node: 
-                print(xml_sub_node.tag)
-                # tag <file> qui indique le fichier trouvé par PMD dans le 
-                # dossier spécifié.
-                if xml_sub_node.tag == pmd_file_tag : 
-                    # Pour l'instant, on prend juste le path du 
-                    # fichier trouvé. 
-                    #
-                    # Attributs disponibles: 
-                    # - column
-                    # - endcolumn
-                    # - endline
-                    # - endtoken
-                    # - line
-                    # - path
-
-
-                    fo = FileObject()
-                    fo.path = xml_sub_node.get("path")
-                    fo.path = fo.path.removeprefix(repo_path + "/")
-                    fo.start_line = xml_sub_node.get("line")
-                    fo.end_line = xml_sub_node.get("endline")
-                    list_of_file.append(fo)
-                    
-                # tag <codefragment> qui contient le texte dupliqué. Si aucune
-                # duplication est trouvée, le XML retourné par PMD n'aura pas de 
-                # <codefragment>. 
-                elif xml_sub_node.tag == pmd_codefragment_tag:
-                    instance_duplication : Duplication = duplication_service.duplication_create(xml_sub_node.text)
-                    for fo in list_of_file:
-                        file = file_service.get_file_by_filename_and_commit(fo.path, commit.id)
-                        if not file:
-                            file = file_service.create_file(fo.path, commit.id)
-                        file_duplication_service.file_duplication_create(file.id, instance_duplication.id, fo.start_line, fo.end_line)
-    return
 
 # get all the commits in the specified range of date
 # commits_in_range = github_service.get_commits_in_date_range(repo.owner, repo.name, branch.name, start_date, end_date)

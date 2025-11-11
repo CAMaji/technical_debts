@@ -8,7 +8,7 @@ prioritisation_query = ""
 def get_file_prioritisation_for_commit(commit : Commit): 
     global prioritisation_query
     if prioritisation_query == "":
-        with open("/app/sql/file-prioritisation.sql") as f:
+        with open("/app/sql/fp2.sql") as f:
             prioritisation_query = f.read()
     
     # copies the query and replace the wildcard by the commit id
