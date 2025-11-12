@@ -263,61 +263,26 @@ def get_complexity_counts_for_commits(commit_ids):
     
     return result
 
-
-def _is_bug_related(message: str) -> bool:
-    if not message:
-        return False
-    msg = message.lower()
-    return ("bug" in msg) or ("fix" in msg)
-
-    
-
-"""
 def calculate_bug_counts_in_range(commits_in_range):
-    print("Calculating ...")
-    results = []
-    bug_related_count = 0
-
-    for c in commits_in_range:
-        message = c.get("message", "")
-        is_bug = _is_bug_related(message)
-        bug_related_count += 1 if is_bug else 0
-
-        results.append({
-            "commit_sha": c.get("sha"),
-            "commit_date": c.get("date"),
-            "commit_author": c.get("author"),
-            "commit_message": message,
-            "is_bug_related": is_bug
-        })
-
-    total = len(commits_in_range)
-    return {
-        "total_commits": total,
-        "bug_related_commits": bug_related_count,
-        "bug_related_ratio": (bug_related_count / total) if total else 0.0,
-        "by_commit": results
-    }
-"""
-
-
-import re
-
-def calculate_bug_counts_in_range(commits):
     """
     Receives a list of commits (each being a dict with a 'message' field)
     Counts how many commit messages contain 'bug' or 'fix' (case-insensitive)
     Returns a dict like: {"total": 7}
     """
-    count = 10
-   # pattern = re.compile(r'\b(bug|fix|fixes|fixed)\b', re.IGNORECASE)
+    linked_bugs = {"total": 0}
 
-    #for commit in commits:
-     #   message = commit.get("message", "")
-      #  if pattern.search(message):
-       #     count += 1
-
-    return {"total": count}
+    if not commits_in_range:
+        return linked_bugs
+    else:
+        count = 0
+        for commit in commits_in_range:
+            message = commit.get("message", "").lower()
+            if "bug" in message or "fix" in message or "fixes" in message or "fixed" in message:
+                count += 1
+        linked_bugs["total"] = count
+    
+    print("Linked bugs count: ", linked_bugs["total"])
+    return linked_bugs
 
 
 def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
@@ -417,6 +382,7 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
         # Sort by date
         debt_evolution.sort(key=lambda x: x["commit_date"] or "")
         
+        #Bug: this line breaks the a part in debt_evolution.js because it is not json
         #debt_evolution.append({"linked_bugs_total": linked_bugs["total"]})
     except Exception as e:
         print(f"Error calculating debt evolution: {str(e)}")
