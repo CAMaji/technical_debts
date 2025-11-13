@@ -29,6 +29,27 @@ services:
       - postgres
     command: >
       sh -c "gunicorn --timeout 300 --reload -w 2 -b :8000 app:app"
+
+  web-unit-tests: 
+    build: ./web
+    links:
+      - postgres:postgres
+    volumes:
+      - ./web:/app
+    environment:
+      FLASK_ENV: dev
+      DEBUG: True
+      DATABASE_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    expose:
+      - "8000"
+    depends_on:
+      - postgres
+    command: >
+      pytest tests 
+
   postgres:
     restart: always
     image: postgres:latest
