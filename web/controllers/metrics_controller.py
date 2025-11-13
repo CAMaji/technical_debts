@@ -10,9 +10,10 @@ import services.complexity_service as complexity_service
 import services.identifiable_entity_service as identifiable_entity_service
 import services.metrics_service as metrics_service
 import services.branch_service as branch_service
-import services.file_duplication_service as file_duplication_service
-import services.file_prioritisation_service as file_priorisation_service
+from services.code_duplication import *
+import services.file_prioritisation_service as file_prioritisation_service
 import time
+import json
 
 def analyse_repo(repo : Repository, commit : Commit):
     # we need to get the files
@@ -27,7 +28,10 @@ def analyse_repo(repo : Repository, commit : Commit):
         metrics_service.calculate_identifiable_identities_analysis(file, code)
 
     # duplication analysis with PMD-CPD
-    file_duplication_service.calculate_file_duplication_analysis(repo, commit)
+    repo_dir = github_service.repo_dir(repo.owner, repo.name)
+    cds = CodeDuplicationService()
+    cds.launch_analyser_tool(repo_dir, [PMD_Language.PYTHON], 20)
+
     return
 
 def get_metrics(commit : Commit, files, include_complexity, include_identifiable_identities, include_code_duplication): 
@@ -50,7 +54,12 @@ def get_metrics(commit : Commit, files, include_complexity, include_identifiable
                 metrics['identifiable_identities_analysis'].append(entity)
     
     if(include_code_duplication):
-         metrics['code_duplication_analysis'] = file_duplication_service.file_duplication_get_json_from_commit(commit)
+        cds = CodeDuplicationService()
+        query = cds.get_code_duplication_query_for_files(files)
+        metrics['code_duplication_analysis'] = json.dumps(query)
+
+        ##### TEST
+        print(metrics['code_duplication_analysis'])
 
     return metrics
 
@@ -77,7 +86,6 @@ def display_metrics_by_commit_id():
     # get metrics
     metrics = get_metrics(commit, files, include_complexity, include_identifiable_identities, include_code_duplication)
     return jsonify(metrics)
-
 
 @app.route('/api/display_debt_evolution', methods=['POST'])
 def display_debt_evolution():
