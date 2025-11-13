@@ -1,11 +1,9 @@
 import uuid
-import file_service as file_service
+import xml.etree.ElementTree as xml
 from models.code_duplication import *
 from models.file_code_duplication import *
 from models.model import *
-from sqlalchemy import select, delete, literal_column, Row
 from subprocess import *
-from xml.etree.ElementTree import *
 from app import db
 from enum import Enum
 
@@ -19,7 +17,7 @@ class PMD_XmlTag(Enum):
     PMD_FILE_TAG = "{https://pmd-code.org/schema/cpd-report}file"
     PMD_CODE_FRAGMENT_TAG = "{https://pmd-code.org/schema/cpd-report}codefragment"
 
-class PMD_ParsedFileData: 
+class PMD_ParsedFileData:  
     path : str
     line_count : int
 
@@ -82,7 +80,7 @@ class CodeDuplicationService:
                 _dict[f.name].append(code_dup)
         return _dict
 
-    def __analyser_parse_duplication_node__(self, node : Element[str], repo_path : str): 
+    def z_analyser_parse_duplication_node(self, node : xml.Element, repo_path : str): 
         list_of_file : list[PMD_ParsedFileData] = []
         list_of_code_dup : list[CodeDuplicationModel] = []
         list_of_associations : list[FileCodeDuplicationModel] = []
@@ -103,20 +101,21 @@ class CodeDuplicationService:
         return
     
     def launch_analyser_tool(self, path : str, language_list : list[PMD_Language], minimum_token : int):
+  
         for lang in language_list:
             pmd_cmd : list[str] = [
                 "./tools/pmd/bin/pmd", "cpd", 
                 "--minimum-tokens", str(minimum_token), 
-                "--language", lang, 
+                "--language", lang.value, 
                 "--format", "xml", 
-                "--dir", path
+                "--dir", path 
             ]
 
-            completed : CompletedProcess = run(pmd_cmd, capture_output=True, text=True)
-            root : Element[str] = ElementTree.fromstring(completed.stdout)
+            completed : CompletedProcess = run(pmd_cmd, capture_output=True, text=True) 
+            root : xml.Element[str] = xml.fromstring(completed.stdout)
             for node in root:
-                if node.tag == PMD_XmlTag.PMD_DUPLICATION_TAG: # <duplication>
-                    self.__analyser_parse_duplication_node__(node, path)
+                if node.tag == PMD_XmlTag.PMD_DUPLICATION_TAG: # <duplication> 
+                    self.z_analyser_parse_duplication_node(node, path)
         return
     
     def get_duplication_stats_for_files(self, files : list[File]) -> FCD_Aggregated_Stats: 
@@ -159,28 +158,4 @@ class CodeDuplicationService:
         )
         return agg_stats
 
-    #def optimised__get_duplications_for_files(self, commit_id : str):
-    #    f_sub_qry = db.session.query(File.id.label("file_id"), File.name.label("file_name"))
-    #    f_sub_qry = f_sub_qry.join(Commit)
-    #    f_sub_qry = f_sub_qry.where(File.commit_id==commit_id)
-    #    f_sub_qry = f_sub_qry.subquery("f")
-    #
-    #    d_qry = db.session.query(f_sub_qry.columns.file_id, f_sub_qry.columns.file_name, CodeDuplicationModel.code_duplication_id, CodeDuplicationModel.text)
-    #    d_qry = d_qry.join(f_sub_qry, FileCodeDuplicationModel.file_id == f_sub_qry.file_id)
-    #    d_qry = d_qry.join(CodeDuplicationModel, FileCodeDuplicationModel.code_duplication_id == CodeDuplicationModel.id)
-    #
-    #    result = d_qry.all()
-    #    return result
-        
-
-
-
-        
-        
-            
-        
-        
     
-
-    
-

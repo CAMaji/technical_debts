@@ -6,14 +6,12 @@ db = SQLAlchemy()
 from models.model import (
     Repository, Branch, Commit, File, Function,
     IdentifiableEntity, FileIdentifiableEntity,
-    Complexity, Coverage, Size, Tests,
-    FileTestCoverage, IdentifiableEntityCount
+    Complexity, IdentifiableEntityCount
 )
 
 __all__ = [
     'db',
     'Repository', 'Branch', 'Commit', 'File', 'Function',
     'IdentifiableEntity', 'FileIdentifiableEntity',
-    'Complexity', 'Coverage', 'Size', 'Tests',
-    'FileTestCoverage', 'IdentifiableEntityCount'
+    'Complexity', 'IdentifiableEntityCount'
 ]

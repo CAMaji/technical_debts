@@ -12,10 +12,13 @@ import services.metrics_service as metrics_service
 import services.branch_service as branch_service
 from services.code_duplication import *
 import services.file_prioritisation_service as file_prioritisation_service
+from services.metrics_service import * 
 import time
 import json
 
 def analyse_repo(repo : Repository, commit : Commit):
+    calculator : MetricsCalculator = MetricsCalculator(None, repo.id, commit.branch_id, None, None)
+
     # we need to get the files
     remote_files = github_service.fetch_files(repo.owner, repo.name, commit.sha)
 
@@ -24,13 +27,13 @@ def analyse_repo(repo : Repository, commit : Commit):
         file = file_service.create_file(filename, commit.id)
 
         # calculate the various metrics here
-        metrics_service.calculate_cyclomatic_complexity_analysis(file, code)
-        metrics_service.calculate_identifiable_identities_analysis(file, code)
+        calculator.calculate_cyclomatic_complexity_analysis(file, code)
+        calculator.calculate_identifiable_identities_analysis(file, code)
 
     # duplication analysis with PMD-CPD
-    repo_dir = github_service.repo_dir(repo.owner, repo.name)
+    repo_dir = github_service.ensure_local_repo(repo.owner, repo.name)
     cds = CodeDuplicationService()
-    cds.launch_analyser_tool(repo_dir, [PMD_Language.PYTHON], 20)
+    cds.launch_analyser_tool(repo_dir, [PMD_Language.PYTHON], 20) 
 
     return
 
@@ -77,7 +80,6 @@ def display_metrics_by_commit_id():
     commit = commit_service.get_commit_by_commit_id(commit_id)
     repo = repository_service.get_repository_by_repository_id(repository_id)
 
-    # check if the commit has f
     files = file_service.get_files_by_commit_id(commit.id)
     if(files == []): 
         analyse_repo(repo, commit)
