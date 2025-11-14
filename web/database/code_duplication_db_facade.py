@@ -31,6 +31,6 @@ class CodeDuplicationDatabaseFacade:
         clauses = or_()
 
         for obj in obj_list:
-            clauses = clauses | CodeDuplicationModel.id == getattr(obj, attrib_name)
+            clauses = clauses | (CodeDuplicationModel.id == getattr(obj, attrib_name))
         
         return db.session.query(CodeDuplicationModel).filter(clauses).all()
