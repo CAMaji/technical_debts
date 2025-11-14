@@ -62,7 +62,7 @@ def get_metrics(commit : Commit, files, include_complexity, include_identifiable
     if(include_code_duplication):
         db_facade = CodeDuplicationDatabaseFacade()
         cds = CodeDuplicationService(db_facade)
-        dup_per_files = cds.get_duplications_by_files(files)
+        dup_per_files = cds.get_duplications_for_many_files(files)
         json_list = []
 
         for k in dup_per_files: 

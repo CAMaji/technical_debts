@@ -35,27 +35,29 @@ class CodeDuplicationService:
 
     def get_duplication_by_id(self, id : str) -> CodeDuplicationModel:
         return self.db_facade.get_duplication_by_id(id)
-
-    def get_association_list_for_file(self, file_id : str) -> list[FileCodeDuplicationModel]:
-        return self.db_facade.get_association_list_for_file(file_id)
     
-    def get_duplications_by_obj_list(self, obj_list : list[object], id_attrib_name : str) -> list[CodeDuplicationModel]:
-        return self.db_facade.get_duplications_by_obj_list(obj_list, id_attrib_name)
+    # id_attrib_name = the name of the object's attribute that contains a valid code duplication id.
+    # In other words, the name of the instance variable that has a code duplication id. 
+    def get_duplications_for_many_objs(self, obj_list : list[object], id_attrib_name : str) -> list[CodeDuplicationModel]:
+        return self.db_facade.get_duplications_for_many_objs(obj_list, id_attrib_name)
     
-    def get_file_duplication_association_list(self, file_name : str, file_id : str) -> tuple[str, list[CodeDuplicationModel]]: 
-        association_list : list[FileCodeDuplicationModel] = self.get_association_list_for_file(file_id)
-        code_dup_list : list[CodeDuplicationModel] = self.get_duplications_by_obj_list(association_list, "code_duplication_id")
-        return (file_name, code_dup_list)
+    def get_duplications_for_one_file(self, file_id : str) -> list[CodeDuplicationModel]:
+        association_list : list[FileCodeDuplicationModel] = self.get_associations_for_one_file(file_id)
+        code_dup_list : list[CodeDuplicationModel] = self.get_duplications_for_many_objs(association_list, "code_duplication_id")
+        return code_dup_list
 
-    def get_duplications_by_files(self, files : list[File]) -> dict[str, list[CodeDuplicationModel]]: 
+    def get_associations_for_one_file(self, file_id : str) -> list[FileCodeDuplicationModel]:
+        return self.db_facade.get_associations_for_one_file(file_id)
+    
+    def get_duplications_for_many_files(self, files : list[File]) -> dict[str, list[CodeDuplicationModel]]: 
         dups_per_file : dict[str, list[CodeDuplicationModel]] = {}
         for f in files: 
-            file_code_dup_tuple = self.get_file_duplication_association_list(f.name)
-            dups_per_file[file_code_dup_tuple[0]] = file_code_dup_tuple[1]
+            code_dup_list = self.get_duplications_for_one_file(f.id)
+            dups_per_file[f.name] = code_dup_list
         return dups_per_file 
     
-    def get_stats_for_file(self, file_id : str) -> CodeDuplicationFileStat: 
-        association_list : list[FileCodeDuplicationModel] = self.get_association_list_for_file(file_id)
+    def get_stats_for_one_file(self, file_id : str) -> CodeDuplicationFileStat: 
+        association_list : list[FileCodeDuplicationModel] = self.get_associations_for_one_file(file_id)
         stats = CodeDuplicationFileStat()
 
         stats.nb_of_associations = len(association_list)
@@ -64,13 +66,12 @@ class CodeDuplicationService:
 
         return stats
 
-    def get_stats_by_files(self, files : list[File]) -> dict[str, CodeDuplicationFileStat]:
-        stats = dict[str, CodeDuplicationFileStat] = {}
+    def get_stats_for_many_files(self, files : list[File]) -> dict[str, CodeDuplicationFileStat]:
+        stats : dict[str, CodeDuplicationFileStat] = {}
         for file in files: 
-            stats[file.name] = self.get_stats_for_file(file.id)
+            stats[file.name] = self.get_stats_for_one_file(file.id)
         return stats
         
-
     def run_duplication_analyser(self, minimum_tokens : int, language : PmdCdpLanguage, dir : str): 
         pmd_cpd_wrapper = PmdCpdWrapper(minimum_tokens, language, dir)
         xml_content = pmd_cpd_wrapper.run()

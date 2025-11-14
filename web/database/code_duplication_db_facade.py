@@ -1,6 +1,5 @@
 from models.code_duplication import *
 from models.file_code_duplication import *
-from typing import Any
 from sqlalchemy import or_
 
 class CodeDuplicationDatabaseFacade: 
@@ -25,10 +24,10 @@ class CodeDuplicationDatabaseFacade:
     def get_duplication_by_id(self, id : str) -> CodeDuplicationModel:
         return db.session.query(CodeDuplicationModel).filter_by(id=id).first()
     
-    def get_association_list_for_file(self, file_id : str) -> FileCodeDuplicationModel: 
+    def get_associations_for_one_file(self, file_id : str) -> list[FileCodeDuplicationModel]:
         return db.session.query(FileCodeDuplicationModel).filter_by(file_id=file_id).all()
     
-    def get_duplications_by_obj_list(self, obj_list : list[object], attrib_name : str) -> list[CodeDuplicationModel]: 
+    def get_duplications_for_many_objs(self, obj_list : list[object], attrib_name : str) -> list[CodeDuplicationModel]: 
         clauses = or_()
 
         for obj in obj_list:
