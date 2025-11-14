@@ -28,7 +28,7 @@ services:
     depends_on:
       - postgres
     command: >
-      sh -c "gunicorn --timeout 300 --reload -w 2 -b :8000 app:app"
+      gunicorn --timeout 300 --reload -w 2 -b :8000 app:app
 
   web-unit-tests: 
     build: ./web

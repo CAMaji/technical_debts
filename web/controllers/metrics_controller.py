@@ -1,6 +1,6 @@
 from flask import request, jsonify
 
-from app import app
+from app import app, db
 from models.model import *
 import services.github_service as github_service
 import services.repository_service as repository_service
@@ -12,6 +12,7 @@ import services.metrics_service as metrics_service
 import services.branch_service as branch_service
 from services.code_duplication import *
 import services.file_prioritisation_service as file_prioritisation_service
+from database.code_duplication_db_facade import *
 from services.metrics_service import * 
 import time
 import json
@@ -32,8 +33,9 @@ def analyse_repo(repo : Repository, commit : Commit):
 
     # duplication analysis with PMD-CPD
     repo_dir = github_service.ensure_local_repo(repo.owner, repo.name)
-    cds = CodeDuplicationService()
-    cds.launch_analyser_tool(repo_dir, [PMD_Language.PYTHON], 20) 
+    db_facade = CodeDuplicationDatabaseFacade()
+    cds = CodeDuplicationService(db_facade)
+    cds.run_duplication_analyser(20, PmdCdpLanguage.PYTHON, repo_dir)
 
     return
 
@@ -55,11 +57,29 @@ def get_metrics(commit : Commit, files, include_complexity, include_identifiable
             entities = identifiable_entity_service.get_identifiable_entity_by_file_id_verbose(file.id)
             for entity in entities:
                 metrics['identifiable_identities_analysis'].append(entity)
-    
+                
+    include_code_duplication = True
     if(include_code_duplication):
-        cds = CodeDuplicationService()
-        query = cds.get_code_duplication_query_for_files(files)
-        metrics['code_duplication_analysis'] = json.dumps(query)
+        db_facade = CodeDuplicationDatabaseFacade()
+        cds = CodeDuplicationService(db_facade)
+        dup_per_files = cds.get_duplications_by_files(files)
+        json_list = []
+
+        for k in dup_per_files: 
+            json_dup_list = []
+            code_dup_list = dup_per_files[k]
+            for cd in code_dup_list:
+                json_dup_list.append({
+                    "id": cd.id,
+                    "text": cd.text
+                })
+
+            json_list.append({
+                "filename": k,
+                "duplications": json.dumps(json_dup_list)
+            })
+
+        metrics['code_duplication_analysis'] = json.dumps(json_list)
 
         ##### TEST
         print(metrics['code_duplication_analysis'])
@@ -69,7 +89,7 @@ def get_metrics(commit : Commit, files, include_complexity, include_identifiable
 @app.route('/api/display_metrics_by_commit_id', methods=['POST'])
 def display_metrics_by_commit_id():
     data = request.get_json()
-    repository_id = data.get('repository_id')
+    repository_id = data.get('repository_id') 
     branch_id = data.get('branch_id')
     commit_id = data.get('commit_id')
     include_complexity = data.get('include_complexity')
