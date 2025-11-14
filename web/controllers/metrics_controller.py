@@ -10,7 +10,7 @@ import services.complexity_service as complexity_service
 import services.identifiable_entity_service as identifiable_entity_service
 import services.metrics_service as metrics_service
 import services.branch_service as branch_service
-from services.code_duplication import *
+from services.code_duplication_service import *
 import services.file_prioritisation_service as file_prioritisation_service
 from database.code_duplication_db_facade import *
 from services.metrics_service import * 

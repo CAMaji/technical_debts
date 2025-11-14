@@ -1,4 +1,5 @@
-from services.code_duplication import *
+from services.code_duplication_service import CodeDuplicationService
+from models.model import File
 from models.code_duplication import *
 from models.file_code_duplication import *
 from mocks.database.code_duplication_db_facade_mock import CodeDuplicationDatabaseFacadeMock
