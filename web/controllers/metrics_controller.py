@@ -79,10 +79,11 @@ def get_metrics(commit : Commit, files, include_complexity, include_identifiable
                 "duplications": json.dumps(json_dup_list)
             })
 
-        metrics['code_duplication_analysis'] = json.dumps(json_list)
+        #metrics['code_duplication_analysis'] = json.dumps(json_list)
 
         ##### TEST
-        print(metrics['code_duplication_analysis'])
+        print("========================= test ============================") 
+        print(metrics['duplicated_code_analysis'])
 
     return metrics
 

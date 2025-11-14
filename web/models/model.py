@@ -124,20 +124,3 @@ class Complexity(ModelMixin, db.Model):
 
     function_id = Column(String(36), ForeignKey("function.id"))
 
-class FileDuplication(ModelMixin, db.Model): 
-    __tablename__ = "file_duplication"
-    id = Column(String(36), primary_key = True)
-    start_line = Column(Integer)
-    end_line = Column(Integer)
-    
-    duplication_id = Column(String(36), ForeignKey("duplication.id"))
-    file_id = Column(String(36), ForeignKey("file.id"))
-
-class Duplication(ModelMixin, db.Model): 
-    __tablename__ = "duplication"
-    id = Column(String(36), primary_key = True)
-    text = Column(Text)
-
-
-def get_db(): 
-    return db

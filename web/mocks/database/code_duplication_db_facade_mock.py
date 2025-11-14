@@ -13,13 +13,14 @@ class CodeDuplicationDatabaseFacadeMock(CodeDuplicationDatabaseFacade):
     get_duplications_for_many_objs_hook   : Callable[[list[object], str], list[CodeDuplicationModel]]
 
     def __init__(self): 
+        super().__init__()
         self.insert_one_duplication_hook         = None
         self.insert_one_association_hook         = None
         self.insert_many_duplications_hook       = None
         self.insert_many_associations_hook       = None
         self.get_duplication_by_id_hook          = None
         self.get_associations_for_one_file_hook  = None
-        self.get_duplications_for_many_objs_hook   = None
+        self.get_duplications_for_many_objs_hook = None
 
     def insert_one_duplication(self, code_dup : CodeDuplicationModel):
         self.insert_one_duplication_hook(code_dup)
