@@ -23,6 +23,21 @@ def create_commit(commit_sha, commit_date, author, message, branch_id):
     return commit
 
 
+def ensure_commit_exists_by_sha(commit, branch_id):
+    found_commit = get_commit_by_sha(commit.get("sha"))
+    if not found_commit:
+        # no commit found, so we create it
+        # Convert date string to datetime object - GitHub API returns ISO format
+        commit_date = datetime.fromisoformat(commit.get("date").replace('Z', '+00:00'))
+        created_commit = create_commit(
+            commit.get("sha"), commit_date, commit.get("author"), commit.get("message"), branch_id
+        )
+
+        return created_commit
+    
+    return found_commit
+
+
 def get_commit_by_commit_id(commit_id):
     return Commit.query.get(commit_id)
 
