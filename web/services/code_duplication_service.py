@@ -45,7 +45,7 @@ class CodeDuplicationService:
         return self.db_facade.get_duplication_by_id(id)
     
     # id_attrib_name = the name of the object's attribute that contains a valid code duplication id.
-    # In other words, the name of the instance variable that has a code duplication id. 
+    # In other words, the name of the instance variable that has an ID of code duplication row. 
     def get_duplications_for_many_objs(self, obj_list : list[object], id_attrib_name : str) -> list[CodeDuplicationModel]:
         return self.db_facade.get_duplications_for_many_objs(obj_list, id_attrib_name)
     

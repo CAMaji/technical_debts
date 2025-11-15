@@ -64,13 +64,13 @@ def get_metrics(commit : Commit, files, include_complexity, include_identifiable
         cds = CodeDuplicationService(db_facade)
         dups_for_files = cds.get_duplications_for_many_files(files)
         json_dups_for_file = CustomJsonEncoder.dump(dups_for_files)
-    
+        pretty_json = json.dumps(json.loads(json_dups_for_file), indent=4)
 
         #metrics['code_duplication_analysis'] = json.dumps(json_list)
 
         ##### TEST
-        print("========================= test ============================") 
-        print(json_dups_for_file)
+        print("========================= test ============================")  
+        print(pretty_json) 
 
     return metrics
 
