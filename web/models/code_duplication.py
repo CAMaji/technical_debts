@@ -5,7 +5,7 @@ from models.model import ModelMixin
 from sqlalchemy import (Column, String, Integer, Float, Text, ForeignKey, DateTime)
 from utilities.custom_json_encoder import *
 
-class CodeDuplicationModel(ModelMixin, db.Model, JsonEncoderInterface): 
+class CodeDuplicationModel(ModelMixin, db.Model, CustomJsonEncoderInterface): 
     __tablename__ = "code_duplication"
     # PK
     id = Column(String(36), primary_key = True)

@@ -4,7 +4,7 @@ from models.model import ModelMixin
 from sqlalchemy import (Column, String, Integer, Float, Text, ForeignKey, DateTime)
 from utilities.custom_json_encoder import * 
 
-class FileCodeDuplicationModel(ModelMixin, db.Model, JsonEncoderInterface): 
+class FileCodeDuplicationModel(ModelMixin, db.Model, CustomJsonEncoderInterface): 
     __tablename__ = "file_code_duplication"
     # PK
     id = Column(String(36), primary_key = True)
