@@ -62,28 +62,15 @@ def get_metrics(commit : Commit, files, include_complexity, include_identifiable
     if(include_code_duplication):
         db_facade = CodeDuplicationDatabaseFacade()
         cds = CodeDuplicationService(db_facade)
-        dup_per_files = cds.get_duplications_for_many_files(files)
-        json_list = []
-
-        for k in dup_per_files: 
-            json_dup_list = []
-            code_dup_list = dup_per_files[k]
-            for cd in code_dup_list:
-                json_dup_list.append({
-                    "id": cd.id,
-                    "text": cd.text
-                })
-
-            json_list.append({
-                "filename": k,
-                "duplications": json.dumps(json_dup_list)
-            })
+        dups_for_files = cds.get_duplications_for_many_files(files)
+        json_dups_for_file = CustomJsonEncoder.dump(dups_for_files)
+    
 
         #metrics['code_duplication_analysis'] = json.dumps(json_list)
 
         ##### TEST
         print("========================= test ============================") 
-        print(metrics['duplicated_code_analysis'])
+        print(json_dups_for_file)
 
     return metrics
 

@@ -19,7 +19,7 @@ class PmdCdpAssociations:
         self.code_fragment = ""
         return
 
-class PmdCdpXmlPaser: 
+class PmdCdpXmlParser: 
     associations : list[PmdCdpAssociations]
     current : PmdCdpAssociations
     text : str
@@ -30,13 +30,16 @@ class PmdCdpXmlPaser:
         self.text = text
         self.repo_path = repo_path
         self.current = None
+
+        if self.repo_path.endswith("/") == False:
+            self.repo_path = self.repo_path + "/"
         return
 
     def parse_file_tag(self, pnode : xml.Element):
         if pnode.tag != PmdXmlTag.PMD_FILE_TAG.value:
             return
-        
-        path = pnode.get("path").removeprefix(self.repo_path + "/")
+    
+        path = pnode.get("path").removeprefix(self.repo_path)
         self.current.files.append(path)
         return
     

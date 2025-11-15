@@ -28,9 +28,9 @@ class CodeDuplicationDatabaseFacade:
         return db.session.query(FileCodeDuplicationModel).filter_by(file_id=file_id).all()
     
     def get_duplications_for_many_objs(self, obj_list : list[object], attrib_name : str) -> list[CodeDuplicationModel]: 
-        clauses = or_()
+        clauses = or_(False)
 
         for obj in obj_list:
             clauses = clauses | (CodeDuplicationModel.id == getattr(obj, attrib_name))
         
-        return db.session.query(CodeDuplicationModel).filter(clauses).all()
+        return db.session.query(CodeDuplicationModel).distinct(CodeDuplicationModel.id).filter(clauses).all()

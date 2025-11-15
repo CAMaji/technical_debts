@@ -2,8 +2,9 @@ import uuid
 from models.model import db
 from models.model import ModelMixin
 from sqlalchemy import (Column, String, Integer, Float, Text, ForeignKey, DateTime)
+from utilities.custom_json_encoder import * 
 
-class FileCodeDuplicationModel(ModelMixin, db.Model): 
+class FileCodeDuplicationModel(ModelMixin, db.Model, JsonEncoderInterface): 
     __tablename__ = "file_code_duplication"
     # PK
     id = Column(String(36), primary_key = True)
@@ -19,3 +20,11 @@ class FileCodeDuplicationModel(ModelMixin, db.Model):
         self.file_id = file_id
         self.line_count = line_count
         return
+    
+    def encode(self):
+        return {
+            "id": self.id,
+            "code_duplication_id": self.code_duplication_id,
+            "file_id": self.file_id,
+            "line_count": self.line_count
+        }

@@ -4,15 +4,23 @@ from models.model import File
 from database.code_duplication_db_facade import *
 from tools.pmd_cpd_wrapper import *
 from utilities.pmd_cpd_xml_parser import *
+from utilities.custom_json_encoder import *
+
 import services.file_service as file_service
 
-class CodeDuplicationFileStat: 
+class CodeDuplicationFileStat(CustomJsonEncoder): 
     nb_of_duplicated_lines : int
     nb_of_associations : int
 
     def __init__(self): 
         self.nb_of_associations = 0
         self.nb_of_duplicated_lines = 0
+
+    def encode(self):
+        return {
+            "nb_of_duplicated_lines": self.nb_of_duplicated_lines,
+            "nb_of_associations": self.nb_of_associations
+        }
 
 
 class CodeDuplicationService: 
@@ -76,14 +84,13 @@ class CodeDuplicationService:
         pmd_cpd_wrapper = PmdCpdWrapper(minimum_tokens, language, dir)
         xml_content = pmd_cpd_wrapper.run()
 
-        pmd_cpd_xml_parser = PmdCdpXmlPaser(xml_content, dir)
+        pmd_cpd_xml_parser = PmdCdpXmlParser(xml_content, dir)
         pmd_cpd_xml_parser.parse()
         
         code_dup_list : list[CodeDuplicationModel] = []
         for a in pmd_cpd_xml_parser.associations:
             code_dup = CodeDuplicationModel(a.code_fragment)
             code_dup_list.append(code_dup)
-            print(code_dup.text)
 
         self.insert_many_duplications(code_dup_list)
 
