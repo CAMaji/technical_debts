@@ -1,8 +1,4 @@
 import uuid
-from flask import Flask
-from flask import request, render_template, redirect, url_for, jsonify
-import requests
-
 from models import db
 from models.model import *
 

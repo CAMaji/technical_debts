@@ -34,17 +34,19 @@ def ensure_local_repo(owner, name):
     if not os.path.isdir(path) or not os.path.isdir(os.path.join(path, ".git")):
         if os.path.isdir(path):
             shutil.rmtree(path, ignore_errors=True)
-        
-        # don't checkout for faster performance
-        subprocess.run(["git", "clone", "--no-checkout", url, path], check=True)
+
+        # don't checkout for faster performance (suppress git output)
+        subprocess.run(["git", "clone", "--no-checkout", url, path], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return path
 
     try:
         current = subprocess.check_output(["git", "-C", path, "remote", "get-url", "origin"], text=True).strip()
         if current != url:
-            subprocess.run(["git", "-C", path, "remote", "set-url", "origin", url], check=True)
+            # suppress output
+            subprocess.run(["git", "-C", path, "remote", "set-url", "origin", url], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
-        subprocess.run(["git", "-C", path, "remote", "add", "origin", url], check=True)
+        # suppress output
+        subprocess.run(["git", "-C", path, "remote", "add", "origin", url], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     return path
 
@@ -66,8 +68,9 @@ def fetch_files(owner, name, commit_sha):
     
     # checkout commit
     try:
-        subprocess.run(["git", "-C", repo_path, "fetch", "--depth", "1", "origin", commit_sha], check=True)
-        subprocess.run(["git", "-C", repo_path, "checkout", "-f", commit_sha], check=True)
+        # suppress git fetch/checkout output to avoid noisy logs
+        subprocess.run(["git", "-C", repo_path, "fetch", "--depth", "1", "origin", commit_sha], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run(["git", "-C", repo_path, "checkout", "-f", commit_sha], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
         raise
 
@@ -294,7 +297,15 @@ def get_latest_commits(owner, name, branch_name):
     repo_path = ensure_local_repo(owner, name)
 
     repo = Repo(repo_path)
-    repo.remotes.origin.fetch()
+    # Fetch quietly to avoid printing git progress/info to logs
+    try:
+        subprocess.run(["git", "-C", repo_path, "fetch", "--prune", "origin"], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception:
+        # Fall back to GitPython fetch if subprocess fails
+        try:
+            repo.remotes.origin.fetch()
+        except Exception:
+            pass
     
     ref = next(
         (r for r in repo.references if r.name in [branch_name, f"origin/{branch_name}"]),
