@@ -11,7 +11,6 @@ import services.identifiable_entity_service as identifiable_entity_service
 import services.metrics_service as metrics_service
 import services.branch_service as branch_service
 from services.code_duplication_service import *
-import web.services.file_statistics_service as file_statistics_service
 from database.code_duplication_db_facade import *
 from services.metrics_service import * 
 import time

@@ -8,9 +8,9 @@ from typing import TypeAlias
 FileID_str : TypeAlias = str
 FuncName_str : TypeAlias = str
 Complexity_int : TypeAlias = int
-LinesDuppedCount : TypeAlias = int
+LinesDuppedCount_int : TypeAlias = int
 
-class FileStatisticsDatabaseFacade:
+class FileMetricsDatabaseFacade:
     def get_function_complexities_for_one_file(self, file_id : str) -> list[tuple[FuncName_str, Complexity_int]]:
         query = db.session.query(Function.name, Complexity.value)
         query = query.join(Complexity, Function.id == Complexity.function_id)
@@ -23,7 +23,7 @@ class FileStatisticsDatabaseFacade:
         query = query.filter(FileIdentifiableEntity.file_id == file_id)
         return query.count()
     
-    def get_code_duplications_for_one_file(self, file_id : str) -> list[tuple[LinesDuppedCount, CodeDuplicationModel]]: 
+    def get_code_duplications_for_one_file(self, file_id : str) -> list[tuple[LinesDuppedCount_int, CodeDuplicationModel]]: 
         query = db.session.query(FileCodeDuplicationModel.line_count, CodeDuplicationModel)
         query = query.join(FileCodeDuplicationModel, FileCodeDuplicationModel.code_duplication_id == CodeDuplicationModel.id)
         query = query.filter(FileCodeDuplicationModel.file_id == file_id)
@@ -41,11 +41,7 @@ class FileStatisticsDatabaseFacade:
         query = query.filter(FileIdentifiableEntity.file_id.in_(file_id_list))
         return query.all()
     
-    # list of tuple
-    # tuple[0]: file id (str)
-    # tuple[1]: line count (int)
-    # tuple[2]: CodeDuplicationModel
-    def get_code_duplications_for_many_files(self, file_id_list : list[str]) -> list[tuple[FileID_str, LinesDuppedCount, CodeDuplicationModel]]:
+    def get_code_duplications_for_many_files(self, file_id_list : list[str]) -> list[tuple[FileID_str, LinesDuppedCount_int, CodeDuplicationModel]]:
         query = db.session.query(FileCodeDuplicationModel.file_id, FileCodeDuplicationModel.line_count, CodeDuplicationModel)
         query = query.join(FileCodeDuplicationModel, FileCodeDuplicationModel.code_duplication_id == CodeDuplicationModel.id)
         query = query.filter(FileCodeDuplicationModel.file_id.in_(file_id_list))

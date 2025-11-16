@@ -1,7 +1,7 @@
 from models.model import Complexity, Function
 from models.code_duplication import CodeDuplicationModel
 from typing import Callable
-from database.file_statistics_db_facade import FileStatisticsDatabaseFacade
+from database.file_metrics_db_facade import FileMetricsDatabaseFacade
 
 class FileStatisticsDatabaseHooks:
     get_function_complexities_for_one_file      : Callable[[str], list[tuple[str, int]]]
@@ -18,7 +18,7 @@ class FileStatisticsDatabaseHooks:
         return
         
 
-class FileStatisticsDatabaseFacadeMock(FileStatisticsDatabaseFacade):
+class FileStatisticsDatabaseFacadeMock(FileMetricsDatabaseFacade):
     hooks : FileStatisticsDatabaseHooks
 
     def __init__(self):

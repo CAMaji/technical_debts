@@ -66,7 +66,7 @@ class CustomJsonEncoder:
         CustomJsonEncoder._raise_exception()
         return None # should not be reached
 
-    def dump(obj : object):
+    def breakdown(obj : object):
         implements_interface : bool = isinstance(obj, CustomJsonEncoderInterface)
         is_dict : bool = isinstance(obj, dict)
         is_list : bool = isinstance(obj, list)
@@ -74,7 +74,12 @@ class CustomJsonEncoder:
 
         if implements_interface or is_dict or is_list or is_tuple:
             raw = CustomJsonEncoder._object_to_raw(obj)
-            return json.dumps(raw)
+            return raw
+        
 
         CustomJsonEncoder._raise_exception()
         return None # should not be reached
+
+    def dump(obj : object):
+        raw = CustomJsonEncoder.breakdown(obj)
+        return json.dumps(raw)

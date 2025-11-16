@@ -1,14 +1,14 @@
 from unit_tests.mock_app import *
 from models.model import *
-from database.file_statistics_db_facade import FileStatisticsDatabaseFacade
-from database.file_statistics_db_facade import FileID_str, Complexity_int, FuncName_str, LinesDuppedCount
+from database.file_metrics_db_facade import FileMetricsDatabaseFacade
+from database.file_metrics_db_facade import FileID_str, Complexity_int, FuncName_str, LinesDuppedCount_int
 
 def test_get_function_complexities_for_one_file():
     app = init_mock_app()
     with app.app_context():
         # arrange 
         predef = start_up()
-        facade = FileStatisticsDatabaseFacade()
+        facade = FileMetricsDatabaseFacade()
         file0 = predef[FILES][0]
     
         # act
@@ -28,7 +28,7 @@ def test_count_identifiable_entities_for_one_file():
     with app.app_context():
         # arrange 
         predef = start_up()
-        facade = FileStatisticsDatabaseFacade()
+        facade = FileMetricsDatabaseFacade()
         file0 = predef[FILES][0]
     
         # act
@@ -47,12 +47,12 @@ def test_get_code_duplications_for_one_file():
     with app.app_context():
         # arrange
         predef = start_up()
-        facade = FileStatisticsDatabaseFacade()
+        facade = FileMetricsDatabaseFacade()
         file_list = predef[FILES]
         
         # act 
         try:
-            result : list[tuple[LinesDuppedCount, CodeDuplicationModel]] = facade.get_code_duplications_for_one_file(file_list[0].id)
+            result : list[tuple[LinesDuppedCount_int, CodeDuplicationModel]] = facade.get_code_duplications_for_one_file(file_list[0].id)
 
         # assert
             assert len(result) == 2
@@ -68,7 +68,7 @@ def test_get_function_complexities_for_many_files():
     with app.app_context():
         # arrange 
         predef = start_up()
-        facade = FileStatisticsDatabaseFacade()
+        facade = FileMetricsDatabaseFacade()
         file_list = predef[FILES]
 
         file_id_list : list[str] = []
@@ -92,7 +92,7 @@ def test_count_identifiable_entities_for_many_files():
     with app.app_context():
         # arrange 
         predef = start_up()
-        facade = FileStatisticsDatabaseFacade()
+        facade = FileMetricsDatabaseFacade()
         file_list = predef[FILES]
 
         file_id_list : list[str] = []
@@ -115,7 +115,7 @@ def test_get_code_duplications_for_many_files():
     with app.app_context():
         # arrange 
         predef = start_up()
-        facade = FileStatisticsDatabaseFacade()
+        facade = FileMetricsDatabaseFacade()
         file_list = predef[FILES]
 
         file_id_list : list[str] = []
@@ -124,7 +124,7 @@ def test_get_code_duplications_for_many_files():
     
         # act
         try:
-            result : list[tuple[FileID_str, LinesDuppedCount, CodeDuplicationModel]] = facade.get_code_duplications_for_many_files(file_id_list)
+            result : list[tuple[FileID_str, LinesDuppedCount_int, CodeDuplicationModel]] = facade.get_code_duplications_for_many_files(file_id_list)
 
             # assert
             assert len(result) == 4

@@ -1,7 +1,5 @@
-from services.file_statistics_service import FileStatisticsService
-from services.file_statistics_service import FileCodeDuplicationStats
-from services.file_statistics_service import FileTechDebtStats
-from unit_tests.database.mocks.file_statistics_db_facade_mock import FileStatisticsDatabaseFacadeMock
+from services.file_metrics_service import FileMetricsService, FileMetrics
+from unit_tests.database.mocks.file_metrics_db_facade_mock import FileStatisticsDatabaseFacadeMock
 from models.code_duplication import CodeDuplicationModel
 
 
@@ -24,7 +22,7 @@ def test_get_function_complexities_for_one_file():
     
     facade = FileStatisticsDatabaseFacadeMock()
     facade.hooks.get_function_complexities_for_one_file = hook
-    service = FileStatisticsService(facade)
+    service = FileMetricsService(facade)
 
     # act 
     result : dict[str, int] = service.get_function_complexities_for_one_file(test_file_id)
@@ -57,7 +55,7 @@ def test_count_identifiable_identities():
     
     facade = FileStatisticsDatabaseFacadeMock()
     facade.hooks.count_identifiable_entities_for_one_file = hook
-    service = FileStatisticsService(facade)
+    service = FileMetricsService(facade)
 
     # act 
     result : int = service.count_identifiable_identities_for_one_file(test_file_id)
@@ -94,7 +92,7 @@ def test_get_complexity_average_for_one_file():
     
     facade = FileStatisticsDatabaseFacadeMock()
     facade.hooks.get_function_complexities_for_one_file = hook
-    service = FileStatisticsService(facade)
+    service = FileMetricsService(facade)
 
     # act 
     result : float = service.get_complexity_average_for_one_file(test_file_id)
@@ -116,7 +114,7 @@ def test_get_complexity_average_for_one_file__division_by_zero():
         
     facade = FileStatisticsDatabaseFacadeMock()
     facade.hooks.get_function_complexities_for_one_file = hook
-    service = FileStatisticsService(facade)
+    service = FileMetricsService(facade)
 
     # act 
     result : float = service.get_complexity_average_for_one_file(test_file_id)
@@ -156,17 +154,17 @@ def test_get_code_duplications_stats_for_one_file():
     
     facade = FileStatisticsDatabaseFacadeMock()
     facade.hooks.get_code_duplications_for_one_file = hook
-    service = FileStatisticsService(facade)
+    service = FileMetricsService(facade)
     
     # act 
-    result : FileCodeDuplicationStats = service.get_code_duplications_stats_for_one_file(test_file_id)
+    result = service.get_code_duplications_metrics_for_one_file(test_file_id)
     
     # assert
     assert result != None
-    assert result.lines_duplicated == expected_lines_dupped
-    assert result.duplication_count == expected_duplication_count
+    assert result[1] == expected_lines_dupped
+    assert result[0] == expected_duplication_count
 
-def test_get_tech_debt_stats_for_one_file():
+def test_get_metrics_for_one_file():
     # arrange
     hook1_called = False
     hook2_called = False
@@ -220,13 +218,15 @@ def test_get_tech_debt_stats_for_one_file():
     facade.hooks.get_function_complexities_for_one_file = get_function_complexities_for_one_file
     facade.hooks.count_identifiable_entities_for_one_file = count_identifiable_entities_for_one_file
     facade.hooks.get_code_duplications_for_one_file = get_code_duplications_for_one_file
-    service = FileStatisticsService(facade)
+    service = FileMetricsService(facade)
 
     # act
-    result : FileTechDebtStats = service.get_tech_debt_stats_for_one_file(test_file_id)
+    result : FileMetrics = service.get_metrics_for_one_file(test_file_id, "fichier.py")
     
     # assert
-    assert result.complexity == (complexity0 + complexity1 + complexity2) / 3
+    assert result.avg_complexity == (complexity0 + complexity1 + complexity2) / 3
     assert result.identifiable_entities == identifiable_entities_count
     assert result.duplication_count == duplication_count
     assert result.lines_duplicated == lines_dupped_0 + lines_dupped_1
+    return
+
