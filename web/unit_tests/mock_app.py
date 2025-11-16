@@ -1,4 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
+
 from flask import Flask
 from dotenv import load_dotenv
 from models.model import *
@@ -72,11 +72,13 @@ def start_up() -> tuple[Repository, Branch, list[Commit], list[File], list[CodeD
         Complexity(id='cplx7', value=50, function_id=function_list[7].id),
     ]
 
+    # identifiable entities (ie)
     ie_list = [
         IdentifiableEntity(id='ie0', name='test0'),
         IdentifiableEntity(id='ie1', name='test1'),
     ]
 
+    # file identifiable entites (fie)
     fie_list = [
         FileIdentifiableEntity(id='fie0',file_id=file_list[0].id, identifiable_entity_id=ie_list[0].id, line_position=3),
         FileIdentifiableEntity(id='fie1',file_id=file_list[0].id, identifiable_entity_id=ie_list[1].id, line_position=7),

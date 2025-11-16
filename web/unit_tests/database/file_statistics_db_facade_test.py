@@ -1,6 +1,7 @@
 from unit_tests.mock_app import *
 from models.model import *
 from database.file_statistics_db_facade import FileStatisticsDatabaseFacade
+from database.file_statistics_db_facade import FileID_str, Complexity_int, FuncName_str, LinesDuppedCount
 
 def test_get_function_complexities_for_one_file():
     app = init_mock_app()
@@ -8,37 +9,34 @@ def test_get_function_complexities_for_one_file():
         # arrange 
         predef = start_up()
         facade = FileStatisticsDatabaseFacade()
-        file_list = predef[FILES]
+        file0 = predef[FILES][0]
     
         # act
         try:
-            result : list[tuple[str, int]] = facade.get_function_complexities_for_one_file(file_list[0].id)
+            result : list[tuple[FuncName_str, Complexity_int]] = facade.get_function_complexities_for_one_file(file0.id)
 
             # assert
             assert len(result) == 4
-            assert result[2][1] == 15 # check 'facade.get_function_complexities_for_one_file' comment
-                                      # check 'mock_app.py' for mock data
+            assert result[2][1] == 15  # in 'complexity_list' (see mock_app.py), 'file0' is linked with 'cplx2' 
         except Exception as e:
             print(e)
             assert False
     return
 
-def test_get_identifiable_entities_for_one_file():
+def test_count_identifiable_entities_for_one_file():
     app = init_mock_app()
     with app.app_context():
         # arrange 
         predef = start_up()
         facade = FileStatisticsDatabaseFacade()
-        file_list = predef[FILES]
+        file0 = predef[FILES][0]
     
         # act
         try:
-            result : list[IdentifiableEntity] = facade.get_identifiable_entities_for_one_file(file_list[0].id)
+            result : int = facade.count_identifiable_entities_for_one_file(file0.id)
 
             # assert
-            assert len(result) == 2
-            assert result[0].id == 'ie1' or result[1].id == 'ie1'
-            assert result[0].id == 'ie0' or result[1].id == 'ie0'
+            assert result == 2 # in 'fie_list' (see mock_app.py), 'file0' is linked with 'fie0' & 'fie1'
         except Exception as e:
             print(e)
             assert False
@@ -54,13 +52,12 @@ def test_get_code_duplications_for_one_file():
         
         # act 
         try:
-            result : list[tuple[int, CodeDuplicationModel]] = facade.get_code_duplications_for_one_file(file_list[0].id)
+            result : list[tuple[LinesDuppedCount, CodeDuplicationModel]] = facade.get_code_duplications_for_one_file(file_list[0].id)
 
         # assert
             assert len(result) == 2
             assert result[0][1].text == 'hello' or result[0][1].text == 'world'
-            assert result[1][1].text == 'world' or result[1][1].text == 'hello' # check 'facade.get_code_duplications_for_one_file' comment
-                                                                                # check 'mock_app.py' for mock data
+            assert result[1][1].text == 'world' or result[1][1].text == 'hello' # check 'mock_app.py' for mock data
         except Exception as e:
             print(e)
             assert False
@@ -80,18 +77,17 @@ def test_get_function_complexities_for_many_files():
     
         # act
         try:
-            result : list[tuple[str, str, int]] = facade.get_function_complexity_for_many_files(file_id_list)
+            result : list[tuple[FileID_str, FuncName_str, Complexity_int]] = facade.get_function_complexities_for_many_files(file_id_list)
 
             # assert
             assert len(result) == 8
-            assert result[0][0] == 'file0' # check 'facade.get_function_complexity_for_many_files' comment
-                                           # check 'mock_app.py' for mock data
+            assert result[0][0] == 'file0' # check 'mock_app.py' for mock data                                           
         except Exception as e:
             print(e)
             assert False
     return
 
-def test_get_identifiable_entities_for_many_files():
+def test_count_identifiable_entities_for_many_files():
     app = init_mock_app()
     with app.app_context():
         # arrange 
@@ -105,13 +101,10 @@ def test_get_identifiable_entities_for_many_files():
     
         # act
         try:
-            result : list[tuple[str, IdentifiableEntity]] = facade.get_identifiable_entities_for_many_files(file_id_list)
+            result : list[tuple[str, int]] = facade.count_identifiable_entities_for_many_files(file_id_list)
 
             # assert
             assert len(result) == 4
-            assert result[0][1].name == 'test0' # check 'facade.get_identifiable_entities_for_many_file' comment
-                                                # check 'mock_app.py' for mock data
-                                           
         except Exception as e:
             print(e)
             assert False
@@ -131,13 +124,11 @@ def test_get_code_duplications_for_many_files():
     
         # act
         try:
-            result : list[tuple[str, int, CodeDuplicationModel]] = facade.get_code_duplications_for_many_files(file_id_list)
+            result : list[tuple[FileID_str, LinesDuppedCount, CodeDuplicationModel]] = facade.get_code_duplications_for_many_files(file_id_list)
 
             # assert
             assert len(result) == 4
-            assert result[0][2].text == 'hello' # check 'facade.get_code_duplications_for_many_files' comment
-                                                # check 'mock_app.py' for mock data
-                                           
+            assert result[0][2].text == 'hello' # check 'mock_app.py' for mock data                                           
         except Exception as e:
             print(e)
             assert False

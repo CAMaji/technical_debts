@@ -19,7 +19,7 @@ def test_insert_one_duplication():
         return
 
     mock = CodeDuplicationDatabaseFacadeMock()
-    mock.insert_one_duplication_hook = hook
+    mock.hooks.insert_one_duplication = hook
     service = CodeDuplicationService(mock)
 
     # act
@@ -47,7 +47,7 @@ def test_insert_one_association():
         return
 
     mock = CodeDuplicationDatabaseFacadeMock()
-    mock.insert_one_association_hook = hook
+    mock.hooks.insert_one_association = hook
     service = CodeDuplicationService(mock)
 
     # act
@@ -76,7 +76,7 @@ def test_insert_many_duplications():
         return 
 
     mock = CodeDuplicationDatabaseFacadeMock()
-    mock.insert_many_duplications_hook = hook
+    mock.hooks.insert_many_duplications = hook
     service = CodeDuplicationService(mock)
 
     # act
@@ -108,7 +108,7 @@ def test_insert_many_associations():
         return 
 
     mock = CodeDuplicationDatabaseFacadeMock()
-    mock.insert_many_associations_hook = hook
+    mock.hooks.insert_many_associations = hook
     service = CodeDuplicationService(mock)
 
     # act
@@ -136,7 +136,7 @@ def test_get_duplication_by_id():
         return None
     
     mock = CodeDuplicationDatabaseFacadeMock()
-    mock.get_duplication_by_id_hook = hook
+    mock.hooks.get_duplication_by_id = hook
     service = CodeDuplicationService(mock)
 
     # act
@@ -192,7 +192,7 @@ def test_get_duplications_for_many_objs():
             return None
 
     mock = CodeDuplicationDatabaseFacadeMock()
-    mock.get_duplications_for_many_objs_hook = hook
+    mock.hooks.get_duplications_for_many_objs = hook
     service = CodeDuplicationService(mock)
 
     # act
@@ -237,8 +237,8 @@ def test_get_duplications_for_one_file():
         return result
 
     mock = CodeDuplicationDatabaseFacadeMock()
-    mock.get_associations_for_one_file_hook = get_associations_for_one_file_hook
-    mock.get_duplications_for_many_objs_hook = get_duplications_for_many_obj_hook
+    mock.hooks.get_associations_for_one_file = get_associations_for_one_file_hook
+    mock.hooks.get_duplications_for_many_objs = get_duplications_for_many_obj_hook
     service = CodeDuplicationService(mock)
 
     # act
@@ -268,7 +268,7 @@ def test_get_associations_for_one_file():
         ]
     
     mock = CodeDuplicationDatabaseFacadeMock()
-    mock.get_associations_for_one_file_hook = hook
+    mock.hooks.get_associations_for_one_file = hook
     service = CodeDuplicationService(mock)
 
     # act
@@ -322,8 +322,8 @@ def test_get_duplications_for_many_files():
         return result
     
     mock = CodeDuplicationDatabaseFacadeMock()
-    mock.get_associations_for_one_file_hook = get_associations_for_one_file_hook
-    mock.get_duplications_for_many_objs_hook = get_duplications_for_many_obj_hook
+    mock.hooks.get_associations_for_one_file = get_associations_for_one_file_hook
+    mock.hooks.get_duplications_for_many_objs = get_duplications_for_many_obj_hook
     service = CodeDuplicationService(mock)
 
     # act
@@ -353,7 +353,7 @@ def test_get_stats_for_one_file():
         ]
     
     mock = CodeDuplicationDatabaseFacadeMock()
-    mock.get_associations_for_one_file_hook = hook
+    mock.hooks.get_associations_for_one_file = hook
     service = CodeDuplicationService(mock)
 
     # act
@@ -383,7 +383,7 @@ def test_get_stats_for_many_files():
         return []
     
     mock = CodeDuplicationDatabaseFacadeMock()
-    mock.get_associations_for_one_file_hook = hook
+    mock.hooks.get_associations_for_one_file = hook
     service = CodeDuplicationService(mock)
 
     # act
