@@ -5,10 +5,10 @@ def test_parse():
     xml_content = ""
     with open("/app//unit_tests/utilities/pmd_cpd_xml_parser_test_directory/pmd_cpd_python_output.xml") as f:
         xml_content = f.read()
-    parser = PmdCdpXmlParser(xml_content, "/app/unit_tests/tools")
+    parser = PmdCdpXmlParser("/app/unit_tests/tools")
 
     # act 
-    parser.parse()
+    parser.parse(xml_content)
 
     # assert 
     assert len(parser.associations) == 2

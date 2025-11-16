@@ -27,10 +27,11 @@ class CodeDuplicationDatabaseFacade:
     def get_associations_for_one_file(self, file_id : str) -> list[FileCodeDuplicationModel]:
         return db.session.query(FileCodeDuplicationModel).filter_by(file_id=file_id).all()
     
-    def get_duplications_for_many_objs(self, obj_list : list[object], attrib_name : str) -> list[CodeDuplicationModel]: 
+    def get_duplications_for_many_objects(self, obj_list : list[object], duplication_id_var_name : str) -> list[CodeDuplicationModel]: 
         clauses = or_(False)
 
         for obj in obj_list:
-            clauses = clauses | (CodeDuplicationModel.id == getattr(obj, attrib_name))
+            clauses = clauses | (CodeDuplicationModel.id == getattr(obj, duplication_id_var_name))
         
         return db.session.query(CodeDuplicationModel).distinct(CodeDuplicationModel.id).filter(clauses).all()
+    

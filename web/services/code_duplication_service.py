@@ -6,8 +6,6 @@ from tools.pmd_cpd_wrapper import *
 from utilities.pmd_cpd_xml_parser import *
 from utilities.custom_json_encoder import *
 
-import services.file_service as file_service
-
 class CodeDuplicationFileStat(CustomJsonEncoder): 
     nb_of_duplicated_lines : int
     nb_of_associations : int
@@ -19,35 +17,34 @@ class CodeDuplicationFileStat(CustomJsonEncoder):
     def encode(self):
         return {
             "nb_of_duplicated_lines": self.nb_of_duplicated_lines,
-            "nb_of_associations": self.nb_of_associations
+            "nb_of_duplications": self.nb_of_associations
         }
 
-
 class CodeDuplicationService: 
-    db_facade : CodeDuplicationDatabaseFacade
+    _facade : CodeDuplicationDatabaseFacade
 
     def __init__(self, db_facade : CodeDuplicationDatabaseFacade): 
-        self.db_facade = db_facade
+        self._facade = db_facade
 
     def insert_one_duplication(self, code_dup : CodeDuplicationModel): 
-        self.db_facade.insert_one_duplication(code_dup)
+        self._facade.insert_one_duplication(code_dup)
 
     def insert_many_duplications(self, code_dups : list[CodeDuplicationModel]):
-        self.db_facade.insert_many_duplications(code_dups)
+        self._facade.insert_many_duplications(code_dups)
 
     def insert_one_association(self, association : FileCodeDuplicationModel):
-        self.db_facade.insert_one_association(association)
+        self._facade.insert_one_association(association)
 
     def insert_many_associations(self, associations : list[FileCodeDuplicationModel]): 
-        self.db_facade.insert_many_associations(associations)
+        self._facade.insert_many_associations(associations)
 
     def get_duplication_by_id(self, id : str) -> CodeDuplicationModel:
-        return self.db_facade.get_duplication_by_id(id)
+        return self._facade.get_duplication_by_id(id)
     
     # id_attrib_name = the name of the object's attribute that contains a valid code duplication id.
     # In other words, the name of the instance variable that has an ID of code duplication row. 
-    def get_duplications_for_many_objs(self, obj_list : list[object], id_attrib_name : str) -> list[CodeDuplicationModel]:
-        return self.db_facade.get_duplications_for_many_objs(obj_list, id_attrib_name)
+    def get_duplications_for_many_objs(self, obj_list : list[object], code_duplication_id_attribute : str) -> list[CodeDuplicationModel]:
+        return self._facade.get_duplications_for_many_objs(obj_list, code_duplication_id_attribute)
     
     def get_duplications_for_one_file(self, file_id : str) -> list[CodeDuplicationModel]:
         association_list : list[FileCodeDuplicationModel] = self.get_associations_for_one_file(file_id)
@@ -55,7 +52,7 @@ class CodeDuplicationService:
         return code_dup_list
 
     def get_associations_for_one_file(self, file_id : str) -> list[FileCodeDuplicationModel]:
-        return self.db_facade.get_associations_for_one_file(file_id)
+        return self._facade.get_associations_for_one_file(file_id)
     
     def get_duplications_for_many_files(self, files : list[File]) -> dict[str, list[CodeDuplicationModel]]: 
         dups_per_file : dict[str, list[CodeDuplicationModel]] = {}
@@ -79,13 +76,14 @@ class CodeDuplicationService:
         for file in files: 
             stats[file.name] = self.get_stats_for_one_file(file.id)
         return stats
-        
-    def run_duplication_analyser(self, minimum_tokens : int, language : PmdCdpLanguage, dir : str): 
-        pmd_cpd_wrapper = PmdCpdWrapper(minimum_tokens, language, dir)
-        xml_content = pmd_cpd_wrapper.run()
+          
+    def run_duplication_analyser(self, pmd_cpd_wrapper : PmdCpdWrapper, pmd_cpd_xml_parser : PmdCdpXmlParser, files : list[File]): 
+        file_registry : dict[str, File] = {}
+        for f in files: 
+            file_registry[f.name] = f
 
-        pmd_cpd_xml_parser = PmdCdpXmlParser(xml_content, dir)
-        pmd_cpd_xml_parser.parse()
+        xml_content = pmd_cpd_wrapper.run()
+        pmd_cpd_xml_parser.parse(xml_content)
         
         code_dup_list : list[CodeDuplicationModel] = []
         for a in pmd_cpd_xml_parser.associations:
@@ -98,7 +96,7 @@ class CodeDuplicationService:
         index = 0
         for a in pmd_cpd_xml_parser.associations: 
             for f in a.files:
-                file = file_service.get_file_by_filename(f)
+                file = file_registry[f]
                 association = FileCodeDuplicationModel(code_dup_list[index].id, file.id, a.lines)
                 ass_list.append(association)
 

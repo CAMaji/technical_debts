@@ -22,12 +22,10 @@ class PmdCdpAssociations:
 class PmdCdpXmlParser: 
     associations : list[PmdCdpAssociations]
     current : PmdCdpAssociations
-    text : str
     repo_path : str
 
-    def __init__(self, text : str, repo_path : str): 
+    def __init__(self, repo_path : str): 
         self.associations = []
-        self.text = text
         self.repo_path = repo_path
         self.current = None
 
@@ -66,8 +64,8 @@ class PmdCdpXmlParser:
         self.current = None 
         return
 
-    def parse(self): 
-        root = xml.fromstring(self.text) 
+    def parse(self, text : str): 
+        root = xml.fromstring(text) 
         for node in root:
             self.parse_duplication_tag(node) 
         return

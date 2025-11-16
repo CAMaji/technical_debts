@@ -2,7 +2,7 @@ from services.code_duplication_service import CodeDuplicationService
 from models.model import File
 from models.code_duplication import *
 from models.file_code_duplication import *
-from mocks.database.code_duplication_db_facade_mock import CodeDuplicationDatabaseFacadeMock
+from unit_tests.database.mocks.code_duplication_db_facade_mock import CodeDuplicationDatabaseFacadeMock
 
 def test_insert_one_duplication(): 
     # arrange 
