@@ -44,7 +44,7 @@ class CodeDuplicationService:
     # id_attrib_name = the name of the object's attribute that contains a valid code duplication id.
     # In other words, the name of the instance variable that has an ID of code duplication row. 
     def get_duplications_for_many_objs(self, obj_list : list[object], code_duplication_id_attribute : str) -> list[CodeDuplicationModel]:
-        return self._facade.get_duplications_for_many_objs(obj_list, code_duplication_id_attribute)
+        return self._facade.get_duplications_for_many_objects(obj_list, code_duplication_id_attribute)
     
     def get_duplications_for_one_file(self, file_id : str) -> list[CodeDuplicationModel]:
         association_list : list[FileCodeDuplicationModel] = self.get_associations_for_one_file(file_id)
@@ -80,6 +80,7 @@ class CodeDuplicationService:
     def run_duplication_analyser(self, pmd_cpd_wrapper : PmdCpdWrapper, pmd_cpd_xml_parser : PmdCdpXmlParser, files : list[File]): 
         file_registry : dict[str, File] = {}
         for f in files: 
+            print(f)
             file_registry[f.name] = f
 
         xml_content = pmd_cpd_wrapper.run()
@@ -90,7 +91,7 @@ class CodeDuplicationService:
             code_dup = CodeDuplicationModel(a.code_fragment)
             code_dup_list.append(code_dup)
 
-        self.insert_many_duplications(code_dup_list)
+        self.insert_many_duplications(code_dup_list) 
 
         ass_list : list[FileCodeDuplicationModel] = []
         index = 0

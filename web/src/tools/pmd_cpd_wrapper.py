@@ -22,7 +22,7 @@ class PmdCpdWrapper:
     
     def run(self) -> str: 
         args = [
-            "/app/src/tools/pmd/bin/pmd", "cpd", 
+            "/pmd/pmd-bin-7.18.0/bin/pmd", "cpd", 
             "--minimum-tokens", str(self.minimum_tokens), 
             "--language", self.language.value, 
             "--format", self.format, 

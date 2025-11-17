@@ -1,4 +1,5 @@
 import json
+from enum import Enum
 
 class CustomJsonEncoderInterface: 
     def encode(self):
@@ -13,6 +14,9 @@ class CustomJsonEncoder:
             "be a class that extends '" + type(CustomJsonEncoderInterface).__name__ + "' and implements\n" +
             "the 'encode' method."
         )
+    
+    def _enum_to_raw(_enum: Enum):
+        return CustomJsonEncoder._tuple_to_raw((_enum.name, _enum.value))
 
     def _dict_to_raw(_dict: dict):
         for k in _dict:
@@ -47,6 +51,7 @@ class CustomJsonEncoder:
         is_number : bool = isinstance(_obj, int) or isinstance(_obj, float)
         is_string : bool = isinstance(_obj, str) 
         is_boolean : bool = isinstance(_obj, bool)
+        is_enum : bool = isinstance(_obj, Enum)
 
         if implements_interface:
             return _obj.encode()
@@ -59,11 +64,14 @@ class CustomJsonEncoder:
         
         if is_tuple: 
             return CustomJsonEncoder._tuple_to_raw(_obj)
+        
+        if is_enum:
+            return CustomJsonEncoder._enum_to_raw(_obj)
 
         if is_number or is_string or is_boolean or _obj == None:
             return _obj
     
-        CustomJsonEncoder._raise_exception()
+        CustomJsonEncoder._raise_exception(_obj)
         return None # should not be reached
 
     def breakdown(obj : object):
@@ -77,7 +85,7 @@ class CustomJsonEncoder:
             return raw
         
 
-        CustomJsonEncoder._raise_exception()
+        CustomJsonEncoder._raise_exception(obj)
         return None # should not be reached
 
     def dump(obj : object):

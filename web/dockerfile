@@ -18,6 +18,8 @@ RUN apt upgrade -y
 RUN apt install openjdk-8-jdk -y
 RUN apt install software-properties-common -y
 RUN apt install git -y
+RUN apt install wget -y
+RUN apt install unzip -y
 RUN add-apt-repository ppa:deadsnakes/ppa
 RUN apt update
 RUN apt install python3.10 -y
@@ -27,6 +29,14 @@ RUN apt install libpq-dev -y
 RUN apt install python3-pip -y
 RUN apt clean
 RUN rm -rf /var/lib/apt/lists/*
+
+# https://pmd.github.io/
+RUN mkdir /pmd 
+WORKDIR /pmd
+RUN wget https://github.com/pmd/pmd/releases/download/pmd_releases%2F7.18.0/pmd-dist-7.18.0-bin.zip
+RUN unzip pmd-dist-7.18.0-bin.zip
+RUN alias pmd="/pmd/pmd-bin-7.18.0/bin/pmd"
+WORKDIR /app
 
 COPY requirements.txt requirements.txt
 RUN python3 -m pip install --upgrade pip && \

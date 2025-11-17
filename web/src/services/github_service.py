@@ -76,11 +76,14 @@ def fetch_files(owner, name, commit_sha):
         try:
             with open(file_path, encoding="utf-8", errors="ignore") as f:
                 code = f.read()
-                rel_path = os.path.relpath(file_path, repo_path)
+                rel_path = os.path.relpath(file_path, repo_path) 
                 files.append((rel_path, code))
+                print(rel_path)
         except Exception:
+            print("err2")
             pass
 
+    print(len(files)) 
     return files
 
 

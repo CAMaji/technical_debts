@@ -21,8 +21,9 @@ def analyse_repo(repo : Repository, commit : Commit):
 
     # we need to get the files
     remote_files = github_service.fetch_files(repo.owner, repo.name, commit.sha)
+    print(len(remote_files))
 
-    # store the files in db
+    # store the files in db 
     for filename, code in remote_files:
         file = file_service.create_file(filename, commit.id)
 
@@ -31,10 +32,11 @@ def analyse_repo(repo : Repository, commit : Commit):
         calculator.calculate_identifiable_identities_analysis(file, code)
 
     # duplication analysis with PMD-CPD
+    files = file_service.get_files_by_commit_id(commit.id)
     repo_dir = github_service.ensure_local_repo(repo.owner, repo.name)
     db_facade = CodeDuplicationDatabaseFacade()
     cds = CodeDuplicationService(db_facade)
-    cds.run_duplication_analyser(20, PmdCdpLanguage.PYTHON, repo_dir)
+    cds.run_duplication_analyser(PmdCpdWrapper(20, PmdCdpLanguage.PYTHON, repo_dir), PmdCdpXmlParser(repo_dir), files)
 
     return
 
@@ -47,6 +49,8 @@ def get_metrics(commit : Commit, files, include_complexity, include_identifiable
         "identifiable_identities_analysis": [],
         "duplicated_code_analysis": [],
     }
+
+    print(len(files))
 
     for file in files:
         if(include_complexity):
@@ -83,21 +87,26 @@ def display_metrics_by_commit_id():
     include_identifiable_identities = data.get('include_identifiable_identities')
     include_code_duplication = data.get('include_code_duplication')
 
+    print(commit_id)
+    print(repository_id)
+
     #branch = branch_service.get_branch_by_branch_id(branch_id)
     commit = commit_service.get_commit_by_commit_id(commit_id)
     repo = repository_service.get_repository_by_repository_id(repository_id)
 
     files = file_service.get_files_by_commit_id(commit.id)
+    print(len(files))
     if(files == []): 
         analyse_repo(repo, commit)
         files = file_service.get_files_by_commit_id(commit.id)
     
+    print(len(files))
     # get metrics
     metrics = get_metrics(commit, files, include_complexity, include_identifiable_identities, include_code_duplication)
     return jsonify(metrics)
 
 @app.route('/api/display_debt_evolution', methods=['POST'])
-def display_debt_evolution():
-    data = request.get_json()
+def display_debt_evolution(): 
+    data = request.get_json() 
 
     return

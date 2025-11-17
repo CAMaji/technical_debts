@@ -1,5 +1,7 @@
 from src.utilities.debt_statistics_calculator import DebtStatisticsCalculator, DebtStatisticsForManyFiles, MetricStatistics, RiskLevelEnum
 from src.services.file_metrics_service import FileMetrics
+from src.utilities.custom_json_encoder import CustomJsonEncoder
+import src.services.github_service as gs
 
 def test_get_maximums():
     # arrange
@@ -173,6 +175,9 @@ def test_get_debt_statistics_for_many_files():
     # assert
     assert result.priorities[0][1] == ((49.2/49.2)*0.40+(20.0/31.0)*0.30+(80.0/80.0)*0.20+(10.0/25.0)*0.10)
     assert result.priorities[0][0] == 'file2.py'
-    assert result.risks[0][1] == RiskLevelEnum.MEDIUM_RISK 
-    assert result.risks[0][0] == 'file1.py'
+    assert result.risks[0][1] == RiskLevelEnum.HIGH_RISK 
+    assert result.risks[0][0] == 'file0.py'
 
+    print(gs.repo_cache_root())
+    print(gs.repo_dir("Flip-HH", "pfe021-test-repo"))
+    assert False

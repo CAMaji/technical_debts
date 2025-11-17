@@ -4,12 +4,12 @@ from enum import Enum
 import math
 
 class RiskLevelEnum(Enum):
-    LOW_RISK = 0,
-    MEDIUM_RISK = 1,
-    HIGH_RISK = 2,
+    LOW_RISK = 0
+    MEDIUM_RISK = 1
+    HIGH_RISK = 2
     VERY_HIGH_RISK = 3
 
-class MetricStatistics:
+class MetricStatistics(CustomJsonEncoderInterface):
     avg_complexity : float
     identifiable_entities : float
     duplication_count : float
@@ -21,6 +21,9 @@ class MetricStatistics:
         self.duplication_count = dc
         self.lines_duplicated = ld
         return
+    
+    def encode(self):
+        return CustomJsonEncoder.breakdown(self.__dict__)
     
 class DebtStatisticsForManyFiles(CustomJsonEncoderInterface):
     metrics    : dict[str, FileMetrics]             # dict of keys (filename) for values (FileMetrics)
@@ -169,7 +172,7 @@ class DebtStatisticsCalculator:
             metrics[f.file_name] = f
 
         priorities.sort(key=lambda item: item[1], reverse=True) 
-        risks.sort(key=lambda item: item[1].value)
+        risks.sort(key=lambda item: item[1].value, reverse=True)
     
         result = DebtStatisticsForManyFiles()
         result.metrics = metrics
