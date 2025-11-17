@@ -55,7 +55,7 @@ class FileMetricsService:
 
         return sum / count
         
-    def get_code_duplications_metrics_for_one_file(self, file_id : str) -> tuple[DuplicationCount_int, LinesDuppedCount_int]:
+    def get_code_duplications_for_one_file(self, file_id : str) -> tuple[DuplicationCount_int, LinesDuppedCount_int]:
         code_duplications = self._facade.get_code_duplications_for_one_file(file_id)
         duplication_count : int = len(code_duplications)
         lines_duplicated : int = 0
@@ -68,7 +68,7 @@ class FileMetricsService:
     def get_metrics_for_one_file(self, file_id : str, file_name : str) -> FileMetrics:
         complexity_avg = self.get_complexity_average_for_one_file(file_id)
         identifiable_entities_count = self.count_identifiable_identities_for_one_file(file_id)
-        duplication_metrics = self.get_code_duplications_metrics_for_one_file(file_id)
+        duplication_metrics = self.get_code_duplications_for_one_file(file_id)
 
         return FileMetrics(
             file_id,
@@ -82,6 +82,6 @@ class FileMetricsService:
     def get_metrics_for_many_files(self, file_list : list[File]) -> list[FileMetrics]: 
         result : list[FileMetrics] = []
         for f in file_list:
-            metrics = self.get_metrics_for_one_file(f.id)
+            metrics = self.get_metrics_for_one_file(f.id, f.name)
             result.append(metrics)
         return result

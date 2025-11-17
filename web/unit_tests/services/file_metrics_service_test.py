@@ -1,123 +1,100 @@
 from services.file_metrics_service import FileMetricsService, FileMetrics
-from unit_tests.database.mocks.file_metrics_db_facade_mock import FileStatisticsDatabaseFacadeMock
+from database.file_metrics_db_facade import FileMetricsDatabaseFacade
 from models.code_duplication import CodeDuplicationModel
-
+from models.model import File
 
 def test_get_function_complexities_for_one_file():
     # arrange
-    called = False
-    file_id_ok = False
-    test_file_id = "file0"
-    test_func_name = "func0"
+    class LocalFacadeMock(FileMetricsDatabaseFacade):
+        hooks_called : list[bool]
 
-    def hook(file_id : str) -> list[tuple[str, int]]:
-        nonlocal called
-        nonlocal test_file_id
-        nonlocal file_id_ok
-        nonlocal test_func_name
+        def __init__(self):
+            self.hooks_called = [False]
 
-        called = True
-        file_id_ok = (file_id == test_file_id)
-        return [(test_func_name, 1)]
-    
-    facade = FileStatisticsDatabaseFacadeMock()
-    facade.hooks.get_function_complexities_for_one_file = hook
+        def get_function_complexities_for_one_file(self, file_id) -> list[tuple[str, int]]:
+            self.hooks_called[0] = True
+            if file_id != "file0": return []
+            else:                  return [("func0", 1)]
+            
+    facade = LocalFacadeMock()
     service = FileMetricsService(facade)
 
     # act 
-    result : dict[str, int] = service.get_function_complexities_for_one_file(test_file_id)
+    result : dict[str, int] = service.get_function_complexities_for_one_file("file0")
 
     # assert 
-    assert called == True
-    assert file_id_ok == True
+    assert facade.hooks_called[0] == True
     assert len(result) == 1
-    assert result[test_func_name] == 1
+    assert result["func0"] == 1
     return
 
 def test_count_identifiable_identities():
     # arrange
-    called = False
-    file_id_ok = False
-    test_file_id = "file0"
-    test_func_name = "func0"
-    expected_result = 3
+    class LocalFacadeMock(FileMetricsDatabaseFacade):
+        hooks_called : list[bool]
 
-    def hook(file_id : str) -> int:
-        nonlocal called
-        nonlocal test_file_id
-        nonlocal file_id_ok
-        nonlocal test_func_name
-        nonlocal expected_result
+        def __init__(self):
+            self.hooks_called = [False]
 
-        called = True
-        file_id_ok = (file_id == test_file_id)
-        return expected_result
-    
-    facade = FileStatisticsDatabaseFacadeMock()
-    facade.hooks.count_identifiable_entities_for_one_file = hook
+        def count_identifiable_entities_for_one_file(self, file_id) -> int:
+            self.hooks_called[0] = True
+            if(file_id != "file0"): return 0
+            else:                   return 3
+
+    facade = LocalFacadeMock()
     service = FileMetricsService(facade)
 
     # act 
-    result : int = service.count_identifiable_identities_for_one_file(test_file_id)
+    result : int = service.count_identifiable_identities_for_one_file("file0")
 
     # assert 
-    assert called == True
-    assert file_id_ok == True
-    assert result == expected_result
+    assert facade.hooks_called[0] == True
+    assert result == 3
     return
 
 def test_get_complexity_average_for_one_file():
     # arrange
-    called = False
-    file_id_ok = False
-    test_file_id = "file0"
-    test_func_name_list = ["func0", "func1", "func2"]
-    test_complexity_list = [10, 20, 30]
-    test_average = sum(test_complexity_list) / len(test_func_name_list)
+    class LocalFacadeMock(FileMetricsDatabaseFacade):
+        hooks_called : list[bool]
 
-    def hook(file_id : str) -> list[tuple[str, int]]:
-        nonlocal called
-        nonlocal test_file_id
-        nonlocal file_id_ok
-        nonlocal test_func_name_list
-        nonlocal test_complexity_list
+        def __init__(self):
+            self.hooks_called = [False]
 
-        called = True
-        file_id_ok = (file_id == test_file_id)
-        return [
-            (test_func_name_list[0], test_complexity_list[0]),
-            (test_func_name_list[1], test_complexity_list[1]),
-            (test_func_name_list[2], test_complexity_list[2])
-        ]
-    
-    facade = FileStatisticsDatabaseFacadeMock()
-    facade.hooks.get_function_complexities_for_one_file = hook
+        # average can't be calculated if there is no elements, leads to div by zero
+        def get_function_complexities_for_one_file(self, file_id) -> list[tuple[str, int]]:
+            self.hooks_called[0] = True
+            if file_id != "file0": return []
+            else:                  return [("func0", 10), ("func1", 20), ("func2", 30)]
+        
+    facade = LocalFacadeMock()
     service = FileMetricsService(facade)
 
     # act 
-    result : float = service.get_complexity_average_for_one_file(test_file_id)
+    result : float = service.get_complexity_average_for_one_file("file0")
 
     # assert
-    assert result == test_average
+    assert facade.hooks_called[0] == True
+    assert result == (10+20+30)/3.0
+    return
 
 def test_get_complexity_average_for_one_file__division_by_zero():
     # arrange
-    called = False
-    file_id_ok = False
-    test_file_id = "file0"
+    class LocalFacadeMock(FileMetricsDatabaseFacade):
+        hooks_called : list[bool]
 
-    def hook(file_id : str) -> list[tuple[str, int]]:
-        nonlocal called
-        nonlocal file_id_ok
-        called = True
-        return [] # average can't be calculated if there is no elements, leads to div by zero
+        def __init__(self):
+            self.hooks_called = [False]
+
+        # average can't be calculated if there is no elements, leads to div by zero
+        def get_function_complexities_for_one_file(self, file_id) -> list[tuple[str, int]]:
+            self.hooks_called[0] = True
+            return []
         
-    facade = FileStatisticsDatabaseFacadeMock()
-    facade.hooks.get_function_complexities_for_one_file = hook
+    facade = LocalFacadeMock()
     service = FileMetricsService(facade)
 
     # act 
-    result : float = service.get_complexity_average_for_one_file(test_file_id)
+    result : float = service.get_complexity_average_for_one_file("file0")
 
     # assert 
     assert result == 0 # shows that divison by zero has been prevented.
@@ -125,108 +102,101 @@ def test_get_complexity_average_for_one_file__division_by_zero():
 
 def test_get_code_duplications_stats_for_one_file():
     # arrange
-    called = False
-    file_id_ok = False
-    test_file_id = "file0"
-    expected_lines_dupped = 2 + 4 + 6
-    expected_duplication_count = 3
-    test_lines_dupped_count = [2, 4, 6]
-    test_code_dup_model = [
-        CodeDuplicationModel('a'), 
-        CodeDuplicationModel('b'), 
-        CodeDuplicationModel('c')
-    ]
+    class LocalFacadeMock(FileMetricsDatabaseFacade):
+        hooks_called : list[bool]
 
-    def hook(file_id : str) -> list[tuple[int, CodeDuplicationModel]]: 
-        nonlocal called
-        nonlocal file_id_ok
-        nonlocal test_file_id
-        nonlocal test_lines_dupped_count
-        nonlocal test_code_dup_model
+        def __init__(self):
+            self.hooks_called = [False]
 
-        called = True
-        file_id_ok = (file_id == test_file_id)
-        return [
-            (test_lines_dupped_count[0], test_code_dup_model[0]),
-            (test_lines_dupped_count[1], test_code_dup_model[1]),
-            (test_lines_dupped_count[2], test_code_dup_model[2]),
-        ]
+        def get_code_duplications_for_one_file(self, file_id) -> list[tuple[int, CodeDuplicationModel]]:
+            self.hooks_called[0] = True
+            if file_id != "file0": return []
+            else:                  return [(2, CodeDuplicationModel('a')), 
+                                           (4, CodeDuplicationModel('b')),
+                                           (6, CodeDuplicationModel('c'))]
     
-    facade = FileStatisticsDatabaseFacadeMock()
-    facade.hooks.get_code_duplications_for_one_file = hook
+    facade = LocalFacadeMock()
     service = FileMetricsService(facade)
     
     # act 
-    result = service.get_code_duplications_metrics_for_one_file(test_file_id)
+    result = service.get_code_duplications_for_one_file("file0")
     
     # assert
     assert result != None
-    assert result[1] == expected_lines_dupped
-    assert result[0] == expected_duplication_count
+    assert facade.hooks_called[0] == True
+    assert result[0] == 3
+    assert result[1] == 2+4+6
+    return
 
 def test_get_metrics_for_one_file():
     # arrange
-    hook1_called = False
-    hook2_called = False
-    hook3_called = False
-    test_file_id = "file0"
-    complexity0 = 1
-    complexity1 = 10
-    complexity2 = 4
-    identifiable_entities_count = 10
-    duplication_count = 2
-    lines_dupped_0 = 10
-    lines_dupped_1 = 37
-    
-    def get_function_complexities_for_one_file(file_id: str) -> list[tuple[str, int]]: 
-        nonlocal hook1_called
-        nonlocal test_file_id
-        nonlocal complexity0
-        nonlocal complexity1
-        nonlocal complexity2
-        hook1_called = True
+    class LocalFacadeMock(FileMetricsDatabaseFacade):
+        hooks_called : list[bool]
 
-        if file_id != test_file_id:
-            return []
-        return [("func0", complexity0), ("func1", complexity1), ("func2", complexity2)]
-    
-    def count_identifiable_entities_for_one_file(file_id: str) -> int:
-        nonlocal hook2_called
-        nonlocal test_file_id
-        nonlocal identifiable_entities_count
+        def __init__(self):
+            self.hooks_called = [False, False, False]
+            return
 
-        hook2_called = True
-        if file_id != test_file_id:
-            return 0
-        return identifiable_entities_count
+        def get_function_complexities_for_one_file(self, file_id) -> list[tuple[str, int]]:
+            self.hooks_called[0] = True
+            if file_id != "file0":  return []
+            else:                   return [("func0", 1), ("func1", 10), ("func2", 4)]
+        
+        def count_identifiable_entities_for_one_file(self, file_id : str) -> int:
+            self.hooks_called[1] = True
+            if file_id != "file0": return 0
+            else:                  return 10
+        
+        def get_code_duplications_for_one_file(self, file_id) -> list[tuple[int, CodeDuplicationModel]]:
+            self.hooks_called[2] = True
+            if file_id != "file0": return []
+            else:                  return [(10, CodeDuplicationModel('abababababa')), (17, CodeDuplicationModel('cbcbcbcbcbc'))]
     
-    def get_code_duplications_for_one_file(file_id: str) -> list[tuple[int, CodeDuplicationModel]]:
-        nonlocal hook3_called
-        nonlocal test_file_id
-        nonlocal lines_dupped_0
-        nonlocal lines_dupped_1
-
-        hook3_called = True
-        if file_id != test_file_id:
-            return []
-        return [
-            (lines_dupped_0, CodeDuplicationModel('abababababa')),
-            (lines_dupped_1, CodeDuplicationModel('cbcbcbcbcbc')),
-        ]
-    
-    facade = FileStatisticsDatabaseFacadeMock()
-    facade.hooks.get_function_complexities_for_one_file = get_function_complexities_for_one_file
-    facade.hooks.count_identifiable_entities_for_one_file = count_identifiable_entities_for_one_file
-    facade.hooks.get_code_duplications_for_one_file = get_code_duplications_for_one_file
+    facade = LocalFacadeMock()
     service = FileMetricsService(facade)
 
     # act
-    result : FileMetrics = service.get_metrics_for_one_file(test_file_id, "fichier.py")
+    result : FileMetrics = service.get_metrics_for_one_file("file0", "file0.py")
     
     # assert
-    assert result.avg_complexity == (complexity0 + complexity1 + complexity2) / 3
-    assert result.identifiable_entities == identifiable_entities_count
-    assert result.duplication_count == duplication_count
-    assert result.lines_duplicated == lines_dupped_0 + lines_dupped_1
+    assert facade.hooks_called[0] == True and facade.hooks_called[1] == True and facade.hooks_called[2] == True
+    assert result.avg_complexity == (1+10+4) / 3.0
+    assert result.identifiable_entities == 10
+    assert result.duplication_count == 2
+    assert result.lines_duplicated == 27
+    return
+
+def test_get_metrics_for_many_files(): 
+    # arrange
+    class LocalServiceMock(FileMetricsService):
+        hooks_called : list[int]
+
+        def __init__(self):
+            super().__init__(None)
+            self.hooks_called = [0]
+
+        def get_metrics_for_one_file(self, file_id, file_name) -> FileMetrics:
+            self.hooks_called[0] += 1
+            if file_id == 'file0' and file_name == 'file0.py':
+                return FileMetrics('file0', 'file0.py', 10, 20, 30, 40)
+            elif file_id == 'file1' and file_name == 'file1.py':
+                return FileMetrics('file0', 'file0.py', 20, 40, 60, 80)
+            else:
+                return FileMetrics('file0', 'file0.py', 0, 0, 0, 0)
+            
+    service = LocalServiceMock()
+    file_list = [
+        File(id='file0',name='file0.py',commit_id='...'),
+        File(id='file1',name='file1.py',commit_id='...'),
+    ]
+    
+    # act
+    result = service.get_metrics_for_many_files(file_list)
+
+    # assert
+    assert service.hooks_called[0] == 2
+    assert len(result) == 2
+    assert result[0].avg_complexity == 10
+    assert result[1].identifiable_entities == 40
     return
 
