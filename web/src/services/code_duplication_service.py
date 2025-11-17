@@ -43,12 +43,12 @@ class CodeDuplicationService:
     
     # id_attrib_name = the name of the object's attribute that contains a valid code duplication id.
     # In other words, the name of the instance variable that has an ID of code duplication row. 
-    def get_duplications_for_many_objs(self, obj_list : list[object], code_duplication_id_attribute : str) -> list[CodeDuplicationModel]:
+    def get_duplications_for_many_objects(self, obj_list : list[object], code_duplication_id_attribute : str) -> list[CodeDuplicationModel]:
         return self._facade.get_duplications_for_many_objects(obj_list, code_duplication_id_attribute)
     
     def get_duplications_for_one_file(self, file_id : str) -> list[CodeDuplicationModel]:
         association_list : list[FileCodeDuplicationModel] = self.get_associations_for_one_file(file_id)
-        code_dup_list : list[CodeDuplicationModel] = self.get_duplications_for_many_objs(association_list, "code_duplication_id")
+        code_dup_list : list[CodeDuplicationModel] = self.get_duplications_for_many_objects(association_list, "code_duplication_id")
         return code_dup_list
 
     def get_associations_for_one_file(self, file_id : str) -> list[FileCodeDuplicationModel]:

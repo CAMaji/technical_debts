@@ -177,7 +177,3 @@ def test_get_debt_statistics_for_many_files():
     assert result.priorities[0][0] == 'file2.py'
     assert result.risks[0][1] == RiskLevelEnum.HIGH_RISK 
     assert result.risks[0][0] == 'file0.py'
-
-    print(gs.repo_cache_root())
-    print(gs.repo_dir("Flip-HH", "pfe021-test-repo"))
-    assert False

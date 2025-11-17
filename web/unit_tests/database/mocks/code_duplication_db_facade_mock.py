@@ -10,7 +10,7 @@ class CodeDuplicationDatabaseFacadeHooks:
     insert_many_associations       : Callable[[list[FileCodeDuplicationModel]], None]
     get_duplication_by_id          : Callable[[str], CodeDuplicationModel]
     get_associations_for_one_file  : Callable[[str], list[FileCodeDuplicationModel]]
-    get_duplications_for_many_objs : Callable[[list[object], str], list[CodeDuplicationModel]]
+    get_duplications_for_many_objects : Callable[[list[object], str], list[CodeDuplicationModel]]
 
     def __init__(self):
         # I was too lazy to set every hook to None by hand.
@@ -43,5 +43,5 @@ class CodeDuplicationDatabaseFacadeMock(CodeDuplicationDatabaseFacade):
     def get_associations_for_one_file(self, file_id : str) -> list[FileCodeDuplicationModel]: 
         return self.hooks.get_associations_for_one_file(file_id)
     
-    def get_duplications_for_many_objs(self, obj_list : list[object], attrib_name : str) -> list[CodeDuplicationModel]: 
-        return self.hooks.get_duplications_for_many_objs(obj_list, attrib_name)
+    def get_duplications_for_many_objects(self, obj_list : list[object], attrib_name : str) -> list[CodeDuplicationModel]: 
+        return self.hooks.get_duplications_for_many_objects(obj_list, attrib_name)
