@@ -312,15 +312,32 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
             # Build result data
             step_start = time.time()
             debt_evolution.append({
-                "commit_sha": commit_info["sha"],
-                "commit_date": commit_info["date"].isoformat() if commit_info["date"] else None,
-                "commit_author": commit_info["author"],
-                "commit_message": commit_info["message"],
-                "total_identifiable_entities": total_debt,
-                "entity_breakdown": counts,
-                "complexity_data": complexity_data
+                "commit_sha": commit.sha,
+                "commit_date": commit.date,
+                "commit_author": commit.author,
+                "commit_message": commit.message,
+                "total_identifiable_entities": total_identifiable_entities,
+                "entity_breakdown": entity_counts,
+                "complexity_data": complexity_count,
             })
-        
+            timing_stats['build_result'].append(time.time() - step_start)
+            
+            iteration_time = time.time() - iteration_start
+            timing_stats['total_iteration'].append(iteration_time)
+            
+            # Print progress every 10% or every 10 commits (whichever is more frequent)
+            progress_interval = max(1, min(10, total_iterations // 10))
+            if i % progress_interval == 0 or i == total_iterations:
+                print(f"Progress: {i}/{total_iterations} commits processed ({i/total_iterations*100:.1f}%)")
+
+        # Print overall timing statistics
+        if timing_stats['total_iteration']:
+            total_time = sum(timing_stats['total_iteration'])
+            print(f"\n=== Execution Time Analysis ===")
+            print(f"Total execution time: {total_time:.2f} seconds")
+            print(f"Average time per commit: {total_time/total_iterations:.3f} seconds")
+            print(f"\nTime breakdown by function:")
+
         # Sort by date
         debt_evolution.sort(key=lambda x: x["commit_date"] or "")
 
