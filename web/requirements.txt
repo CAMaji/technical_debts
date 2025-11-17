@@ -9,3 +9,4 @@ lizard==1.18.0
 python-dotenv==1.0.1
 pydriller>=2.5
 pytest==9.0.1
+pytest-cov==7.0.0

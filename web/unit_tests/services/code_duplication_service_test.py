@@ -1,7 +1,7 @@
-from services.code_duplication_service import CodeDuplicationService
-from models.model import File
-from models.code_duplication import *
-from models.file_code_duplication import *
+from src.services.code_duplication_service import CodeDuplicationService
+from src.models.model import File
+from src.models.code_duplication import *
+from src.models.file_code_duplication import *
 from unit_tests.database.mocks.code_duplication_db_facade_mock import CodeDuplicationDatabaseFacadeMock
 
 def test_insert_one_duplication(): 

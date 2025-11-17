@@ -1,6 +1,6 @@
-from models.code_duplication import CodeDuplicationModel
-from models.file_code_duplication import FileCodeDuplicationModel
-from database.code_duplication_db_facade import CodeDuplicationDatabaseFacade
+from src.models.code_duplication import CodeDuplicationModel
+from src.models.file_code_duplication import FileCodeDuplicationModel
+from src.database.code_duplication_db_facade import CodeDuplicationDatabaseFacade
 from typing import Callable
 
 class CodeDuplicationDatabaseFacadeHooks:

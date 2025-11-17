@@ -5,7 +5,7 @@ services:
     ports:
     - "80:80"
     volumes:
-      - ./web/static:/static
+      - ./web/src/static:/static
     links:
       - web:web
 
@@ -28,7 +28,7 @@ services:
     depends_on:
       - postgres
     command: >
-      gunicorn --timeout 300 --reload -w 2 -b :8000 app:app
+      gunicorn --timeout 300 --reload -w 2 -b :8000 src.app:app
 
   web-unit-tests: 
     build: ./web
@@ -48,7 +48,7 @@ services:
     depends_on:
       - postgres
     command: >
-      pytest --show-capture=all unit_tests
+      pytest --cov=src --show-capture=all unit_tests
 
   postgres:
     restart: always

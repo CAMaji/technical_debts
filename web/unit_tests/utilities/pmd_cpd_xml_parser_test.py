@@ -1,4 +1,4 @@
-from utilities.pmd_cpd_xml_parser import *
+from src.utilities.pmd_cpd_xml_parser import *
 
 def test_parse():
     # arrange

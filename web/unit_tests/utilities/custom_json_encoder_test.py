@@ -1,4 +1,4 @@
-from utilities.custom_json_encoder import CustomJsonEncoder, CustomJsonEncoderInterface
+from src.utilities.custom_json_encoder import CustomJsonEncoder, CustomJsonEncoderInterface
 
 class DummyClass(CustomJsonEncoderInterface):
     a : int

@@ -1,9 +1,9 @@
 
 from flask import Flask
 from dotenv import load_dotenv
-from models.model import *
-from models.code_duplication import CodeDuplicationModel
-from models.file_code_duplication import FileCodeDuplicationModel
+from src.models.model import *
+from src.models.code_duplication import CodeDuplicationModel
+from src.models.file_code_duplication import FileCodeDuplicationModel
 import os
 
 REPO = 0

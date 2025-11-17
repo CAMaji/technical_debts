@@ -1,7 +1,7 @@
-from services.file_metrics_service import FileMetricsService, FileMetrics
-from database.file_metrics_db_facade import FileMetricsDatabaseFacade
-from models.code_duplication import CodeDuplicationModel
-from models.model import File
+from src.services.file_metrics_service import FileMetricsService, FileMetrics
+from src.database.file_metrics_db_facade import FileMetricsDatabaseFacade
+from src.models.code_duplication import CodeDuplicationModel
+from src.models.model import File
 
 def test_get_function_complexities_for_one_file():
     # arrange

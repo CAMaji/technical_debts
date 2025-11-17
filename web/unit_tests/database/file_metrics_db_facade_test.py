@@ -1,7 +1,7 @@
 from unit_tests.mock_app import *
-from models.model import *
-from database.file_metrics_db_facade import FileMetricsDatabaseFacade
-from database.file_metrics_db_facade import FileID_str, Complexity_int, FuncName_str, LinesDuppedCount_int
+from src.models.model import *
+from src.database.file_metrics_db_facade import FileMetricsDatabaseFacade
+from src.database.file_metrics_db_facade import FileID_str, Complexity_int, FuncName_str, LinesDuppedCount_int
 
 def test_get_function_complexities_for_one_file():
     app = init_mock_app()

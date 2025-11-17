@@ -1,8 +1,8 @@
 from unit_tests.mock_app import *
-from database.code_duplication_db_facade import CodeDuplicationDatabaseFacade
-from models.code_duplication import CodeDuplicationModel
-from models.file_code_duplication import FileCodeDuplicationModel
-from models.model import *
+from src.database.code_duplication_db_facade import CodeDuplicationDatabaseFacade
+from src.models.code_duplication import CodeDuplicationModel
+from src.models.file_code_duplication import FileCodeDuplicationModel
+from src.models.model import *
 
 def test_insert_duplication():
     app = init_mock_app()

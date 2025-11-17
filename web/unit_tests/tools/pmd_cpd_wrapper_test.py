@@ -1,4 +1,4 @@
-from tools.pmd_cpd_wrapper import PmdCpdWrapper, PmdCdpLanguage
+from src.tools.pmd_cpd_wrapper import PmdCpdWrapper, PmdCdpLanguage
 import re
 
 def test_run_python(): 
