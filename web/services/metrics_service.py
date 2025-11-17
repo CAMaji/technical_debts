@@ -1,5 +1,6 @@
 import uuid
-from datetime import datetime, timezone
+import time
+from collections import defaultdict
 
 from models import db
 from models.model import *
@@ -13,6 +14,102 @@ import services.repository_service as repository_service
 import services.branch_service as branch_service
 import services.commit_service as commit_service
 import services.file_service as file_service
+
+
+class MetricsClass:
+    repo = None
+    branch = None
+
+    def __init__(self, repo_id, branch_id):
+        self.repo = repository_service.get_repository_by_repository_id(repo_id)
+        self.branch = branch_service.get_branch_by_branch_id(branch_id)
+
+    def get_commits_in_date_range(self, start_date, end_date):
+        commits_in_range = github_service.get_commits_in_date_range(
+            self.repo.owner, self.repo.name, self.branch.name, start_date, end_date
+        )
+
+        return commits_in_range
+
+    def ensure_metric_snapshot(self, commit_to_check):
+        # check if there is a snapshot of the count of identifiable identities
+        existing_counts = IdentifiableEntityCount.query.filter_by(commit_id=commit_to_check.id).all()
+        existing_complexity = ComplexityCount.query.filter_by(commit_id=commit_to_check.id).first()
+
+        if existing_counts and existing_complexity:
+            # snapshots already calculated for this commit
+            return
+
+        try:
+            # the snapshot has not yet been calculated, so we calculate it
+            remote_files = github_service.fetch_files(self.repo.owner, self.repo.name, commit_to_check.sha)
+
+            # Initialize counters for each identifiable entity type
+            identifiable_entities = identifiable_entity_service.get_all_identifiable_entities()
+            entity_totals = {}
+            for entity in identifiable_entities:
+                entity_totals[entity.id] = {"name": entity.name, "count": 0}
+
+            # Initialize complexity tracking
+            total_complexity = 0
+            function_count = 0
+            complexity_values = []
+
+            # Process each file and accumulate counts
+            for filename, code in remote_files:
+                file = file_service.create_file(filename, commit_to_check.id)
+
+                # calculate identifiable entities for this file
+                identifiable_identities_analysis = calculate_identifiable_identities_analysis(file, code)
+
+                # Count occurrences by entity type
+                for entity_analysis in identifiable_identities_analysis:
+                    entity_name = entity_analysis["entity_name"]
+                    # Find the entity ID by name
+                    for entity_id, entity_info in entity_totals.items():
+                        if entity_info["name"] == entity_name:
+                            entity_totals[entity_id]["count"] += 1
+                            break
+
+                # calculate complexity for this file
+                complexity_analysis = calculate_cyclomatic_complexity_analysis(file, code)
+
+                # Accumulate complexity data
+                for complexity_data in complexity_analysis:
+                    complexity_value = complexity_data["cyclomatic_complexity"]
+                    total_complexity += complexity_value
+                    function_count += 1
+                    complexity_values.append(complexity_value)
+
+            # Store the entity counts in the database
+            if not existing_counts:
+                for entity_id, entity_info in entity_totals.items():
+                    db.session.add(IdentifiableEntityCount(
+                        id = str(uuid.uuid4()),
+                        identifiable_entity_id = entity_id,
+                        commit_id = commit_to_check.id,
+                        count = entity_info["count"],
+                    ))
+
+            # Store the complexity summary in the database
+            if not existing_complexity:
+                average_complexity = total_complexity / function_count if function_count > 0 else 0
+                db.session.add(ComplexityCount(
+                    id = str(uuid.uuid4()),
+                    commit_id = commit_to_check.id,
+                    total_complexity = total_complexity,
+                    function_count = function_count,
+                    average_complexity = average_complexity,
+                ))
+
+            db.session.commit()
+            print(f"Calculated metrics for commit {commit_to_check.sha}: {sum(info['count'] for info in entity_totals.values())} total identifiable entities, {function_count} functions with total complexity {total_complexity}")
+
+        except Exception as e:
+            db.session.rollback()
+            print(f"Error calculating metrics for commit {commit_to_check.sha}: {str(e)}")
+            raise
+
 
 
 def calculate_cyclomatic_complexity_analysis(file, code):
@@ -73,122 +170,11 @@ def calculate_identifiable_identities_analysis(file, code):
 
 
 
-def ensure_branch_commit_history(repo_id, branch_id, commits_in_range):
-    # check if the database contains each commit
-    created_count = 0
-    existing_count = 0
-    failed_count = 0
     
-    for commit_in_range in commits_in_range:
-        try:
-            found_commit = commit_service.get_commit_by_sha(commit_in_range["sha"])
-            if not found_commit:
-                # no commit found, so we create it
-                # Convert date string to datetime object - GitHub API returns ISO format
-                commit_date = datetime.fromisoformat(commit_in_range["date"].replace('Z', '+00:00'))
-                commit = commit_service.create_commit(commit_in_range["sha"], commit_date, commit_in_range["author"], commit_in_range["message"], branch_id)
-                ensure_metric_snapshots(repo_id, commit.id)
-                created_count += 1
-            else:
-                # commit exists, but we still need to ensure metrics are calculated
-                ensure_metric_snapshots(repo_id, found_commit.id)
-                existing_count += 1
-        except Exception as e:
-            print(f"Error processing commit {commit_in_range.get('sha', 'unknown')}: {str(e)}")
-            failed_count += 1
-            continue
-    
-    print(f"Commit processing summary: {created_count} created, {existing_count} existing, {failed_count} failed")
-
-
-def ensure_metric_snapshots(repo_id, commit_id):
-    repo = repository_service.get_repository_by_repository_id(repo_id)
-    commit = commit_service.get_commit_by_commit_id(commit_id)
-
-    # check if there is a snapshot of the count of identifiable identities
-    existing_counts = IdentifiableEntityCount.query.filter_by(commit_id=commit_id).all()
-    existing_complexity = ComplexityCount.query.filter_by(commit_id=commit_id).first()
-    
-    if existing_counts and existing_complexity:
-        # snapshots already calculated for this commit
-        return
-
-    try:
-        # the snapshot has not yet been calculated, so we calculate it
-        remote_files = github_service.fetch_files(repo.owner, repo.name, commit.sha)
-
-        # Initialize counters for each identifiable entity type
-        identifiable_entities = identifiable_entity_service.get_all_identifiable_entities()
-        entity_totals = {}
-        for entity in identifiable_entities:
-            entity_totals[entity.id] = {"name": entity.name, "count": 0}
-
-        # Initialize complexity tracking
-        total_complexity = 0
-        function_count = 0
-        complexity_values = []
-
-        # Process each file and accumulate counts
-        for filename, code in remote_files:
-            file = file_service.create_file(filename, commit.id)
-            
-            # calculate identifiable entities for this file
-            identifiable_identities_analysis = calculate_identifiable_identities_analysis(file, code)
-            
-            # Count occurrences by entity type
-            for entity_analysis in identifiable_identities_analysis:
-                entity_name = entity_analysis["entity_name"]
-                # Find the entity ID by name
-                for entity_id, entity_info in entity_totals.items():
-                    if entity_info["name"] == entity_name:
-                        entity_totals[entity_id]["count"] += 1
-                        break
-
-            # calculate complexity for this file
-            complexity_analysis = calculate_cyclomatic_complexity_analysis(file, code)
-            
-            # Accumulate complexity data
-            for complexity_data in complexity_analysis:
-                complexity_value = complexity_data["cyclomatic_complexity"]
-                total_complexity += complexity_value
-                function_count += 1
-                complexity_values.append(complexity_value)
-
-        # Store the entity counts in the database
-        if not existing_counts:
-            for entity_id, entity_info in entity_totals.items():
-                db.session.add(IdentifiableEntityCount(
-                    id=str(uuid.uuid4()),
-                    identifiable_entity_id=entity_id,
-                    commit_id=commit_id,
-                    count=entity_info["count"],
-                ))
-
-        # Store the complexity summary in the database
-        if not existing_complexity:
-            average_complexity = total_complexity / function_count if function_count > 0 else 0
-            db.session.add(ComplexityCount(
-                id=str(uuid.uuid4()),
-                commit_id=commit_id,
-                total_complexity=total_complexity,
-                function_count=function_count,
-                average_complexity=average_complexity,
-            ))
-        
-        db.session.commit()
-        print(f"Calculated metrics for commit {commit.sha}: {sum(info['count'] for info in entity_totals.values())} total identifiable entities, {function_count} functions with total complexity {total_complexity}")
-        
-    except Exception as e:
-        db.session.rollback()
-        print(f"Error calculating metrics for commit {commit.sha}: {str(e)}")
-        raise
-
-    return
-
 
 def get_identifiable_entity_counts_for_commit(commit_id):
     """
-    Get the total counts of identifiable entities for a specific commit.
+    Count the number of times an identifiable identity for each one
     
     Args:
         commit_id (str): The commit ID
@@ -207,36 +193,7 @@ def get_identifiable_entity_counts_for_commit(commit_id):
     return result
 
 
-def get_identifiable_entity_counts_for_commits(commit_ids):
-    """
-    Get the total counts of identifiable entities for multiple commits.
-    
-    Args:
-        commit_ids (list): List of commit IDs
-        
-    Returns:
-        dict: Dictionary with commit_id as keys and entity counts as values
-    """
-    if not commit_ids:
-        return {}
-        
-    counts = IdentifiableEntityCount.query.filter(
-        IdentifiableEntityCount.commit_id.in_(commit_ids)
-    ).all()
-    
-    result = {}
-    for count in counts:
-        if count.commit_id not in result:
-            result[count.commit_id] = {}
-        
-        entity = IdentifiableEntity.query.get(count.identifiable_entity_id)
-        if entity:
-            result[count.commit_id][entity.name] = count.count
-    
-    return result
-
-
-def get_complexity_counts_for_commits(commit_ids):
+def get_complexity_count_for_commit(commit_id):
     """
     Get the complexity counts for multiple commits.
     
@@ -246,22 +203,35 @@ def get_complexity_counts_for_commits(commit_ids):
     Returns:
         dict: Dictionary with commit_id as keys and complexity data as values
     """
-    if not commit_ids:
-        return {}
-        
-    complexity_counts = ComplexityCount.query.filter(
-        ComplexityCount.commit_id.in_(commit_ids)
-    ).all()
+
+    complexity_count = ComplexityCount.query.filter_by(commit_id=commit_id).first()
+
+    return {
+        "total_complexity": complexity_count.total_complexity,
+        "function_count": complexity_count.function_count,
+        "average_complexity": complexity_count.average_complexity
+    }
+
+def calculate_bug_counts_in_range(commits_in_range):
+    """
+    Receives a list of commits (each being a dict with a 'message' field)
+    Counts how many commit messages contain 'bug' or 'fix' (case-insensitive)
+    Returns a dict like: {"total": 7}
+    """
+    linked_bugs = {"total": 0}
+
+    if not commits_in_range:
+        return linked_bugs
+    else:
+        count = 0
+        for commit in commits_in_range:
+            message = commit.get("message", "").lower()
+            if "bug" in message or "fix" in message or "fixes" in message or "fixed" in message:
+                count += 1
+        linked_bugs["total"] = count
     
-    result = {}
-    for complexity_count in complexity_counts:
-        result[complexity_count.commit_id] = {
-            "total_complexity": complexity_count.total_complexity,
-            "function_count": complexity_count.function_count,
-            "average_complexity": complexity_count.average_complexity
-        }
-    
-    return result
+    print("Linked bugs count: ", linked_bugs["total"])
+    return linked_bugs
 
 def calculate_bug_counts_in_range(commits_in_range):
     """
@@ -301,72 +271,46 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
     """
     debt_evolution = []
 
-    repo = repository_service.get_repository_by_repository_id(repo_id)
-    branch = branch_service.get_branch_by_branch_id(branch_id)
-
     try:
-        # Get commits in the date range
-        commits_in_range = github_service.get_commits_in_date_range(
-            repo.owner, repo.name, branch.name, start_date, end_date
-        )
-        
-        # Ensure all commits are in database with calculated metrics
-        ensure_branch_commit_history(repo_id, branch_id, commits_in_range)
-        
-        # Get commit IDs for the commits in range
-        commit_ids = []
-        commit_lookup = {}
-        missing_commits = []
-        
-        for commit_data in commits_in_range:
-            commit = commit_service.get_commit_by_sha(commit_data["sha"])
-            if commit:
-                commit_ids.append(commit.id)
-                commit_lookup[commit.id] = {
-                    "sha": commit.sha,
-                    "date": commit.date,
-                    "author": commit.author,
-                    "message": commit.message
-                }
-            else:
-                missing_commits.append(commit_data["sha"])
-        
-        if missing_commits:
-            print(f"Warning: commits were not found in database: {missing_commits[:5]}{'...' if len(missing_commits) > 5 else ''}")
-        
-        
-        # Get entity counts for all commits
-        entity_counts = get_identifiable_entity_counts_for_commits(commit_ids)
-        
-        # Get complexity counts for all commits
-        complexity_counts = get_complexity_counts_for_commits(commit_ids)
-        
-        # Calculate linked bug of comits in range
-        print("test before going in the function")
-        linked_bugs = calculate_bug_counts_in_range(commits_in_range)
-        
+        metrics_class = MetricsClass(repo_id, branch_id)
 
-        # Build evolution data - include all commits even if they don't have entity data
-        for commit_id in commit_ids:
-            commit_info = commit_lookup[commit_id]
-            counts = entity_counts.get(commit_id, {})
-            complexity_data = complexity_counts.get(commit_id, {})
+        # Get commits in the date range
+        commits_in_range = metrics_class.get_commits_in_date_range(start_date, end_date)
+
+        # Initialize timing statistics
+        timing_stats = defaultdict(list)
+        total_iterations = len(commits_in_range)
+        
+        print(f"Processing {total_iterations} commits...")
+
+        for i, found_commit in enumerate(commits_in_range, 1):
+            iteration_start = time.time()
             
-            # If no entity counts found, initialize with zeros for all known entities
-            if not counts:
-                all_entities = identifiable_entity_service.get_all_identifiable_entities()
-                counts = {entity.name: 0 for entity in all_entities}
-            
-            # If no complexity data found, initialize with zeros
-            if not complexity_data:
-                complexity_data = {
-                    "total_complexity": 0,
-                    "function_count": 0,
-                    "average_complexity": 0.0
-                }
-            
-            total_debt = sum(counts.values())
-            
+            # 1 - Create commit in database, if missing
+            step_start = time.time()
+            commit = commit_service.ensure_commit_exists_by_sha(found_commit, branch_id)
+            timing_stats['ensure_commit'].append(time.time() - step_start)
+
+            # 2 - Calculate metrics, if the commit was missing
+            step_start = time.time()
+            metrics_class.ensure_metric_snapshot(commit)
+            timing_stats['ensure_metric_snapshot'].append(time.time() - step_start)
+
+            # Get entity counts for current commit, if missing
+            step_start = time.time()
+            entity_counts = get_identifiable_entity_counts_for_commit(commit.id)
+            total_identifiable_entities = 0
+            for count in entity_counts.values():
+                total_identifiable_entities += count
+            timing_stats['get_entity_counts'].append(time.time() - step_start)
+
+            # Get complexity counts for current commit, if missing
+            step_start = time.time()
+            complexity_count = get_complexity_count_for_commit(commit.id)
+            timing_stats['get_complexity_counts'].append(time.time() - step_start)
+
+            # Build result data
+            step_start = time.time()
             debt_evolution.append({
                 "commit_sha": commit_info["sha"],
                 "commit_date": commit_info["date"].isoformat() if commit_info["date"] else None,
@@ -374,14 +318,12 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
                 "commit_message": commit_info["message"],
                 "total_identifiable_entities": total_debt,
                 "entity_breakdown": counts,
-                "complexity_data": complexity_data,
-                "linked_bugs_total": linked_bugs["total"]
+                "complexity_data": complexity_data
             })
-        
         
         # Sort by date
         debt_evolution.sort(key=lambda x: x["commit_date"] or "")
-        
+
         #Bug: this line breaks the a part in debt_evolution.js because it is not json
         #debt_evolution.append({"linked_bugs_total": linked_bugs["total"]})
     except Exception as e:
