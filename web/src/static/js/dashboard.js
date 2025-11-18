@@ -6,6 +6,7 @@ const commit_select = document.getElementById("commit_select");
 const include_identifiable_identities_label = document.getElementById("include_identifiable_identities_label");
 const include_identifiable_identities_input = document.getElementById("include_identifiable_identities_input");
 const include_complexity_input = document.getElementById("include_complexity_input");
+const include_duplication_input = document.getElementById("include_duplication_input");
 
 // commit selected for metrics display
 const commit_sha_display = document.getElementById("commit-sha");
@@ -65,11 +66,11 @@ function display_metrics() {
     const commit_id = get_selected_commit_id();
     const include_identifiable_identities = include_identifiable_identities_input.checked;
     const include_complexity = include_complexity_input.checked;
+    const include_duplication = include_duplication_input.checked;
 
-    display_metrics_by_commit_id(repository_id, branch_id, commit_id, include_identifiable_identities, include_complexity, false).then((metrics) => {
+    display_metrics_by_commit_id(repository_id, branch_id, commit_id, include_identifiable_identities, include_complexity, include_duplication).then((metrics) => {
         const { commit_date, commit_message, commit_sha, cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis } = metrics;
         render_commit_info(commit_sha, commit_date, commit_message);
-        console.log(metrics);
         render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis)
     });
 }

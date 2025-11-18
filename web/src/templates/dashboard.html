@@ -3,129 +3,138 @@
 {% block content %}
 
 {% if repository %}
-	<div class="container my-4">
-		<!-- Header -->
-		<div class="text-center mb-4">
-			<h1>Repository Dashboard</h1>
-			<p class="lead">
-				Showing dashboard for 
-				<strong>{{ repository.owner }}</strong>/<strong>{{ repository.name }}</strong>
-			</p>
-			<div class="mt-3">
-				<a href="{{ url_for('debt_evolution', owner=repository.owner, name=repository.name) }}" 
-				   class="btn btn-outline-primary">
-					<i class="bi bi-graph-up"></i> View Debt Evolution
-				</a>
-			</div>
+<div class="container my-4">
+	<!-- Header -->
+	<div class="text-center mb-4">
+		<h1>Repository Dashboard</h1>
+		<p class="lead">
+			Showing dashboard for
+			<strong>{{ repository.owner }}</strong>/<strong>{{ repository.name }}</strong>
+		</p>
+		<div class="mt-3">
+			<a href="{{ url_for('debt_evolution', owner=repository.owner, name=repository.name) }}"
+				class="btn btn-outline-primary">
+				<i class="bi bi-graph-up"></i> View Debt Evolution
+			</a>
 		</div>
+	</div>
 
-		<!-- Filters Section -->
-		<div class="card mb-4 shadow-sm">
-			<div class="card-body">
-				<div class="row g-3 d-flex align-items-center mb-2">
-					<div class="col-md-4">
-						<label class="form-label">Branch</label>
-						<select class="form-select cursor-pointer" id="branch_select">
-							{% for branch in branches %}
-								<option data-id="{{ branch.id }}" {% if loop.first %}selected{% endif %}>
-									{{ branch.name }}
-								</option>
-							{% endfor %}
-						</select>
-					</div>
-					<div class="col-md-5">
-						<label class="form-label">Commit</label>
-						<select class="form-select cursor-pointer" id="commit_select">
-							
-						</select>
-					</div>
-					<div class="col-md-3">
-						<label class="form-label">Date/Time</label>
-						<input type="datetime-local" class="form-control cursor-pointer" id="period_select" />
+	<!-- Filters Section -->
+	<div class="card mb-4 shadow-sm">
+		<div class="card-body">
+			<div class="row g-3 d-flex align-items-center mb-2">
+				<div class="col-md-4">
+					<label class="form-label">Branch</label>
+					<select class="form-select cursor-pointer" id="branch_select">
+						{% for branch in branches %}
+						<option data-id="{{ branch.id }}" {% if loop.first %}selected{% endif %}>
+							{{ branch.name }}
+						</option>
+						{% endfor %}
+					</select>
+				</div>
+				<div class="col-md-5">
+					<label class="form-label">Commit</label>
+					<select class="form-select cursor-pointer" id="commit_select">
+
+					</select>
+				</div>
+				<div class="col-md-3">
+					<label class="form-label">Date/Time</label>
+					<input type="datetime-local" class="form-control cursor-pointer" id="period_select" />
+				</div>
+			</div>
+			<div class="row g-3 align-items-center mt-2">
+				<div class="col-md-4 d-flex align-items-end">
+					<div class="form-check form-switch">
+						<input class="form-check-input cursor-pointer" type="checkbox"
+							id="include_identifiable_identities_input" checked>
+						<label class="form-check-label text-decoration-underline"
+							for="include_identifiable_identities_input"
+							id="include_identifiable_identities_label">Inclure Identitées Remarquables</label>
 					</div>
 				</div>
-				<div class="row g-3 align-items-center mt-2">
-					<div class="col-md-4 d-flex align-items-end">
-						<div class="form-check form-switch">
-							<input class="form-check-input cursor-pointer" type="checkbox" id="include_identifiable_identities_input" checked>
-							<label class="form-check-label text-decoration-underline" for="include_identifiable_identities_input" id="include_identifiable_identities_label">Inclure Identitées Remarquables</label>
-						</div>
+				<div class="col-md-3 d-flex align-items-end">
+					<div class="form-check form-switch">
+						<input class="form-check-input cursor-pointer" type="checkbox" id="include_complexity_input"
+							checked>
+						<label class="form-check-label" for="include_complexity_input">Inclure Complexité</label>
 					</div>
-					<div class="col-md-3 d-flex align-items-end">
-						<div class="form-check form-switch">
-							<input class="form-check-input cursor-pointer" type="checkbox" id="include_complexity_input" checked>
-							<label class="form-check-label" for="include_complexity_input">Inclure Complexité</label>
+				</div>
+				<div class="col-md-3 d-flex align-items-end">
+					<div class="form-check form-switch">
+						<input class="form-check-input cursor-pointer" type="checkbox" id="include_duplication_input"
+							checked>
+						<label class="form-check-label" for="include_duplication_input">Inclure Duplication Code</label>
+					</div>
+				</div>
+			</div>
+			<div class="row g-3 align-items-center mt-2">
+				<div class="col-md-8">
+					<div id="commit-info" class="text-muted small">
+						Commit: <span id="commit-sha">-</span> | Date: <span id="commit-date">-</span>
+						<div id="commit-message" class="text-muted small mt-1 text-truncate" style="max-width: 100%;">
 						</div>
 					</div>
 				</div>
-				<div class="row g-3 align-items-center mt-2">
-					<div class="col-md-8">
-						<div id="commit-info" class="text-muted small">
-							Commit: <span id="commit-sha">-</span> | Date: <span id="commit-date">-</span>
-							<div id="commit-message" class="text-muted small mt-1 text-truncate" style="max-width: 100%;"></div>
-						</div>
-					</div>
-					<div class="col-md-4 d-flex align-items-end ms-auto">
-						<button class="btn btn-primary w-100" onclick="display_metrics()">Calculate Metrics</button>
-					</div>
+				<div class="col-md-4 d-flex align-items-end ms-auto">
+					<button class="btn btn-primary w-100" onclick="display_metrics()">Calculate Metrics</button>
 				</div>
 			</div>
 		</div>
 	</div>
+</div>
 
-	<div class="container my-4">
-		<div class="card shadow-sm">
-			<div class="card-body">
-				<h3 class="card-title fw-bold mb-4">Fichiers à prioriser</h3>
+<div class="container my-4">
+	<div class="card shadow-sm">
+		<div class="card-body">
+			<h3 class="card-title fw-bold mb-4">Fichiers à prioriser</h3>
 
-				<div class="table-responsive">
-					<table class="table table-hover table-sm align-middle" id="metrics-container">
-						<thead>
-							<tr id="metrics-container-header">
-								<th>Nom de fichier</th>
-								<th class="text-center d-none d-lg-table-cell">DEBT</th>
-								<th class="text-center d-none d-lg-table-cell">BUGS</th>
-								<th class="text-center">COMPLEXITY</th>
-								<th class="text-center d-none d-md-table-cell">Progress</th>
-							</tr>
-						</thead>
-						<tbody>
+			<div class="table-responsive">
+				<table class="table table-hover table-sm align-middle" id="metrics-container">
+					<thead>
+						<tr id="metrics-container-header">
+							<th>Nom de fichier</th>
+							<th class="text-center d-none d-lg-table-cell">DEBT</th>
+							<th class="text-center d-none d-lg-table-cell">BUGS</th>
+							<th class="text-center">COMPLEXITY</th>
+							<th class="text-center d-none d-md-table-cell">Progress</th>
+						</tr>
+					</thead>
+					<tbody>
 
-						</tbody>
-					</table>
-				</div>
+					</tbody>
+				</table>
 			</div>
 		</div>
 	</div>
+</div>
 
-	<!-- Technical Debt Metrics Table Section -->
-	<div class="container my-4">
-		<div class="card shadow-sm">
-			<div class="card-body">
-				<h3 class="card-title fw-bold mb-4">Technical Debt Metrics</h3>
-				<div class="table-responsive">
-					<table 
-						id="metrics-table"
-						data-toggle="table"
-						data-detail-view="true"
-						data-detail-formatter="detailFormatter">
-					</table>
-				</div>
+<!-- Technical Debt Metrics Table Section -->
+<div class="container my-4">
+	<div class="card shadow-sm">
+		<div class="card-body">
+			<h3 class="card-title fw-bold mb-4">Technical Debt Metrics</h3>
+			<div class="table-responsive">
+				<table id="metrics-table" data-toggle="table" data-detail-view="true"
+					data-detail-formatter="detailFormatter">
+				</table>
 			</div>
 		</div>
 	</div>
+</div>
 
-	<!-- Debt evolution diagram -->
+<!-- Debt evolution diagram -->
 {% else %}
-	<div class="container my-4">
-		<div class="text-center mb-4">
-			<h1>Repository Dashboard</h1>
-			<p class="lead">
-				Repository <strong>{{ owner }}</strong>/<strong>{{ repo }}</strong> not found.
-				It may not have been created yet.
-			</p>
-		</div>
+<div class="container my-4">
+	<div class="text-center mb-4">
+		<h1>Repository Dashboard</h1>
+		<p class="lead">
+			Repository <strong>{{ owner }}</strong>/<strong>{{ repo }}</strong> not found.
+			It may not have been created yet.
+		</p>
 	</div>
+</div>
 {% endif %}
 
 <script>
