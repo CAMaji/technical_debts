@@ -13,11 +13,11 @@ def test_get_function_complexities_for_one_file():
     
         # act
         try:
-            result : list[tuple[FuncName_str, Complexity_int]] = facade.get_function_complexities_for_one_file(file0.id)
+            result : dict[FuncName_str, Complexity_int] = facade.get_function_complexities_for_one_file(file0.id)
 
             # assert
             assert len(result) == 4
-            assert result[2][1] == 15  # in 'complexity_list' (see mock_app.py), 'file0' is linked with 'cplx2' 
+            assert result["def function2():"] == 15  # in 'complexity_list' (see mock_app.py), 'file0' is linked with 'cplx2' 
         except Exception as e:
             print(e)
             assert False
@@ -52,7 +52,7 @@ def test_get_code_duplications_for_one_file():
         
         # act 
         try:
-            result : list[tuple[LinesDuppedCount_int, CodeDuplicationModel]] = facade.get_code_duplications_for_one_file(file_list[0].id)
+            result : list[tuple[LinesDuppedCount_int, CodeFragment]] = facade.get_code_duplications_for_one_file(file_list[0].id)
 
         # assert
             assert len(result) == 2
@@ -124,7 +124,7 @@ def test_get_code_duplications_for_many_files():
     
         # act
         try:
-            result : list[tuple[FileID_str, LinesDuppedCount_int, CodeDuplicationModel]] = facade.get_code_duplications_for_many_files(file_id_list)
+            result : list[tuple[FileID_str, LinesDuppedCount_int, CodeFragment]] = facade.get_code_duplications_for_many_files(file_id_list)
 
             # assert
             assert len(result) == 4

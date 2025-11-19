@@ -1,26 +1,25 @@
 import json
 from enum import Enum
 
-class CustomJsonEncoderInterface: 
-    def encode(self):
-        return {}
-    
 class CustomJsonEncoder: 
 
+    def encode(self): 
+        return {}
+    
     def _raise_exception(obj : object):
         raise Exception(
             "Type '" + type(obj).__name__ + "' cannot be converted to a JSON dumpable object.\n" +
             "Type must be: list[any], dict[str, any], tuple[any], int, float, bool, None, or\n" +
-            "be a class that extends '" + type(CustomJsonEncoderInterface).__name__ + "' and implements\n" +
+            "be a class that extends '" + type(CustomJsonEncoder).__name__ + "' and implements\n" +
             "the 'encode' method."
         )
-    
+
     def _enum_to_raw(_enum: Enum):
         return CustomJsonEncoder._tuple_to_raw((_enum.name, _enum.value))
 
     def _dict_to_raw(_dict: dict):
         for k in _dict:
-            is_string : bool = isinstance(k, str)
+            is_string  = isinstance(k, str)
             is_int: int = isinstance(k, int)
             if is_string or is_int:
                 _dict[k] = CustomJsonEncoder._object_to_raw(_dict[k])
@@ -42,20 +41,27 @@ class CustomJsonEncoder:
         for v in _tuple:
             temp_list.append(CustomJsonEncoder._object_to_raw(v))
         return temp_list
+    
+    def _set_to_raw(_set: set[object]): 
+        temp_list = []
+        for v in _set:
+            temp_list.append(CustomJsonEncoder._object_to_raw(v))
+        return temp_list
 
     def _object_to_raw(_obj : object): 
-        implements_interface : bool = isinstance(_obj, CustomJsonEncoderInterface)
-        is_dict : bool = isinstance(_obj, dict)
-        is_list : bool = isinstance(_obj, list)
-        is_tuple : bool = isinstance(_obj, tuple)
-        is_number : bool = isinstance(_obj, int) or isinstance(_obj, float)
-        is_string : bool = isinstance(_obj, str) 
-        is_boolean : bool = isinstance(_obj, bool)
-        is_enum : bool = isinstance(_obj, Enum)
-
-        if implements_interface:
-            return _obj.encode()
+        is_encodable = isinstance(_obj, CustomJsonEncoder)
+        is_dict  = isinstance(_obj, dict)
+        is_list  = isinstance(_obj, list)
+        is_tuple  = isinstance(_obj, tuple)
+        is_number  = isinstance(_obj, int) or isinstance(_obj, float)
+        is_string  = isinstance(_obj, str) 
+        is_boolean  = isinstance(_obj, bool)
+        is_enum  = isinstance(_obj, Enum)
+        is_set  = isinstance(_obj, set)
         
+        if is_encodable:
+            return _obj.encode()
+
         if is_dict: 
             return CustomJsonEncoder._dict_to_raw(_obj)
         
@@ -67,27 +73,26 @@ class CustomJsonEncoder:
         
         if is_enum:
             return CustomJsonEncoder._enum_to_raw(_obj)
+        
+        if is_set: 
+            return CustomJsonEncoder._set_to_raw(_obj)
 
         if is_number or is_string or is_boolean or _obj == None:
             return _obj
-    
+
         CustomJsonEncoder._raise_exception(_obj)
-        return None # should not be reached
 
-    def breakdown(obj : object):
-        implements_interface : bool = isinstance(obj, CustomJsonEncoderInterface)
-        is_dict : bool = isinstance(obj, dict)
-        is_list : bool = isinstance(obj, list)
-        is_tuple : bool = isinstance(obj, tuple)
+    def breakdown(obj):
+        """
+        breaks appart complex python objects into 
+        simpler objects that can be dumped as json
+        with `json.dumps()`.
+        """
+        return CustomJsonEncoder._object_to_raw(obj)
 
-        if implements_interface or is_dict or is_list or is_tuple:
-            raw = CustomJsonEncoder._object_to_raw(obj)
-            return raw
-        
-
-        CustomJsonEncoder._raise_exception(obj)
-        return None # should not be reached
-
-    def dump(obj : object):
+    def dump(obj):
+        """
+        Converts a python object into a JSON string.
+        """
         raw = CustomJsonEncoder.breakdown(obj)
         return json.dumps(raw)

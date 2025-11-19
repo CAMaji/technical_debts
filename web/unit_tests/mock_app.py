@@ -2,22 +2,22 @@
 from flask import Flask
 from dotenv import load_dotenv
 from src.models.model import *
-from src.models.code_duplication import CodeDuplicationModel
-from src.models.file_code_duplication import FileCodeDuplicationModel
+from src.models.code_fragment import CodeFragment
+from src.models.duplication import Duplication
 import os
 
 REPO = 0
 BRANCH = 1
 COMMITS = 2
 FILES = 3
-DUPLICATIONS = 4
-FILE_DUPLICATION = 5
+CODE_DUPLICATIONS = 4
+DUPLICATION_ASSOCIATIONS = 5
 FUNCTIONS = 6
 COMPLEXITY = 7
 IDENTIFIABLE_ENTITIES = 8
 FILE_IDENTIFIABLE_ENTITIES = 9
 
-def start_up() -> tuple[Repository, Branch, list[Commit], list[File], list[CodeDuplicationModel], list[FileCodeDuplicationModel]]:
+def start_up() -> tuple[Repository, Branch, list[Commit], list[File], list[CodeFragment], list[Duplication]]:
     # pre-defined values
     repo0 = Repository(id='repo0', owner='test', name='test')
     branch0 = Branch(id='branch0', name='test',repository_id=repo0.id)
@@ -35,15 +35,15 @@ def start_up() -> tuple[Repository, Branch, list[Commit], list[File], list[CodeD
     ]
 
     duplication_list = [
-        CodeDuplicationModel("hello"),
-        CodeDuplicationModel("world"),
+        CodeFragment("hello"),
+        CodeFragment("world"),
     ]
 
-    file_code_duplication_list = [
-        FileCodeDuplicationModel(duplication_list[0].id, file_list[0].id, 1),
-        FileCodeDuplicationModel(duplication_list[0].id, file_list[1].id, 1),
-        FileCodeDuplicationModel(duplication_list[1].id, file_list[0].id, 1),
-        FileCodeDuplicationModel(duplication_list[1].id, file_list[1].id, 1)
+    duplication_association_list = [
+        Duplication(duplication_list[0].id, file_list[0].id, 1),
+        Duplication(duplication_list[0].id, file_list[1].id, 1),
+        Duplication(duplication_list[1].id, file_list[0].id, 1),
+        Duplication(duplication_list[1].id, file_list[1].id, 1)
     ]
 
     function_list = [
@@ -98,7 +98,7 @@ def start_up() -> tuple[Repository, Branch, list[Commit], list[File], list[CodeD
     db.session.commit()
     db.session.add_all(duplication_list)
     db.session.commit()
-    db.session.add_all(file_code_duplication_list)
+    db.session.add_all(duplication_association_list)
     db.session.commit()
     db.session.add_all(function_list)
     db.session.commit()
@@ -115,7 +115,7 @@ def start_up() -> tuple[Repository, Branch, list[Commit], list[File], list[CodeD
         commit_list, 
         file_list, 
         duplication_list, 
-        file_code_duplication_list, 
+        duplication_association_list, 
         function_list, 
         complexity_list,
         ie_list,

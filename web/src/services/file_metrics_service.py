@@ -1,29 +1,10 @@
 from src.models.model import *
+from src.models.file_metrics import FileMetrics
 from src.database.file_metrics_db_facade import FileMetricsDatabaseFacade
 from src.database.file_metrics_db_facade import FuncName_str, Complexity_int, LinesDuppedCount_int
-from src.utilities.custom_json_encoder import CustomJsonEncoderInterface, CustomJsonEncoder
 from typing import TypeAlias
 
 DuplicationCount_int : TypeAlias = int
-
-class FileMetrics(CustomJsonEncoderInterface):
-    file_id : str
-    file_name : str
-    avg_complexity: float
-    identifiable_entities : int
-    duplication_count : int
-    lines_duplicated : int
-
-    def __init__(self, file_id : str, file_name : str, ac : float, ie : int, dc : int, ld : int): 
-        self.file_id = file_id
-        self.file_name = file_name
-        self.avg_complexity = ac
-        self.identifiable_entities = ie
-        self.duplication_count = dc
-        self.lines_duplicated = ld
-
-    def encode(self): 
-        return CustomJsonEncoder.breakdown(self.__dict__)
     
 class FileMetricsService: 
     _facade : FileMetricsDatabaseFacade
@@ -33,11 +14,7 @@ class FileMetricsService:
         return
 
     def get_function_complexities_for_one_file(self, file_id : str) -> dict[FuncName_str, Complexity_int]:
-        rows = self._facade.get_function_complexities_for_one_file(file_id)
-        function_complexities : dict[str, int] = {}
-        for r in rows: 
-            function_complexities[r[0]] = r[1]
-        return function_complexities
+        return self._facade.get_function_complexities_for_one_file(file_id)
 
     def count_identifiable_identities_for_one_file(self, file_id : str) -> int:
         return self._facade.count_identifiable_entities_for_one_file(file_id)

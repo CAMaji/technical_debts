@@ -1,14 +1,21 @@
-from src.utilities.custom_json_encoder import CustomJsonEncoder, CustomJsonEncoderInterface
+from src.utilities.custom_json_encoder import CustomJsonEncoder
+from enum import Enum
 
-class DummyClass(CustomJsonEncoderInterface):
+class DummyEnum(Enum):
+    A = 1
+    B = 2
+
+class DummyClass(CustomJsonEncoder):
     a : int
     b : float
     c : str
+    d : DummyEnum
 
-    def __init__(self, a : int, b : float, c : str): 
+    def __init__(self, a : int, b : float, c : str, d = DummyEnum.A): 
         self.a = a
         self.b = b
         self.c = c
+        self.d = d
         return
     
     def encode(self):
@@ -117,3 +124,38 @@ def test_dump__invalid_dict_key_failure():
 
     except Exception as e:
         assert True # Test succeeds if 'dump' raises an exception. 
+
+def test__obj_to_raw__invalid_type():
+    # arrange
+    class A: 
+        a: int
+        b: int
+    
+    dummy = A()
+    dummy.a = 2
+    dummy.b = 3
+    
+    # act
+    try:
+        result = CustomJsonEncoder._object_to_raw(dummy=dummy)
+
+        #assert
+        assert False
+    except Exception as e:
+        assert True
+
+def test__dict_to_raw__invalid_keys():
+    # arrange
+    dummy = {
+        (1, 2): 'a',
+        (3, 4): 'b'
+    }
+
+    # act
+    try:
+        result = CustomJsonEncoder._dict_to_raw(dummy=dummy)
+
+        #assert
+        assert False
+    except Exception as e:
+        assert True

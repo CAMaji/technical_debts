@@ -1,4 +1,4 @@
-from src.utilities.custom_json_encoder import CustomJsonEncoder, CustomJsonEncoderInterface
+from src.utilities.custom_json_encoder import CustomJsonEncoder
 from src.services.file_metrics_service import FileMetrics
 from enum import Enum
 import math
@@ -9,7 +9,7 @@ class RiskLevelEnum(Enum):
     HIGH_RISK = 2
     VERY_HIGH_RISK = 3
 
-class MetricStatistics(CustomJsonEncoderInterface):
+class MetricStatistics(CustomJsonEncoder):
     avg_complexity : float
     identifiable_entities : float
     duplication_count : float
@@ -25,7 +25,7 @@ class MetricStatistics(CustomJsonEncoderInterface):
     def encode(self):
         return CustomJsonEncoder.breakdown(self.__dict__)
     
-class DebtStatisticsForManyFiles(CustomJsonEncoderInterface):
+class DebtStatisticsForManyFiles(CustomJsonEncoder):
     metrics    : dict[str, FileMetrics]             # dict of keys (filename) for values (FileMetrics)
     priorities : list[tuple[str, float]]            # list of tuple of (priority, filename)
     risks      : list[tuple[str, RiskLevelEnum]]    # dict of keys (filename) for values (RiskLevelEnum)
@@ -161,18 +161,18 @@ class DebtStatisticsCalculator:
         medians = self.get_medians(file_metrics)
         metrics : dict[str, FileMetrics] = {}           # dict of keys (filename) for values (FileMetrics)
         priorities : list[tuple[str, float]] = []       # list of tuple of (priority, filename)
-        risks : list[tuple[str, RiskLevelEnum]] = []    # dict of keys (filename) for values (RiskLevelEnum)
+        risks : list[tuple[str, RiskLevelEnum]] = []    # dict of keys (filename) for values (RiskLevelEnum) 
 
         for f in file_metrics: 
             score = self.get_priority(f, maximums)
             risk = self.get_risk_level(f.avg_complexity)
 
             priorities.append((f.file_name, score))
-            risks.append((f.file_name, risk))
+            risks.append((f.file_name, risk.value))
             metrics[f.file_name] = f
 
         priorities.sort(key=lambda item: item[1], reverse=True) 
-        risks.sort(key=lambda item: item[1].value, reverse=True)
+        risks.sort(key=lambda item: item[1], reverse=True)
     
         result = DebtStatisticsForManyFiles()
         result.metrics = metrics
