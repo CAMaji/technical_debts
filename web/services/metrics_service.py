@@ -308,6 +308,7 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
             step_start = time.time()
             complexity_count = get_complexity_count_for_commit(commit.id)
             timing_stats['get_complexity_counts'].append(time.time() - step_start)
+            linked_bugs = calculate_bug_counts_in_range(commits_in_range)
 
             # Build result data
             step_start = time.time()
@@ -319,6 +320,7 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
                 "total_identifiable_entities": total_identifiable_entities,
                 "entity_breakdown": entity_counts,
                 "complexity_data": complexity_count,
+                 "linked_bugs_total": linked_bugs["total"],
             })
             timing_stats['build_result'].append(time.time() - step_start)
             
