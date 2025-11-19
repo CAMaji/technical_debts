@@ -7,4 +7,5 @@ __pycache__
 web/src/.repo_cache/*
 .pytest_cache
 .coverage
+web/.repo_cache/*
 web/.repo_cache/python__cpython
