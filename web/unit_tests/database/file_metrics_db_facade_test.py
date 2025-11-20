@@ -2,6 +2,7 @@ from unit_tests.mock_app import *
 from src.models.model import *
 from src.database.file_metrics_db_facade import FileMetricsDatabaseFacade
 from src.database.file_metrics_db_facade import FileID_str, Complexity_int, FuncName_str, LinesDuppedCount_int
+from src.utilities.smart_list_iterator import SmartListIterator
 
 def test_get_function_complexities_for_one_file():
     app = init_mock_app()
@@ -129,6 +130,52 @@ def test_get_code_duplications_for_many_files():
             # assert
             assert len(result) == 4
             assert result[0][2].text == 'hello' # check 'mock_app.py' for mock data                                           
+        except Exception as e:
+            print(e)
+            assert False
+    return
+
+
+def test_get_function_complexities_for_many_files_v2():
+    app = init_mock_app()
+    with app.app_context():
+        # arrange 
+        predef = start_up()
+        facade = FileMetricsDatabaseFacade()
+        file_list = predef[FILES]
+        iterator = SmartListIterator[File, str](file_list, lambda file: file.id)
+    
+        # act
+        try:
+            result = facade.get_function_complexities_for_many_files_v2(iterator)
+
+            # assert
+            assert len(result) == 8
+            assert result[0][0] == 'file0' and result[0][1].id == 'func0' and result[0][2].id == 'cplx0'
+            assert result[7][0] == 'file1' and result[7][1].id == 'func7' and result[7][2].id == 'cplx7'
+        except Exception as e:
+            print(e)
+            assert False
+    return
+   
+
+def test_get_avg_complexities_for_many_files_v2():
+    app = init_mock_app()
+    with app.app_context():
+        # arrange 
+        predef = start_up()
+        facade = FileMetricsDatabaseFacade()
+        file_list = predef[FILES]
+        iterator = SmartListIterator[File, str](file_list, lambda file: file.id)
+    
+        # act
+        try:
+            result = facade.get_avg_complexities_for_many_files_v2(iterator)
+
+            # assert
+            assert len(result) == 2
+            assert result[0][0] == 'file0' and result[0][1] == 13.75
+            assert result[1][0] == 'file1' and result[1][1] == 35.0
         except Exception as e:
             print(e)
             assert False

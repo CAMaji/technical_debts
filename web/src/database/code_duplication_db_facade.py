@@ -4,7 +4,6 @@ from src.models.model import File
 from src.utilities.smart_list_iterator import SmartListIterator
 from src.utilities.facade_utilities import FacadeUtilities
 from sqlalchemy.orm import Query
-from sqlalchemy.engine import Row
 
 class CodeDuplicationDatabaseFacade: 
     def insert_many_fragments(self, fragments : list[CodeFragment]): 

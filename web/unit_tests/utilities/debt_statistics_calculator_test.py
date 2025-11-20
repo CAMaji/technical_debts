@@ -173,5 +173,5 @@ def test_get_debt_statistics_for_many_files():
     # assert
     assert result.priorities[0][1] == ((49.2/49.2)*0.40+(20.0/31.0)*0.30+(80.0/80.0)*0.20+(10.0/25.0)*0.10)
     assert result.priorities[0][0] == 'file2.py'
-    assert result.risks[0][1] == RiskLevelEnum.HIGH_RISK.value
+    assert result.risks[0][1] == RiskLevelEnum.HIGH_RISK
     assert result.risks[0][0] == 'file0.py'

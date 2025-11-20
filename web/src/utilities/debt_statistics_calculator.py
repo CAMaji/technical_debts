@@ -137,7 +137,7 @@ class DebtStatisticsCalculator:
             lines_duplicated_ratio * 0.10
         )
     
-    def get_risk_level(self, complexity) -> RiskLevelEnum:
+    def get_risk_level(self, complexity : float) -> RiskLevelEnum:
         # Source: Murphy, James & Robinson III, John. (2007). Design of a Research Platform 
         #         for En Route Conflict Detection and Resolution. 10.2514/6.2007-7803. 
         # https://www.researchgate.net/figure/Cyclomatic-Complexity-Thresholds_tbl2_238659831
@@ -166,13 +166,17 @@ class DebtStatisticsCalculator:
         for f in file_metrics: 
             score = self.get_priority(f, maximums)
             risk = self.get_risk_level(f.avg_complexity)
+            print(risk)
 
             priorities.append((f.file_name, score))
-            risks.append((f.file_name, risk.value))
+            risks.append((f.file_name, risk))
             metrics[f.file_name] = f
 
+        # ===========================================================
+        print(risks)
+
         priorities.sort(key=lambda item: item[1], reverse=True) 
-        risks.sort(key=lambda item: item[1], reverse=True)
+        risks.sort(key=lambda item: item[1].value, reverse=True)
     
         result = DebtStatisticsForManyFiles()
         result.metrics = metrics

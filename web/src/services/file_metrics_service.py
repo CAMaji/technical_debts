@@ -2,6 +2,7 @@ from src.models.model import *
 from src.models.file_metrics import FileMetrics
 from src.database.file_metrics_db_facade import FileMetricsDatabaseFacade
 from src.database.file_metrics_db_facade import FuncName_str, Complexity_int, LinesDuppedCount_int
+from src.utilities.smart_list_iterator import SmartListIterator
 from typing import TypeAlias
 
 DuplicationCount_int : TypeAlias = int
@@ -50,7 +51,8 @@ class FileMetricsService:
         return FileMetrics(
             file_id,
             file_name,
-            complexity_avg, 
+            complexity_avg,
+            #{"0":complexity_avg},  
             identifiable_entities_count, 
             duplication_metrics[0], 
             duplication_metrics[1]

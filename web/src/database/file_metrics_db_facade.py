@@ -1,8 +1,11 @@
-from src.models.model import db, Complexity, Function, IdentifiableEntity, FileIdentifiableEntity
+from src.models.model import db, Complexity, Function, IdentifiableEntity, FileIdentifiableEntity, File
 from src.models.code_fragment import CodeFragment
 from src.models.duplication import Duplication
-from typing import TypeAlias
 from src.utilities.facade_utilities import FacadeUtilities
+from src.utilities.smart_list_iterator import SmartListIterator
+from typing import TypeAlias
+from sqlalchemy.orm import Query
+from sqlalchemy import func
 
 # type aliases for clarity
 FileID_str : TypeAlias = str
@@ -46,3 +49,16 @@ class FileMetricsDatabaseFacade:
         query = query.join(Duplication, Duplication.code_fragment_id == CodeFragment.id)
         query = query.filter(Duplication.file_id.in_(file_id_list))
         return FacadeUtilities.to_list(query.all(), lambda row : (row[0], row[1], row[2]))
+    
+    def get_function_complexities_for_many_files_v2(self, files : SmartListIterator[File, str]) -> list[tuple[FileID_str, Function, Complexity]]:
+        query : Query = db.session.query(Function.file_id, Function, Complexity)
+        query : Query = query.join(Function, Function.id == Complexity.function_id)
+        query : Query = query.filter(Function.file_id.in_(files))
+        return FacadeUtilities.to_list(query.all(), lambda row: (row[0], row[1], row[2]))
+    
+    def get_avg_complexities_for_many_files_v2(self, files : SmartListIterator[File, str]) -> list[tuple[FileID_str, float]]:
+        query : Query = db.session.query(Function.file_id, func.avg(Complexity.value))
+        query : Query = query.join(Function, Function.id == Complexity.function_id)
+        query : Query = query.filter(Function.file_id.in_(files))
+        query : Query = query.group_by(Function.file_id)
+        return FacadeUtilities.to_list(query.all(), lambda row: (row[0], float(row[1])))
