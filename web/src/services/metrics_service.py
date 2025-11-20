@@ -113,6 +113,7 @@ class MetricsClass:
 
 
 def calculate_cyclomatic_complexity_analysis(file, code):
+    
     cyclomatic_complexity_analysis = []
     analysis = analyze_file.analyze_source_code(file.name, code)
     for func in analysis.function_list:
@@ -165,6 +166,10 @@ def calculate_identifiable_identities_analysis(file, code):
 # get all the commits in the specified range of date
 # commits_in_range = github_service.get_commits_in_date_range(repo.owner, repo.name, branch.name, start_date, end_date)
 
+
+
+
+
     
 
 def get_identifiable_entity_counts_for_commit(commit_id):
@@ -207,8 +212,51 @@ def get_complexity_count_for_commit(commit_id):
         "average_complexity": complexity_count.average_complexity
     }
 
+def calculate_bug_counts_in_range(commits_in_range):
+    """
+    Receives a list of commits (each being a dict with a 'message' field)
+    Counts how many commit messages contain 'bug' or 'fix' (case-insensitive)
+    Returns a dict like: {"total": 7}
+    """
+    linked_bugs = {"total": 0}
+
+    if not commits_in_range:
+        return linked_bugs
+    else:
+        count = 0
+        for commit in commits_in_range:
+            message = commit.get("message", "").lower()
+            if "bug" in message or "fix" in message or "fixes" in message or "fixed" in message:
+                count += 1
+        linked_bugs["total"] = count
+    
+    print("Linked bugs count: ", linked_bugs["total"])
+    return linked_bugs
+
+def calculate_bug_counts_in_range(commits_in_range):
+    """
+    Receives a list of commits (each being a dict with a 'message' field)
+    Counts how many commit messages contain 'bug' or 'fix' (case-insensitive)
+    Returns a dict like: {"total": 7}
+    """
+    linked_bugs = {"total": 0}
+
+    if not commits_in_range:
+        return linked_bugs
+    else:
+        count = 0
+        for commit in commits_in_range:
+            message = commit.get("message", "").lower()
+            if "bug" in message or "fix" in message or "fixes" in message or "fixed" in message:
+                count += 1
+        linked_bugs["total"] = count
+    
+    print("Linked bugs count: ", linked_bugs["total"])
+    return linked_bugs
+
 
 def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
+    print("Calculating bug-related commit counts...")
     """
     Calculate the evolution of technical debt (identifiable entities) over time.
     
@@ -260,6 +308,7 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
             step_start = time.time()
             complexity_count = get_complexity_count_for_commit(commit.id)
             timing_stats['get_complexity_counts'].append(time.time() - step_start)
+            linked_bugs = calculate_bug_counts_in_range(commits_in_range)
 
             # Build result data
             step_start = time.time()
@@ -271,6 +320,7 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
                 "total_identifiable_entities": total_identifiable_entities,
                 "entity_breakdown": entity_counts,
                 "complexity_data": complexity_count,
+                 "linked_bugs_total": linked_bugs["total"],
             })
             timing_stats['build_result'].append(time.time() - step_start)
             
@@ -293,6 +343,8 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
         # Sort by date
         debt_evolution.sort(key=lambda x: x["commit_date"] or "")
 
+        #Bug: this line breaks the a part in debt_evolution.js because it is not json
+        #debt_evolution.append({"linked_bugs_total": linked_bugs["total"]})
     except Exception as e:
         print(f"Error calculating debt evolution: {str(e)}")
         raise

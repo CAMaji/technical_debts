@@ -20,6 +20,7 @@ import src.controllers.duplication_controller as duplication_controller
 import src.controllers.tech_debt_controller as tech_debt_controller
 
 @app.route('/api/display_metrics_by_commit_id', methods=['POST'])
+
 def display_metrics_by_commit_id():
     data = request.get_json()
     repository_id = data.get('repository_id')
@@ -42,12 +43,12 @@ def display_metrics_by_commit_id():
     if files == []:
         # we need to get the files
         remote_files = github_service.fetch_files(repo.owner, repo.name, commit.sha)
-
         # store the files in db
         for filename, code in remote_files:
             file = file_service.create_file(filename, commit.id)
             
             # calculate the various metrics here
+            
             cyclomatic_complexity_analysis = metrics_service.calculate_cyclomatic_complexity_analysis(file, code)
             identifiable_identities_analysis = metrics_service.calculate_identifiable_identities_analysis(file, code)
 

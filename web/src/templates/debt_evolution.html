@@ -86,25 +86,31 @@
 			<div class="card-body">
 				<h4 class="card-title">Summary Statistics</h4>
 				<div class="row">
-					<div class="col-md-3">
+					<div class="col-md-2">
 						<div class="text-center">
 							<h5 class="text-primary" id="total-commits">{{ debt_data|length }}</h5>
 							<small class="text-muted">Total Commits</small>
 						</div>
 					</div>
-					<div class="col-md-3">
+					<div class="col-md-2">
+						<div class="text-center">
+							<h5 class="text-warning" id="linked-bugs-total">-</h5>
+							<small class="text-muted">Linked Bugs</small>
+						</div>
+					</div>
+					<div class="col-md-2">
 						<div class="text-center">
 							<h5 class="text-danger" id="max-debt">-</h5>
 							<small class="text-muted">Peak Debt</small>
 						</div>
 					</div>
-					<div class="col-md-3">
+					<div class="col-md-2">
 						<div class="text-center">
 							<h5 class="text-success" id="current-debt">-</h5>
 							<small class="text-muted">Current Debt</small>
 						</div>
 					</div>
-					<div class="col-md-3">
+					<div class="col-md-2">
 						<div class="text-center">
 							<h5 id="debt-trend">-</h5>
 							<small class="text-muted">Trend</small>

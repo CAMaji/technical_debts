@@ -210,6 +210,7 @@ function updateSummaryStats() {
     const totalDebts = debtData.map(commit => commit.total_identifiable_entities);
     const maxDebt = Math.max(...totalDebts);
     const currentDebt = totalDebts[totalDebts.length - 1];
+    const linkedBugsTotal = (debtData[1] && debtData[1].linked_bugs_total); 
     
     // Calculate trend
     let trend = "No Change";
@@ -230,6 +231,7 @@ function updateSummaryStats() {
     
     // Update the DOM
     document.getElementById('total-commits').textContent = totalCommits;
+    document.getElementById('linked-bugs-total').textContent = linkedBugsTotal;
     document.getElementById('max-debt').textContent = maxDebt;
     document.getElementById('current-debt').textContent = currentDebt;
     

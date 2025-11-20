@@ -66,6 +66,7 @@ def dashboard(owner, name):
 
 @app.route('/debt_evolution/<owner>/<name>/', methods=['GET'])
 def debt_evolution(owner, name):
+    
     """
         Return the debt evolution page for a repository with Plotly visualization.
     """
@@ -102,6 +103,8 @@ def debt_evolution(owner, name):
                 start_date, 
                 end_date
             )
+
+        print("Print test:", debt_data)
 
         return render_template('debt_evolution.html', 
             repository=repo, 
