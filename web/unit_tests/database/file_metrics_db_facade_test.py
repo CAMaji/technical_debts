@@ -135,7 +135,6 @@ def test_get_code_duplications_for_many_files():
             assert False
     return
 
-
 def test_get_function_complexities_for_many_files_v2():
     app = init_mock_app()
     with app.app_context():
@@ -158,7 +157,6 @@ def test_get_function_complexities_for_many_files_v2():
             assert False
     return
    
-
 def test_get_avg_complexities_for_many_files_v2():
     app = init_mock_app()
     with app.app_context():

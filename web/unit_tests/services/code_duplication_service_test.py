@@ -1,6 +1,6 @@
 from src.services.code_duplication_service import CodeDuplicationService
 from src.database.code_duplication_db_facade import CodeDuplicationDatabaseFacade
-from src.models.code_duplication_report import CodeDuplicationReport
+from src.models.duplication_report import DuplicationReport
 from src.models.model import File
 from src.models.code_fragment import *
 from src.models.duplication import *
@@ -115,11 +115,11 @@ def test_insert_elements_from_parsed_xml():
             LocalServiceMock.called = True
             LocalServiceMock.params_valid = (len(fragments) == 2) and (len(duplications) == 4)
 
-    report0 = CodeDuplicationReport(3, "hello world")
+    report0 = DuplicationReport(3, "hello world")
     report0.add("file0.py", 0, 3, 0, 10)
     report0.add("file1.py", 10, 13, 0, 10)
 
-    report1 = CodeDuplicationReport(6, "world hello")
+    report1 = DuplicationReport(6, "world hello")
     report1.add("file0.py", 0, 5, 0, 15)
     report1.add("file1.py", 10, 15, 0, 15)
 

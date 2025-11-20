@@ -1,4 +1,4 @@
-class CodeDuplicationReport: 
+class DuplicationReport: 
     class _DuplicationInstance: 
         filename: str
         from_line : int
@@ -27,7 +27,7 @@ class CodeDuplicationReport:
         return
     
     def add(self, filename:str, from_line:int, to_line:int, from_column:int, to_column:int):
-        instance = CodeDuplicationReport._DuplicationInstance(filename, from_line, to_line, from_column, to_column)
+        instance = DuplicationReport._DuplicationInstance(filename, from_line, to_line, from_column, to_column)
         self.instances.append(instance)
 
     def __iter__(self):

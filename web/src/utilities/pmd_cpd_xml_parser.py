@@ -1,5 +1,5 @@
 import xml.etree.ElementTree as xml
-from src.models.code_duplication_report import CodeDuplicationReport
+from src.models.duplication_report import DuplicationReport
 from enum import Enum
 
 class PmdXmlTag(Enum):
@@ -8,7 +8,7 @@ class PmdXmlTag(Enum):
     PMD_CODE_FRAGMENT_TAG = "{" + "https://pmd-code.org/schema/cpd-report" + "}codefragment"
 
 class PmdCdpXmlParser: 
-    _associations : list[CodeDuplicationReport]
+    _associations : list[DuplicationReport]
     _repo_path : str
 
     def __init__(self, repo_path : str): 
@@ -19,7 +19,7 @@ class PmdCdpXmlParser:
             self._repo_path = self._repo_path + "/"
         return
 
-    def parse_file_tag(self, pnode : xml.Element, report : CodeDuplicationReport):
+    def parse_file_tag(self, pnode : xml.Element, report : DuplicationReport):
         path = pnode.get("path").removeprefix(self._repo_path)
         line = int(pnode.get("line"))
         endline = int(pnode.get("endline"))
@@ -28,13 +28,13 @@ class PmdCdpXmlParser:
         report.add(path, line, endline, column, endcolumn)
         return
     
-    def parse_code_fragment_tag(self, pnode : xml.Element, report : CodeDuplicationReport) -> str: 
+    def parse_code_fragment_tag(self, pnode : xml.Element, report : DuplicationReport) -> str: 
         report.fragment = pnode.text
         return
 
     def parse_duplication_tag(self, pnode : xml.Element):
         lines = int(pnode.attrib['lines'])
-        report = CodeDuplicationReport(lines, "")
+        report = DuplicationReport(lines, "")
 
         for node in pnode:
             if node.tag == PmdXmlTag.PMD_FILE_TAG.value:
@@ -58,5 +58,5 @@ class PmdCdpXmlParser:
                 
         return
     
-    def get_reports(self) -> list[CodeDuplicationReport]:
+    def get_reports(self) -> list[DuplicationReport]:
         return self._associations

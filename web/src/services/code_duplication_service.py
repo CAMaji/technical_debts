@@ -3,7 +3,7 @@ from src.models.duplication import *
 from src.models.code_fragment import CodeFragment
 from src.models.code_fragment_referent import CodeFragmentReferent
 from src.models.code_fragment_relationships import CodeFragmentRelationships
-from src.models.code_duplication_report import CodeDuplicationReport
+from src.models.duplication_report import DuplicationReport
 from src.models.model import File
 from src.database.code_duplication_db_facade import *
 
@@ -43,7 +43,7 @@ class CodeDuplicationService:
             referents_dict[cf.id].referent.append(referent)
         return referents_dict
       
-    def insert_elements_from_parsed_xml(self, reports : list[CodeDuplicationReport], files : list[File]): 
+    def insert_elements_from_parsed_xml(self, reports : list[DuplicationReport], files : list[File]): 
         file_registry : dict[str, File] = {}
         for file in files: 
             file_registry[file.name] = file
