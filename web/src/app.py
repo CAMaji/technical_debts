@@ -35,6 +35,8 @@ import src.controllers.commit_controller
 import src.controllers.metrics_controller
 import src.controllers.repository_controller
 
+import src.services.metrics_service as metrics_service
+
 
 @app.route('/', methods=['GET'])
 def index():
@@ -96,7 +98,7 @@ def debt_evolution(owner, name):
             
         debt_data = []
         if selected_branch:
-            import services.metrics_service as metrics_service
+            
             debt_data = metrics_service.calculate_debt_evolution(
                 repo.id, 
                 selected_branch.id, 
