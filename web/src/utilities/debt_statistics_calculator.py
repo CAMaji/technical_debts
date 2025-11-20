@@ -166,14 +166,14 @@ class DebtStatisticsCalculator:
         for f in file_metrics: 
             score = self.get_priority(f, maximums)
             risk = self.get_risk_level(f.avg_complexity)
-            print(risk)
+            #print(risk)
 
             priorities.append((f.file_name, score))
             risks.append((f.file_name, risk))
             metrics[f.file_name] = f
 
         # ===========================================================
-        print(risks)
+        #print(risks)
 
         priorities.sort(key=lambda item: item[1], reverse=True) 
         risks.sort(key=lambda item: item[1].value, reverse=True)

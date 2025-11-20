@@ -17,26 +17,52 @@ import time
 import json
 
 import src.controllers.duplication_controller as duplication_controller
-import src.controllers.file_metrics_contoller as tech_debt_controller
+import src.controllers.tech_debt_controller as tech_debt_controller
 
-def analyse_repo(repo : Repository, commit : Commit):
-    calculator : MetricsCalculator = MetricsCalculator(None, repo.id, commit.branch_id, None, None)
+@app.route('/api/display_metrics_by_commit_id', methods=['POST'])
+def display_metrics_by_commit_id():
+    data = request.get_json()
+    repository_id = data.get('repository_id')
+    branch_id = data.get('branch_id')
+    commit_id = data.get('commit_id')
+    include_complexity = data.get('include_complexity')
+    include_identifiable_identities = data.get('include_identifiable_identities')
+    include_code_duplication = data.get('include_code_duplication')
 
-    # we need to get the files
-    remote_files = github_service.fetch_files(repo.owner, repo.name, commit.sha)
+    commit = commit_service.get_commit_by_commit_id(commit_id)
+    repo = repository_service.get_repository_by_repository_id(repository_id)
 
-    # store the files in db 
-    for filename, code in remote_files:
-        file = file_service.create_file(filename, commit.id)
+    cyclomatic_complexity_analysis = []
+    identifiable_identities_analysis = []
+    duplication_analysis = None
+    prioritisation_risk = None
 
-        # calculate the various metrics here
-        calculator.calculate_cyclomatic_complexity_analysis(file, code)
-        calculator.calculate_identifiable_identities_analysis(file, code)
+    # check if the commit has files
+    files = file_service.get_files_by_commit_id(commit_id)
+    if files == []:
+        # we need to get the files
+        remote_files = github_service.fetch_files(repo.owner, repo.name, commit.sha)
 
-    duplication_controller.analyse_repo(repo, commit)
-    return
+        # store the files in db
+        for filename, code in remote_files:
+            file = file_service.create_file(filename, commit.id)
+            
+            # calculate the various metrics here
+            cyclomatic_complexity_analysis = metrics_service.calculate_cyclomatic_complexity_analysis(file, code)
+            identifiable_identities_analysis = metrics_service.calculate_identifiable_identities_analysis(file, code)
 
-def get_metrics(commit : Commit, files, include_complexity, include_identifiable_identities, include_code_duplication): 
+    saved_files = file_service.get_files_by_commit_id(commit.id)
+    for file in saved_files:
+        cyclomatic_complexity_analysis.append(complexity_service.get_complexity_by_file_id_verbose(file.id))
+
+        entities = identifiable_entity_service.get_identifiable_entity_by_file_id_verbose(file.id)
+        for entity in entities:
+            identifiable_identities_analysis.append(entity)
+    
+    duplication_controller.analyse_repo(repo, saved_files)
+    duplication_analysis = duplication_controller.get_metrics(commit, saved_files)
+    prioritisation_risk = tech_debt_controller.get_metrics(commit, saved_files)
+
     metrics = {
         "commit_sha": commit.sha,
         "commit_date": commit.date,
@@ -46,46 +72,21 @@ def get_metrics(commit : Commit, files, include_complexity, include_identifiable
         "duplicated_code_analysis": [],
     }
 
-    for file in files:
-        if(include_complexity):
-             metrics['cyclomatic_complexity_analysis'].append(complexity_service.get_complexity_by_file_id_verbose(file.id))
+    # add the metrics analysis only if requested
+    if include_complexity:
+        metrics["cyclomatic_complexity_analysis"] = cyclomatic_complexity_analysis
 
-        if(include_identifiable_identities):
-            entities = identifiable_entity_service.get_identifiable_entity_by_file_id_verbose(file.id)
-            for entity in entities:
-                metrics['identifiable_identities_analysis'].append(entity) 
-                
-    if(include_code_duplication):
-        _ = tech_debt_controller.get_metrics(commit, files)
-        metrics['identifiable_identities_analysis'] = duplication_controller.get_metrics(commit, files)
+    if include_identifiable_identities:
+        metrics["identifiable_identities_analysis"] = identifiable_identities_analysis
 
-    return metrics
-
-@app.route('/api/display_metrics_by_commit_id', methods=['POST'])
-def display_metrics_by_commit_id():
-    data = request.get_json()
-    repository_id = data.get('repository_id') 
-    branch_id = data.get('branch_id')
-    commit_id = data.get('commit_id')
-    include_complexity = data.get('include_complexity')
-    include_identifiable_identities = data.get('include_identifiable_identities')
-    include_code_duplication = data.get('include_code_duplication')
-
-    #branch = branch_service.get_branch_by_branch_id(branch_id)
-    commit = commit_service.get_commit_by_commit_id(commit_id)
-    repo = repository_service.get_repository_by_repository_id(repository_id)
-
-    files = file_service.get_files_by_commit_id(commit.id)
-    if(files == []): 
-        analyse_repo(repo, commit)
-        files = file_service.get_files_by_commit_id(commit.id)
+    if include_code_duplication: 
+        metrics["duplicated_code_analysis"] = duplication_analysis
     
-    # get metrics
-    metrics = get_metrics(commit, files, include_complexity, include_identifiable_identities, include_code_duplication)
     return jsonify(metrics)
 
+
 @app.route('/api/display_debt_evolution', methods=['POST'])
-def display_debt_evolution(): 
-    data = request.get_json() 
+def display_debt_evolution():
+    data = request.get_json()
 
     return

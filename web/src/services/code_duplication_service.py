@@ -43,7 +43,7 @@ class CodeDuplicationService:
             referents_dict[cf.id].referent.append(referent)
         return referents_dict
       
-    def insert_elements_from_parsed_xml(self, reports : list[DuplicationReport], files : list[File]): 
+    def insert_elements_from_parsed_xml(self, reports : list[DuplicationReport], files : list[File]):  
         file_registry : dict[str, File] = {}
         for file in files: 
             file_registry[file.name] = file
@@ -56,10 +56,15 @@ class CodeDuplicationService:
             fragments_list.append(code_dup)
 
             for instance in r:
+                if instance.filename not in file_registry:
+                    msg = "Duplication detection tool has found '"+ instance.filename + "', " \
+                          "but file does not appear in provided file list."
+                    print(msg)
+                    raise Exception(msg)
                 file = file_registry[instance.filename]
                 lines = ValueRange(instance.from_line, instance.to_line)
                 columns = ValueRange(instance.from_column, instance.to_column)
-                association = Duplication(code_dup.id, file.id, r.lines, lines, columns)
+                association = Duplication(code_dup.id, file.id, r.lines, lines, columns) 
                 association_list.append(association)
 
         self.insert(fragments_list, association_list)

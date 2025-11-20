@@ -21,6 +21,6 @@ def get_metrics(commit : Commit, files):
     debt = calculator.get_debt_statistics_for_many_files(file_metrics)
 
     metrics = CustomJsonEncoder.breakdown(debt) 
-    print(json.dumps(metrics, indent=4))
+    #print(json.dumps(metrics, indent=4))
 
     return metrics
