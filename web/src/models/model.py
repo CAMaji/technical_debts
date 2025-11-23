@@ -5,7 +5,6 @@ from sqlalchemy import inspect
 from datetime import datetime
 import enum
 from src.models import db
-from src.utilities.custom_json_encoder import CustomJsonEncoder
 
 class ModelMixin:
     def as_dict(self, include_relationships: bool = True):
@@ -67,19 +66,12 @@ class Commit(ModelMixin, db.Model):
     branch_id = Column(String(36), ForeignKey("branch.id"))
 
 
-class File(ModelMixin, db.Model, CustomJsonEncoder):
+class File(ModelMixin, db.Model):
     __tablename__ = "file"
     id = Column(String(36), primary_key=True)
     name = Column(Text, nullable=False)
 
     commit_id = Column(String(36), ForeignKey("commit.id"))
-
-    def encode(self): 
-        return {
-            "id": self.id,
-            "name": self.name,
-            "commit_id": self.commit_id
-        }
 
 class Function(ModelMixin, db.Model):
     __tablename__ = "function"

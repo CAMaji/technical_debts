@@ -1,11 +1,9 @@
 from src.models.code_fragment import *
 from src.models.duplication import *
 from src.models.code_fragment import CodeFragment
-from src.models.code_fragment_referent import CodeFragmentReferent
-from src.models.code_fragment_relationships import CodeFragmentRelationships
-from src.models.duplication_report import DuplicationReport
-from src.models.model import File
 from src.database.code_duplication_db_facade import *
+from src.interface.duplication_report import DuplicationReport
+from src.models.model import File
 
 class CodeDuplicationService: 
     _facade : CodeDuplicationDatabaseFacade
@@ -20,52 +18,50 @@ class CodeDuplicationService:
     def get_fragment_by_id(self, id : str) -> CodeFragment:
         return self._facade.get_duplication_by_id(id)
 
-    def get_fragments_for_many_files(self, files : list[File]) -> dict[str, CodeFragmentRelationships]:
-        lookup_table : dict[str, File] = {}
-        for f in files: 
-            lookup_table[f.id] = f
+    def get_reports_for_many_files(self, file_list : list[File]) -> dict[str, DuplicationReport]:
+        file_id_dict : dict[str, File] = {}
+        for f in file_list: 
+            file_id_dict[f.id] = f
 
-        iterator = SmartListIterator[File, str](files, lambda f: f.id)
-        frag_dupl_list = self._facade.get_fragments_for_many_file(iterator)
-        referents_dict : dict[str, CodeFragmentRelationships] = {}
+        iterator = SmartListIterator[File, str](file_list, lambda file: file.id)
+        fragment_list = self._facade.get_fragments_for_many_file(iterator)
+        fragment_id_dict : dict[str, DuplicationReport] = {}
 
-        for frag_dupl in frag_dupl_list:
-            cf : CodeFragment = frag_dupl[0]
-            dupl : Duplication = frag_dupl[1]
-            file = lookup_table[dupl.file_id]
+        for element in fragment_list:
+            fragment : CodeFragment = element[0]
+            duplication : Duplication = element[1]
+            file = file_id_dict[duplication.file_id]
 
-            if cf.id not in referents_dict:
-                referents_dict[cf.id] = CodeFragmentRelationships()
-                referents_dict[cf.id].fragment = cf
-                referents_dict[cf.id].referent = []
+            if fragment.id not in fragment_id_dict:
+                report = DuplicationReport(fragment.line_count, fragment.text)
+                fragment_id_dict[fragment.id] = report
 
-            referent = CodeFragmentReferent(file, dupl)
-            referents_dict[cf.id].referent.append(referent)
-        return referents_dict
-      
-    def insert_elements_from_parsed_xml(self, reports : list[DuplicationReport], files : list[File]):  
-        file_registry : dict[str, File] = {}
-        for file in files: 
-            file_registry[file.name] = file
+            report_element = DuplicationReport.File(file.name, duplication.lines(), duplication.columns())
+            report = fragment_id_dict[fragment.id]
+            report.add_file(report_element)
 
-        association_list : list[Duplication] = []
+        return fragment_id_dict
+    
+    def insert_from_report(self, report_list : list[DuplicationReport], file_list : list[File]):  
+        filename_dict : dict[str, File] = {}
+        for file in file_list: 
+            filename_dict[file.name] = file
+
+        duplication_list : list[Duplication] = []
         fragments_list : list[CodeFragment] = []
 
-        for r in reports:
-            code_dup = CodeFragment(r.fragment)
-            fragments_list.append(code_dup)
+        for report in report_list:
+            fragment = CodeFragment(report.get_fragment(), report.get_lines())
+            fragments_list.append(fragment)
+            lines = report.get_lines()
+            
+            for element in report:
+                if element.filename not in filename_dict:
+                    raise Exception("filename '" + element.filename + "' in duplication report does not exists in database.")
+        
+                file : File = filename_dict[element.filename]
+                duplication = Duplication(fragment.id, file.id, lines, element.lines, element.columns)
+                duplication_list.append(duplication)
 
-            for instance in r:
-                if instance.filename not in file_registry:
-                    msg = "Duplication detection tool has found '"+ instance.filename + "', " \
-                          "but file does not appear in provided file list."
-                    print(msg)
-                    raise Exception(msg)
-                file = file_registry[instance.filename]
-                lines = ValueRange(instance.from_line, instance.to_line)
-                columns = ValueRange(instance.from_column, instance.to_column)
-                association = Duplication(code_dup.id, file.id, r.lines, lines, columns) 
-                association_list.append(association)
-
-        self.insert(fragments_list, association_list)
+        self.insert(fragments_list, duplication_list)
         return

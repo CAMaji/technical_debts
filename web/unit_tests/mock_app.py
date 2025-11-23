@@ -4,13 +4,14 @@ from dotenv import load_dotenv
 from src.models.model import *
 from src.models.code_fragment import CodeFragment
 from src.models.duplication import Duplication
+from src.utilities.value_range import ValueRange
 import os
 
 REPO = 0
 BRANCH = 1
 COMMITS = 2
 FILES = 3
-CODE_DUPLICATIONS = 4
+CODE_FRAGMENTS = 4
 DUPLICATION_ASSOCIATIONS = 5
 FUNCTIONS = 6
 COMPLEXITY = 7
@@ -34,16 +35,18 @@ def start_up() -> tuple[Repository, Branch, list[Commit], list[File], list[CodeF
         File(id='file5', name='file2.py', commit_id=commit_list[1].id)
     ]
 
-    duplication_list = [
-        CodeFragment("hello"),
-        CodeFragment("world"),
+    fragment_list = [
+        CodeFragment("hello", 10),
+        CodeFragment("world", 10),
     ]
 
-    duplication_association_list = [
-        Duplication(duplication_list[0].id, file_list[0].id, 1),
-        Duplication(duplication_list[0].id, file_list[1].id, 1),
-        Duplication(duplication_list[1].id, file_list[0].id, 1),
-        Duplication(duplication_list[1].id, file_list[1].id, 1)
+    duplication_list = [
+        # file0
+        Duplication(fragment_list[0].id, file_list[0].id, 10, ValueRange(0, 10), ValueRange(0, 10)),
+        Duplication(fragment_list[1].id, file_list[0].id, 10, ValueRange(0, 10), ValueRange(0, 10)),
+        # file1
+        Duplication(fragment_list[0].id, file_list[1].id, 10, ValueRange(0, 10), ValueRange(0, 10)),
+        Duplication(fragment_list[1].id, file_list[1].id, 10, ValueRange(0, 10), ValueRange(0, 10))
     ]
 
     function_list = [
@@ -80,8 +83,10 @@ def start_up() -> tuple[Repository, Branch, list[Commit], list[File], list[CodeF
 
     # file identifiable entites (fie)
     fie_list = [
+        # file0
         FileIdentifiableEntity(id='fie0',file_id=file_list[0].id, identifiable_entity_id=ie_list[0].id, line_position=3),
         FileIdentifiableEntity(id='fie1',file_id=file_list[0].id, identifiable_entity_id=ie_list[1].id, line_position=7),
+        # file1
         FileIdentifiableEntity(id='fie2',file_id=file_list[1].id, identifiable_entity_id=ie_list[0].id, line_position=10),
         FileIdentifiableEntity(id='fie3',file_id=file_list[1].id, identifiable_entity_id=ie_list[1].id, line_position=2),
     ]
@@ -96,9 +101,9 @@ def start_up() -> tuple[Repository, Branch, list[Commit], list[File], list[CodeF
     db.session.commit()
     db.session.add_all(file_list)
     db.session.commit()
-    db.session.add_all(duplication_list)
+    db.session.add_all(fragment_list)
     db.session.commit()
-    db.session.add_all(duplication_association_list)
+    db.session.add_all(duplication_list)
     db.session.commit()
     db.session.add_all(function_list)
     db.session.commit()
@@ -114,8 +119,8 @@ def start_up() -> tuple[Repository, Branch, list[Commit], list[File], list[CodeF
         branch0, 
         commit_list, 
         file_list, 
+        fragment_list, 
         duplication_list, 
-        duplication_association_list, 
         function_list, 
         complexity_list,
         ie_list,

@@ -10,14 +10,14 @@ def test_insert_many_fragments():
     with app.app_context():
         # arrange
         facade = CodeDuplicationDatabaseFacade()
-        duplications = [
-            CodeFragment("hello world"),
-            CodeFragment("world hello")
+        fragments = [
+            CodeFragment("hello world", 10),
+            CodeFragment("world hello", 10)
         ]
     
         # act
         try:
-            facade.insert_many_fragments(duplications)
+            facade.insert_many_fragments(fragments)
 
         # assert
         except Exception as e: 
@@ -33,15 +33,15 @@ def test_insert_many_duplications():
         facade = CodeDuplicationDatabaseFacade()
         file1 = predef[FILES][0]
         file2 = predef[FILES][1]
-        duplication = predef[CODE_DUPLICATIONS][0]
-        associations = [
-            Duplication(duplication.id, file1.id, 10),
-            Duplication(duplication.id, file2.id, 20)
+        fragments = predef[CODE_FRAGMENTS][0]
+        duplications = [
+            Duplication(fragments.id, file1.id, 10, ValueRange(0, 10), ValueRange(0, 10)),
+            Duplication(fragments.id, file2.id, 20, ValueRange(0, 10), ValueRange(0, 10))
         ]
     
         # act
         try:
-            facade.insert_many_duplications(associations)
+            facade.insert_many_duplications(duplications)
 
         # assert
         except Exception as e: 
@@ -55,14 +55,14 @@ def test_get_duplication_by_id():
         # arrange
         predef = start_up()
         facade = CodeDuplicationDatabaseFacade()
-        duplication = predef[CODE_DUPLICATIONS][0]
+        fragments = predef[CODE_FRAGMENTS][0]
 
         try:
             # act
-            result = facade.get_duplication_by_id(duplication.id)
+            result = facade.get_duplication_by_id(fragments.id)
     
             # assert
-            assert result != None and result.text == duplication.text
+            assert result != None and result.text == fragments.text
         except Exception as e:
             print(e)
             assert False
@@ -82,12 +82,14 @@ def test_get_fragments_for_many_file():
             result = facade.get_fragments_for_many_file(iterator)
 
         # assert
-            assert type(result) == list
             assert len(result) == 4
-            assert type(result[0]) == type((CodeFragment, Duplication))
-            assert result[0][0].text == 'hello' and result[0][1].file_id == 'file1'
-            assert result[1][0].text == 'hello' and result[1][1].file_id == 'file0'
-        
+            fragment = result[0][0]
+            duplication = result[0][1]
+            assert fragment.line_count == 10 and duplication.line_count == 10
+            assert fragment.text == 'hello'
+            assert duplication.code_fragment_id == fragment.id and duplication.file_id in {'file0', 'file1'}
+            assert duplication.from_column == 0 and duplication.to_column == 10
+            assert duplication.from_line == 0 and duplication.to_line == 10
         except Exception as e:
             print(e)
             assert False

@@ -52,17 +52,21 @@ def display_metrics_by_commit_id():
             cyclomatic_complexity_analysis = metrics_service.calculate_cyclomatic_complexity_analysis(file, code)
             identifiable_identities_analysis = metrics_service.calculate_identifiable_identities_analysis(file, code)
 
-    saved_files = file_service.get_files_by_commit_id(commit.id)
+        files = file_service.get_files_by_commit_id(commit.id)
+        duplication_controller.analyse_repo(repo, files)
+    
+    saved_files = files
     for file in saved_files:
         cyclomatic_complexity_analysis.append(complexity_service.get_complexity_by_file_id_verbose(file.id))
 
         entities = identifiable_entity_service.get_identifiable_entity_by_file_id_verbose(file.id)
         for entity in entities:
-            identifiable_identities_analysis.append(entity)
-    
-    duplication_controller.analyse_repo(repo, saved_files)
-    duplication_analysis = duplication_controller.get_metrics(commit, saved_files)
-    prioritisation_risk = tech_debt_controller.get_metrics(commit, saved_files)
+            identifiable_identities_analysis.append(entity) 
+
+    duplication_analysis = duplication_controller.get_metrics(commit, saved_files) 
+    prioritisation_risk = tech_debt_controller.get_metrics(saved_files)
+    print(json.dumps(duplication_analysis, indent=4))
+    print(json.dumps(prioritisation_risk, indent=4))
 
     metrics = {
         "commit_sha": commit.sha,

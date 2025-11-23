@@ -1,11 +1,12 @@
-from src.services.code_duplication_service import CodeDuplicationService
 from src.database.code_duplication_db_facade import CodeDuplicationDatabaseFacade
-from src.models.duplication_report import DuplicationReport
+from src.services.code_duplication_service import CodeDuplicationService
+from src.interface.duplication_report import DuplicationReport
+from src.utilities.value_range import ValueRange
+from src.models.code_fragment import CodeFragment
+from src.models.duplication import Duplication
 from src.models.model import File
-from src.models.code_fragment import *
-from src.models.duplication import *
 
-def test_insert_v2():
+def test_insert():
     # arrange
     class LocalFacadeMock(CodeDuplicationDatabaseFacade):
         frag_called = 0
@@ -28,8 +29,10 @@ def test_insert_v2():
     mock = LocalFacadeMock()
     service = CodeDuplicationService(mock)
     fragments = [CodeFragment("hello", 10), CodeFragment("world", 11)]
-    duplications = [Duplication(fragments[0].id, 'file0', 10), Duplication(fragments[1].id, 'file0', 11),
-                    Duplication(fragments[0].id, 'file1', 10), Duplication(fragments[1].id, 'file1', 11)]
+    duplications = [Duplication(fragments[0].id, 'file0', 10, ValueRange(0, 10), ValueRange(0, 10)), 
+                    Duplication(fragments[1].id, 'file0', 11, ValueRange(0, 10), ValueRange(0, 10)),
+                    Duplication(fragments[0].id, 'file1', 10, ValueRange(0, 10), ValueRange(0, 10)), 
+                    Duplication(fragments[1].id, 'file1', 11, ValueRange(0, 10), ValueRange(0, 10))]
 
     # act 
     service.insert(fragments, duplications)
@@ -49,7 +52,7 @@ def test_get_duplication_by_id():
         def get_duplication_by_id(self, id):
             LocalFacadeMock.called = True
             LocalFacadeMock.params_valid = id == 'test_id'
-            inst = CodeFragment('test')
+            inst = CodeFragment('test', 10)
             inst.id = 'test_id'
             return inst
     
@@ -62,8 +65,9 @@ def test_get_duplication_by_id():
     # assert
     assert LocalFacadeMock.called and LocalFacadeMock.params_valid
     assert result.id == 'test_id' and result.text == 'test'
+    assert result.line_count == 10
 
-def test_get_fragments_for_many_file_v2():
+def test_get_fragments_for_many_file():
     # arrange 
     class LocalFacadeMock(CodeDuplicationDatabaseFacade):
         called = False
@@ -76,31 +80,41 @@ def test_get_fragments_for_many_file_v2():
                 file_list_iterator.data[1].id == 'file1'
             )
             
-            cd0 = CodeFragment("hello", 10)
-            cd1 = CodeFragment("world", 20)
-            cd0.id = 'c0'
-            cd1.id = 'c1'
+            cf0 = CodeFragment("hello", 10)
+            cf1 = CodeFragment("world", 20)
+            cf0.id = 'c0'
+            cf1.id = 'c1'
 
             return [
-                (cd0, Duplication(cd0.id, 'file0', 10)),
-                (cd0, Duplication(cd0.id, 'file1', 10)),
-                (cd1, Duplication(cd1.id, 'file0', 20)),
-                (cd1, Duplication(cd1.id, 'file1', 20))
+                (cf0, Duplication(cf0.id, 'file0', 10, ValueRange(0, 10), ValueRange(0, 10))),
+                (cf0, Duplication(cf0.id, 'file1', 10, ValueRange(0, 10), ValueRange(0, 10))),
+                (cf1, Duplication(cf1.id, 'file0', 20, ValueRange(0, 10), ValueRange(0, 10))),
+                (cf1, Duplication(cf1.id, 'file1', 20, ValueRange(0, 10), ValueRange(0, 10)))
             ]
         
     mock = LocalFacadeMock()
     service = CodeDuplicationService(mock)
 
     # act
-    result = service.get_fragments_for_many_files([
+    result = service.get_reports_for_many_files([
         File(id='file0',name='file0.py',commit_id='...'),
         File(id='file1',name='file1.py',commit_id='...')
     ])
 
     # assert 
     assert LocalFacadeMock.called and LocalFacadeMock.params_valid
+    assert "c0" in result
     assert len(result) == 2
-    assert len(result['c0'].referent) == 2
+    
+    report = result['c0']
+    assert report.get_lines() == 10
+    assert report.get_fragment() == "hello"
+    assert len(report._files) == 2
+    
+    file = report._files[0]
+    assert file.filename == 'file0.py'
+    assert file.lines.From == 0 and file.lines.To == 10
+    assert file.columns.From == 0 and file.columns.To == 10
 
 def test_insert_elements_from_parsed_xml(): 
     # arrange
@@ -115,25 +129,32 @@ def test_insert_elements_from_parsed_xml():
             LocalServiceMock.called = True
             LocalServiceMock.params_valid = (len(fragments) == 2) and (len(duplications) == 4)
 
-    report0 = DuplicationReport(3, "hello world")
-    report0.add("file0.py", 0, 3, 0, 10)
-    report0.add("file1.py", 10, 13, 0, 10)
-
-    report1 = DuplicationReport(6, "world hello")
-    report1.add("file0.py", 0, 5, 0, 15)
-    report1.add("file1.py", 10, 15, 0, 15)
-
-    reports = [report0, report1]
-
     files = [
         File(id='file0', name='file0.py', commit_id='...'),
         File(id='file1', name='file1.py', commit_id='...'),
     ]
+    report0_files = [
+        DuplicationReport.File("file0.py", ValueRange(0, 3), ValueRange(0, 10)),
+        DuplicationReport.File("file1.py", ValueRange(10, 13), ValueRange(0, 10))
+    ]
+    report1_files = [
+        DuplicationReport.File("file0.py", ValueRange(0, 5), ValueRange(0, 15)),
+        DuplicationReport.File("file1.py", ValueRange(10, 15), ValueRange(0, 15))
+    ]
 
+    report0 = DuplicationReport(3, "hello world")
+    report1 = DuplicationReport(6, "world hello")
+
+    report0.add_file(report0_files[0])
+    report0.add_file(report0_files[1])
+    report1.add_file(report1_files[0])
+    report1.add_file(report1_files[1])
+
+    reports = [report0, report1]
     service = LocalServiceMock()
 
     # act
-    service.insert_elements_from_parsed_xml(reports, files)
+    service.insert_from_report(reports, files)
 
     # assert
     assert LocalServiceMock.called and LocalServiceMock.params_valid

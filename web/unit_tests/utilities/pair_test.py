@@ -5,7 +5,7 @@ def test_to_tuple():
     pair = Pair[int, str](123, "soleil")
 
     # act
-    _tuple = pair.to_tuple()
+    _tuple = pair.as_tuple()
 
     # assert 
     assert _tuple[0] == 123
