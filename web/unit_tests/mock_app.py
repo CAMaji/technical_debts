@@ -2,7 +2,6 @@
 from flask import Flask
 from dotenv import load_dotenv
 from src.models.model import *
-from src.models.code_fragment import CodeFragment
 from src.models.duplication import Duplication
 from src.utilities.value_range import ValueRange
 import os

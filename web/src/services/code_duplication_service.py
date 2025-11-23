@@ -1,6 +1,4 @@
-from src.models.code_fragment import *
 from src.models.duplication import *
-from src.models.code_fragment import CodeFragment
 from src.database.code_duplication_db_facade import *
 from src.interface.duplication_report import DuplicationReport
 from src.models.model import File

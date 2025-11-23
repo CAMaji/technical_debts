@@ -4,6 +4,7 @@ from sqlalchemy import (
 from sqlalchemy import inspect
 from datetime import datetime
 import enum
+import uuid
 from src.models import db
 
 class ModelMixin:
@@ -40,6 +41,21 @@ class ModelMixin:
 
 
 # ---------------- CORE TABLES ---------------- #
+
+class CodeFragment(ModelMixin, db.Model): 
+    __tablename__ = "code_fragment"
+    # PK
+    id = Column(String(36), primary_key = True)
+
+    # Columns
+    text = Column(Text)
+    line_count = Column(Integer)
+
+    def __init__(self, text: str, line_count: int):
+        self.id = str(uuid.uuid4())
+        self.text = text
+        self.line_count = line_count
+        return
 
 class Repository(ModelMixin, db.Model):
     __tablename__ = "repository"

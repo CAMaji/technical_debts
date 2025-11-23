@@ -1,5 +1,6 @@
-from src.models.model import db, Complexity, Function, IdentifiableEntity, FileIdentifiableEntity, File
-from src.models.code_fragment import CodeFragment
+from src.models import db
+from src.models.model import *
+
 from src.models.duplication import Duplication
 from src.utilities.facade_utilities import FacadeUtilities
 from src.utilities.smart_list_iterator import SmartListIterator

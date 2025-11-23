@@ -309,18 +309,19 @@ def get_latest_commits(owner, name, branch_name):
             repo.remotes.origin.fetch()
         except Exception:
             pass
-    
-    ref = next(
-        (r for r in repo.references if r.name in [branch_name, f"origin/{branch_name}"]),
-        None
-    )
+
+    # only search for origin references
+    for r in repo.references:
+        if r.name == f"origin/{branch_name}":
+            ref = r
 
     if not ref:
         raise ValueError(
             f"Branch '{branch_name}' not found. Available refs: {[r.name for r in repo.references]}"
         )
 
-    commits = list(repo.iter_commits(ref, max_count=10))
+    commits = list(repo.iter_commits(ref, max_count=11))
+
     return [
         {
             "hash": c.hexsha,

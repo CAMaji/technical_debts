@@ -1,5 +1,5 @@
 import uuid
-from src.models.model import db
+from src.models import db
 from src.models.model import ModelMixin
 from sqlalchemy import (Column, String, Integer, Float, Text, ForeignKey, DateTime)
 from src.utilities.value_range import ValueRange
