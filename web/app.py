@@ -46,6 +46,9 @@ def index():
     except Exception:
         repositories = []
 
+    import services.duplicate_code_service as duplicate_code_service
+    duplicates = duplicate_code_service.find_duplicates("Flip-HH", "pfe021-test-repo", "da753db88949953c1ae955900677996a80c2696b")
+    print(duplicates)
     return render_template('index.html', repositories=repositories)
 
 
