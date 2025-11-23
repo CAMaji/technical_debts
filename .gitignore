@@ -4,6 +4,7 @@ venv
 env
 __pycache__
 .env
-web\src\.repo_cache
+web/src/.repo_cache/*
+web/.repo_cache/*
 .pytest_cache
 .coverage
