@@ -210,23 +210,30 @@ function processMetricsData(cyclomatic_complexity_analysis, identifiable_identit
     }
 
     // Process duplicate code data
-    if (duplicated_code_analysis && Array.isArray(duplicated_code_analysis)) {
-        duplicated_code_analysis.forEach(duplicate => {
-            const fileName = duplicate.file_name || duplicate.file;
-            
-            if (!fileMap.has(fileName)) {
-                fileMap.set(fileName, {
-                    fileName: fileName,
-                    functions: [],
-                    avgComplexity: null,
-                    identifiableIdentitiesCount: 0,
-                    duplicateCodeCount: 0
-                });
-            }
+    if (duplicated_code_analysis !== undefined) {
 
-            const fileData = fileMap.get(fileName);
-            fileData.duplicateCodeCount++;
-        });
+        const duplicates = Object.values(duplicated_code_analysis);
+
+        for (const duplicate of duplicates) {
+            const files = duplicate["_files"];
+            
+            for (const file of files) {
+                const fileName = file.filename;
+
+                if (!fileMap.has(fileName)) {
+                    fileMap.set(fileName, {
+                        fileName: fileName,
+                        functions: [],
+                        avgComplexity: null,
+                        identifiableIdentitiesCount: 0,
+                        duplicateCodeCount: 0
+                    });
+                }
+
+                const fileData = fileMap.get(fileName);
+                fileData.duplicateCodeCount++;
+            }
+        }
     }
 
     return Array.from(fileMap.values());
@@ -263,4 +270,4 @@ function getComplexityBadgeClass(complexity) {
     if (complexity <= 5) return 'bg-success';
     if (complexity <= 10) return 'bg-warning';
     return 'bg-danger';
-}
+};
