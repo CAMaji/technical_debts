@@ -267,7 +267,7 @@ function detailFormatter(index, row) {
 
 // Helper function to get badge color based on complexity
 function getComplexityBadgeClass(complexity) {
-    if (complexity <= 5) return 'bg-success';
-    if (complexity <= 10) return 'bg-warning';
+    if (complexity <= 10) return 'bg-success';
+    if (complexity <= 20) return 'bg-warning';
     return 'bg-danger';
-};
+}
