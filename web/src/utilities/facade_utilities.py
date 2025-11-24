@@ -17,7 +17,15 @@ class FacadeUtilities:
         for row in orm_result:
             _tuple = value_function(row)
             _dict[_tuple[0]] = _tuple[1]
-        #print(_dict) 
+        return _dict
+    
+    def to_list_dict(orm_result : list[Row], value_function : Callable[[Row], tuple[TKey, T]]) -> dict[TKey, list[T]]:
+        _dict : dict[TKey, list[T]] = {}
+        for row in orm_result:
+            _tuple = value_function(row)
+            if _tuple[0] not in _dict:
+                _dict[_tuple[0]] = []
+            _dict[_tuple[0]].append(_tuple[1])
         return _dict
     
         
