@@ -46,6 +46,9 @@ class DuplicationReport(JsonEncoder.Interface):
     
     def get_fragment(self) -> str:
         return self._fragment
+    
+    def get_file_nb(self) -> int:
+        return len(self._files)
 
     def __iter__(self): 
         self._iteration = 0

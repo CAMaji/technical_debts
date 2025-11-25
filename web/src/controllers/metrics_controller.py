@@ -63,10 +63,12 @@ def display_metrics_by_commit_id():
         for entity in entities:
             identifiable_identities_analysis.append(entity) 
 
-    duplication_analysis = duplication_controller.get_metrics(commit, saved_files) 
-    prioritisation_risk = tech_debt_controller.get_metrics(saved_files)
-    print(json.dumps(duplication_analysis, indent=4))
-    print(json.dumps(prioritisation_risk, indent=4))
+    #duplication_analysis = duplication_controller.get_metrics(commit, saved_files) 
+    #prioritisation_risk = tech_debt_controller.get_metrics(saved_files)
+    #print(json.dumps(duplication_analysis, indent=4))
+    #print(json.dumps(prioritisation_risk, indent=4))
+
+    reports = tech_debt_controller.get_reports(saved_files)
 
     metrics = {
         "commit_sha": commit.sha,
@@ -85,7 +87,7 @@ def display_metrics_by_commit_id():
         metrics["identifiable_identities_analysis"] = identifiable_identities_analysis
 
     if include_code_duplication: 
-        metrics["duplicated_code_analysis"] = duplication_analysis
+        metrics["duplicated_code_analysis"] = reports["duplications"]
     
     return jsonify(metrics)
 

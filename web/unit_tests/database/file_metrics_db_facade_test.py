@@ -73,61 +73,6 @@ def test_get_duplications_metrics():
         assert duplications['file1'][0] == 2 and duplications['file1'][1] == 20
     return
 
-def test_get_duplications_metrics():
-    # arrange
-    app = init_mock_app()
-    with app.app_context():
-        # arrange
-        predef = start_up()
-        facade = FileMetricsDatabaseFacade()
-        files = predef[FILES]
-
-        # act
-        try:
-            duplications = facade.get_duplications_metrics(files)
-
-        # assert
-        except Exception as e: 
-            print(e)
-            assert False
-
-        assert len(duplications) == 2
-        assert type(duplications['file0']) == tuple
-        assert duplications['file0'][0] == 2 and duplications['file0'][1] == 20
-        assert duplications['file1'][0] == 2 and duplications['file1'][1] == 20
-    return
-
-def test_get_files_per_duplication(): 
-    # arrange
-    app = init_mock_app()
-    with app.app_context():
-        # arrange
-        predef = start_up()
-        facade = FileMetricsDatabaseFacade()
-        files = predef[FILES]
-        fragments = predef[CODE_FRAGMENTS]
-
-        # act
-        try:
-            files_duplications = facade.get_files_per_duplication(files)
-
-        # assert
-        except Exception as e: 
-            print(e)
-            assert False
-
-        assert len(files_duplications) == 2
-        assert type(files_duplications[fragments[0].id]) == list
-        assert type(files_duplications[fragments[1].id]) == list
-        assert len(files_duplications[fragments[0].id]) == 2
-        assert len(files_duplications[fragments[1].id]) == 2
-        
-        _list0 = files_duplications[fragments[0].id]
-        _tuple0 = _list0[0]
-        assert _tuple0[0] == 'file0'
-        assert _tuple0[1] == fragments[0].line_count
-        return
-
 def test_get_functions_complexity(): 
     # arrange
     app = init_mock_app()

@@ -8,7 +8,7 @@ class RiskEnum(Enum):
     HIGH_RISK = 2
     VERY_HIGH_RISK = 3
 
-    def get_risk(complexity : float): 
+    def get_risk(complexity : float) -> Enum: 
         # Source: Murphy, James & Robinson III, John. (2007). Design of a Research Platform 
         #         for En Route Conflict Detection and Resolution. 10.2514/6.2007-7803. 
         # https://www.researchgate.net/figure/Cyclomatic-Complexity-Thresholds_tbl2_238659831
@@ -19,22 +19,34 @@ class RiskEnum(Enum):
         else:                 return RiskEnum.VERY_HIGH_RISK
 
 @dataclass
-class TechDebtMetrics(JsonEncoder.Interface):
+class FunctionDebtMetrics(JsonEncoder.Interface):
+    """
+    Represents the metrics of a function, contained in a file.
+    """
+    filename : str = ""
+    funcname : str = ""
+    complexity : float = 0.0
+
+@dataclass
+class FileDebtMetrics(JsonEncoder.Interface):
+    """
+    Represents the metrics of a file.
+    """
     average_complexity : float = 0.0
     entities : float = 0.0
     duplications : float = 0.0
     duplicated_lines : float = 0.0
 
     def get(self, index : int) -> float:
-        _fields = fields(TechDebtMetrics)
+        _fields = fields(FileDebtMetrics)
         return getattr(self, _fields[index].name)
     
     def set(self, index : int, value : float):
-        _fields = fields(TechDebtMetrics)
+        _fields = fields(FileDebtMetrics)
         return setattr(self, _fields[index].name, value)
     
     def length(self) -> int:
-        _fields = fields(TechDebtMetrics)
+        _fields = fields(FileDebtMetrics)
         return len(_fields)
 
 class TechDebtReport(JsonEncoder.Interface):
@@ -47,24 +59,24 @@ class TechDebtReport(JsonEncoder.Interface):
         Represents a row of metrics and statistics for a given file.
         """
 
-        metrics : TechDebtMetrics
+        metrics : FileDebtMetrics
         priority : float
         risk : RiskEnum
         filename : str
         
-        def __init__(self, filename : str, priority : float, risk : RiskEnum, metrics : TechDebtMetrics):
+        def __init__(self, filename : str, priority : float, risk : RiskEnum, metrics : FileDebtMetrics):
             self.risk = risk
             self.metrics = metrics
             self.priority = priority
             self.filename = filename
-
+    
     _metrics    : list[File]
-    _maximums   : TechDebtMetrics
-    _averages   : TechDebtMetrics
-    _medians    : TechDebtMetrics
+    _maximums   : FileDebtMetrics
+    _averages   : FileDebtMetrics
+    _medians    : FileDebtMetrics
     _i          : int
     
-    def __init__(self, maxs : TechDebtMetrics, avg : TechDebtMetrics, medians : TechDebtMetrics): 
+    def __init__(self, maxs : FileDebtMetrics, avg : FileDebtMetrics, medians : FileDebtMetrics): 
         self._metrics = []
         self._maximums = maxs
         self._averages = avg
@@ -74,13 +86,13 @@ class TechDebtReport(JsonEncoder.Interface):
     def add_file(self, file : File):
         self._metrics.append(file)
 
-    def get_maximums(self) -> TechDebtMetrics: 
+    def get_maximums(self) -> FileDebtMetrics: 
         return self._maximums
     
-    def get_averages(self) -> TechDebtMetrics:
+    def get_averages(self) -> FileDebtMetrics:
         return self._averages
     
-    def get_medians(self) -> TechDebtMetrics:
+    def get_medians(self) -> FileDebtMetrics:
         return self._medians
     
     def get_length(self) -> int:

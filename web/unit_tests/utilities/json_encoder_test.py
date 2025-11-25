@@ -146,3 +146,14 @@ def test_dump():
 
     # assert
     assert result == '{"a": 3, "b": 4.0, "c": "d", "d": ["A", 1]}'
+
+def test_dummy_encode():
+    # arrange 
+    dummy = DummyClass(2, 3.0, "4", DummyEnum.B)
+
+    # act
+    result = dummy.encode()
+
+    # assert 
+    assert result == {"a": 2, "b": 3.0, "c": "4", "d": ['B', 2]}
+

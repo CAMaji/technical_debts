@@ -2,14 +2,15 @@ import xml.etree.ElementTree as xml
 
 from enum import Enum
 from src.utilities.value_range import ValueRange
-from src.interface.duplication_report import DuplicationReport
+from src.reports.duplication_report import DuplicationReport
+from src.tools.reader_interface import ReaderInterface
 
 class PMD_CPD_XMLTag(Enum):
     PMD_DUPLICATION_TAG = "{https://pmd-code.org/schema/cpd-report}duplication"
     PMD_FILE_TAG = "{https://pmd-code.org/schema/cpd-report}file"
     PMD_CODE_FRAGMENT_TAG = "{https://pmd-code.org/schema/cpd-report}codefragment"
 
-class PMD_CPD_XmlReader: 
+class PMD_CPD_XmlReader(ReaderInterface): 
     _reports : list[DuplicationReport]
     _directory : str
 
@@ -54,7 +55,7 @@ class PMD_CPD_XmlReader:
         self._reports.append(report)
         return
 
-    def parse(self, text : str) -> list[DuplicationReport]: 
+    def parse(self, text : str) -> object: 
         root = xml.fromstring(text) 
         for node in root:
             if node.tag == PMD_CPD_XMLTag.PMD_DUPLICATION_TAG.value: 

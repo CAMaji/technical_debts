@@ -1,13 +1,13 @@
 from src.services.debt_stats_service import DebtStatsService
-from src.interface.tech_debt_report import TechDebtMetrics, TechDebtReport, RiskEnum
+from src.reports.tech_debt_report import FileDebtMetrics, TechDebtReport, RiskEnum
 
 def test_get_statistics__maximum():
     # arrange
     file_list = {
-        "file0.py": TechDebtMetrics(32.4, 3, 50, 20),
-        "file1.py": TechDebtMetrics(17.3, 11, 29, 15),
-        "file2.py": TechDebtMetrics(49.2, 20, 80, 10),
-        "file3.py": TechDebtMetrics(46.9, 31, 20, 25),
+        "file0.py": FileDebtMetrics(32.4, 3, 50, 20),
+        "file1.py": FileDebtMetrics(17.3, 11, 29, 15),
+        "file2.py": FileDebtMetrics(49.2, 20, 80, 10),
+        "file3.py": FileDebtMetrics(46.9, 31, 20, 25),
     }
     which_stat = DebtStatsService.StatsEnum.MAXIMUMS
     service = DebtStatsService()
@@ -24,10 +24,10 @@ def test_get_statistics__maximum():
 def test_get_statistics__averages():
     # arrange
     file_list = {
-        "file0.py": TechDebtMetrics(32.4, 3, 50, 20),
-        "file1.py": TechDebtMetrics(17.3, 11, 29, 15),
-        "file2.py": TechDebtMetrics(49.2, 20, 80, 10),
-        "file3.py": TechDebtMetrics(46.9, 31, 20, 25),
+        "file0.py": FileDebtMetrics(32.4, 3, 50, 20),
+        "file1.py": FileDebtMetrics(17.3, 11, 29, 15),
+        "file2.py": FileDebtMetrics(49.2, 20, 80, 10),
+        "file3.py": FileDebtMetrics(46.9, 31, 20, 25),
     }
     which_stat = DebtStatsService.StatsEnum.AVERAGES
     service = DebtStatsService()
@@ -44,10 +44,10 @@ def test_get_statistics__averages():
 def test_get_statistics__medians():
     # arrange
     file_list = {
-        "file0.py": TechDebtMetrics(32.4, 3, 50, 20),
-        "file1.py": TechDebtMetrics(17.3, 11, 29, 15),
-        "file2.py": TechDebtMetrics(49.2, 20, 80, 10),
-        "file3.py": TechDebtMetrics(46.9, 31, 20, 25),
+        "file0.py": FileDebtMetrics(32.4, 3, 50, 20),
+        "file1.py": FileDebtMetrics(17.3, 11, 29, 15),
+        "file2.py": FileDebtMetrics(49.2, 20, 80, 10),
+        "file3.py": FileDebtMetrics(46.9, 31, 20, 25),
     }
     which_stat = DebtStatsService.StatsEnum.MEDIANS
     service = DebtStatsService()
@@ -63,7 +63,7 @@ def test_get_statistics__medians():
 
 def test_get_priority():
     # arrange
-    ratios = TechDebtMetrics(32.4/49.2, 3.0/31.0, 50.0/80.0, 20.0/25.0)
+    ratios = FileDebtMetrics(32.4/49.2, 3.0/31.0, 50.0/80.0, 20.0/25.0)
     service = DebtStatsService()
 
     # act
@@ -74,8 +74,8 @@ def test_get_priority():
 
 def test_get_ratios():
     # arrange
-    metrics = TechDebtMetrics(32.4, 3, 50, 20)
-    maximums = TechDebtMetrics(49.2, 31, 80, 25)
+    metrics = FileDebtMetrics(32.4, 3, 50, 20)
+    maximums = FileDebtMetrics(49.2, 31, 80, 25)
     service = DebtStatsService()
 
     # act
@@ -89,8 +89,8 @@ def test_get_ratios():
 
 def test_get_ratios__maximum_zero():
     # arrange
-    metrics = TechDebtMetrics(32.4, 3, 50, 20)
-    maximums = TechDebtMetrics()
+    metrics = FileDebtMetrics(32.4, 3, 50, 20)
+    maximums = FileDebtMetrics()
     service = DebtStatsService()
 
     # act
@@ -126,7 +126,7 @@ def test_get_report():
         risk_called = 0
         ratio_called = 0
 
-        dummy = TechDebtMetrics(0.5, 0.5, 0.5, 0.5)
+        dummy = FileDebtMetrics(0.5, 0.5, 0.5, 0.5)
         
         def get_statistics(self, which_stat, file_list):
             LocalServiceMock.stats_called += 1
@@ -145,10 +145,10 @@ def test_get_report():
             return RiskEnum.MEDIUM_RISK
 
     file_list = {
-        "file0.py": TechDebtMetrics(32.4, 3, 50, 20),
-        "file1.py": TechDebtMetrics(17.3, 11, 29, 15),
-        "file2.py": TechDebtMetrics(49.2, 20, 80, 10),
-        "file3.py": TechDebtMetrics(46.9, 31, 20, 25),
+        "file0.py": FileDebtMetrics(32.4, 3, 50, 20),
+        "file1.py": FileDebtMetrics(17.3, 11, 29, 15),
+        "file2.py": FileDebtMetrics(49.2, 20, 80, 10),
+        "file3.py": FileDebtMetrics(46.9, 31, 20, 25),
     }
 
     service = LocalServiceMock()
@@ -167,3 +167,4 @@ def test_get_report():
     assert report.get_length() == 4
     for report_element in report:
         assert report_element.priority == 0.5 and report_element.risk == RiskEnum.MEDIUM_RISK
+

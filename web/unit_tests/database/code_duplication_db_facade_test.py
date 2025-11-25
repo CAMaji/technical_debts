@@ -4,25 +4,25 @@ from src.models.duplication import Duplication
 from src.models.model import *
 from src.utilities.smart_list_iterator import SmartListIterator
 
-# def test_insert_many_fragments(): 
-#     app = init_mock_app()
-#     with app.app_context():
-#         # arrange
-#         facade = CodeDuplicationDatabaseFacade()
-#         fragments = [
-#             CodeFragment("hello world", 10),
-#             CodeFragment("world hello", 10)
-#         ]
-    
-#         # act
-#         try:
-#             facade.insert_many_fragments(fragments)
+def test_insert_many_fragments(): 
+    app = init_mock_app()
+    with app.app_context():
+        # arrange
+        facade = CodeDuplicationDatabaseFacade()
+        fragments = [
+            CodeFragment("hello world", 10),
+            CodeFragment("world hello", 10)
+        ]
+  
+        # act
+        try:
+            facade.insert_many_fragments(fragments)
 
-#         # assert
-#         except Exception as e: 
-#             print(e)
-#             assert False
-#     return
+        # assert
+        except Exception as e: 
+            print(e)
+            assert False
+    return
 
 def test_insert_many_duplications(): 
     app = init_mock_app()

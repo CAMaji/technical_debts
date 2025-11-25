@@ -1,6 +1,6 @@
 from src.models.duplication import *
 from src.database.code_duplication_db_facade import *
-from src.interface.duplication_report import DuplicationReport
+from src.reports.duplication_report import DuplicationReport
 from src.models.model import File
 
 class CodeDuplicationService: 

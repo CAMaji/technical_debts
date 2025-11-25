@@ -1,8 +1,7 @@
 from src.database.code_duplication_db_facade import CodeDuplicationDatabaseFacade
 from src.services.code_duplication_service import CodeDuplicationService
-from src.interface.duplication_report import DuplicationReport
+from src.reports.duplication_report import DuplicationReport
 from src.utilities.value_range import ValueRange
-from src.models import db
 from src.models.duplication import Duplication
 from src.models.model import *
 
@@ -158,3 +157,46 @@ def test_insert_elements_from_parsed_xml():
 
     # assert
     assert LocalServiceMock.called and LocalServiceMock.params_valid
+
+
+def test_insert_elements__exception_file_not_in_db(): 
+    # arrange
+    class LocalServiceMock(CodeDuplicationService):
+        called = False
+        params_valid = False
+
+        def __init__(self):
+            super().__init__(None)
+
+        def insert(self, fragments, duplications):
+            LocalServiceMock.called = True
+            return
+
+    files = [
+        File(id='file0', name='file0.py', commit_id='...'),
+        File(id='file1', name='file1.py', commit_id='...'),
+    ]
+    report0_files = [
+        DuplicationReport.File("file0.py", ValueRange(0, 3), ValueRange(0, 10)),
+        DuplicationReport.File("file1.py", ValueRange(10, 13), ValueRange(0, 10)),
+        DuplicationReport.File("file2.py", ValueRange(3, 39), ValueRange(0, 10))
+    ]
+
+    report0 = DuplicationReport(3, "hello world")
+
+    report0.add_file(report0_files[0])
+    report0.add_file(report0_files[1])
+    report0.add_file(report0_files[2])
+    reports = [report0]
+    service = LocalServiceMock()
+
+    # act
+    try:
+        service.insert_from_report(reports, files)
+        
+    # assert
+        assert False
+    except Exception as e:
+        assert LocalServiceMock.called == False
+    return 
+    
