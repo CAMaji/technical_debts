@@ -233,28 +233,6 @@ def calculate_bug_counts_in_range(commits_in_range):
     print("Linked bugs count: ", linked_bugs["total"])
     return linked_bugs
 
-def calculate_bug_counts_in_range(commits_in_range):
-    """
-    Receives a list of commits (each being a dict with a 'message' field)
-    Counts how many commit messages contain 'bug' or 'fix' (case-insensitive)
-    Returns a dict like: {"total": 7}
-    """
-    linked_bugs = {"total": 0}
-
-    if not commits_in_range:
-        return linked_bugs
-    else:
-        count = 0
-        for commit in commits_in_range:
-            message = commit.get("message", "").lower()
-            if "bug" in message or "fix" in message or "fixes" in message or "fixed" in message:
-                count += 1
-        linked_bugs["total"] = count
-    
-    print("Linked bugs count: ", linked_bugs["total"])
-    return linked_bugs
-
-
 def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
     print("Calculating bug-related commit counts...")
     """
