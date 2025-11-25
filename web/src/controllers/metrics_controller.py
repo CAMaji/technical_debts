@@ -29,6 +29,7 @@ def display_metrics_by_commit_id():
     include_complexity = data.get('include_complexity')
     include_identifiable_identities = data.get('include_identifiable_identities')
     include_code_duplication = data.get('include_code_duplication')
+    print(include_code_duplication)
 
     commit = commit_service.get_commit_by_commit_id(commit_id)
     repo = repository_service.get_repository_by_repository_id(repository_id)
@@ -46,15 +47,15 @@ def display_metrics_by_commit_id():
         # store the files in db
         for filename, code in remote_files:
             file = file_service.create_file(filename, commit.id)
-            
+
             # calculate the various metrics here
-            
+
             cyclomatic_complexity_analysis = metrics_service.calculate_cyclomatic_complexity_analysis(file, code)
             identifiable_identities_analysis = metrics_service.calculate_identifiable_identities_analysis(file, code)
 
         files = file_service.get_files_by_commit_id(commit.id)
         duplication_controller.analyse_repo(repo, files)
-    
+
     saved_files = files
     for file in saved_files:
         cyclomatic_complexity_analysis.append(complexity_service.get_complexity_by_file_id_verbose(file.id))
@@ -63,10 +64,10 @@ def display_metrics_by_commit_id():
         for entity in entities:
             identifiable_identities_analysis.append(entity) 
 
-    #duplication_analysis = duplication_controller.get_metrics(commit, saved_files) 
-    #prioritisation_risk = tech_debt_controller.get_metrics(saved_files)
-    #print(json.dumps(duplication_analysis, indent=4))
-    #print(json.dumps(prioritisation_risk, indent=4))
+    duplication_analysis = duplication_controller.get_metrics(commit, saved_files) 
+    prioritisation_risk = tech_debt_controller.get_metrics(saved_files)
+    # json.dumps(duplication_analysis, indent=4)
+    # print(json.dumps(prioritisation_risk, indent=4))
 
     reports = tech_debt_controller.get_reports(saved_files)
 
@@ -86,9 +87,10 @@ def display_metrics_by_commit_id():
     if include_identifiable_identities:
         metrics["identifiable_identities_analysis"] = identifiable_identities_analysis
 
+    print(include_code_duplication)
     if include_code_duplication: 
-        metrics["duplicated_code_analysis"] = reports #reports["duplications"]
-    
+        metrics["duplicated_code_analysis"] = duplication_analysis
+
     return jsonify(metrics)
 
 
