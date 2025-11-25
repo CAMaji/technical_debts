@@ -122,8 +122,8 @@ def debt_evolution(owner, name):
             branches=None, 
             error=str(e))
 
-#import src.services.identifiable_entity_service as identifiable_entity_service
-#with app.app_context():
+# import src.services.identifiable_entity_service as identifiable_entity_service
+# with app.app_context():
 #    print('dropping...')
 #    db.drop_all()
 #    db.reflect()

@@ -64,8 +64,8 @@ def display_metrics_by_commit_id():
         for entity in entities:
             identifiable_identities_analysis.append(entity) 
 
-    duplication_analysis = duplication_controller.get_metrics(commit, saved_files) 
-    prioritisation_risk = tech_debt_controller.get_metrics(saved_files)
+    # duplication_analysis = duplication_controller.get_metrics(commit, saved_files) 
+    # prioritisation_risk = tech_debt_controller.get_metrics(saved_files)
     # json.dumps(duplication_analysis, indent=4)
     # print(json.dumps(prioritisation_risk, indent=4))
 
@@ -89,7 +89,7 @@ def display_metrics_by_commit_id():
 
     print(include_code_duplication)
     if include_code_duplication: 
-        metrics["duplicated_code_analysis"] = duplication_analysis
+        metrics["duplicated_code_analysis"] = reports
 
     return jsonify(metrics)
 
