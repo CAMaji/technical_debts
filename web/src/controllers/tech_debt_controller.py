@@ -44,7 +44,7 @@ def get_recommendations_report(duplications : DuplicationReportDict, tech_debt :
     report = service.get_report(tech_debt, duplications, funcs)
     return report
     
-#import json
+import json
 def get_reports(files : list[File]) -> dict[str, object]:
     d_reports = get_duplications_reports(files)
     fm_reports = get_file_metrics_report(files)
@@ -52,13 +52,13 @@ def get_reports(files : list[File]) -> dict[str, object]:
     ffm_report = get_file_function_metrics_report(files)
     r_report = get_recommendations_report(d_reports, td_report, ffm_report)
 
-    #result = {
-    #    "recommendations": JsonEncoder.breakdown(r_report),   # <---- fonctionnel, mais reste bug à répliquer, tester, et corriger.
+    #temp_result = {
+    #    "recommendations": JsonEncoder.breakdown(r_report),
     #    "duplications": JsonEncoder.breakdown(d_reports),
     #    "tech_debt": JsonEncoder.breakdown(td_report)
     #}
-
-    #print(json.dumps(result["recommendations"], indent=4))
+    #
+    #print(json.dumps(temp_result))
 
     result = JsonEncoder.breakdown(d_reports)
     return result

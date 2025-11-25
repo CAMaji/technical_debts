@@ -6,6 +6,9 @@ from datetime import datetime
 import enum
 import uuid
 from src.models import db
+from typing import TypeAlias
+
+ID : TypeAlias = str
 
 class ModelMixin:
     def as_dict(self, include_relationships: bool = True):

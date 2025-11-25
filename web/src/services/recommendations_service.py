@@ -16,7 +16,7 @@ class RecommendationsService:
     def get_global_risk(self, median_metrics : FileDebtMetrics) -> Pair[str, str]:
         global_risk : RiskEnum = RiskEnum.get_risk(median_metrics.average_complexity)
 
-        if global_risk.value < RiskEnum.HIGH_RISK.value:
+        if global_risk.value < RiskEnum.MEDIUM_RISK.value:
             return self.get_no_problem()
 
         problem = ProblemEnum.GLOBAL_RISK_PROBLEM.value
@@ -107,7 +107,7 @@ class RecommendationsService:
         return [file_avg_risk, file_func_nb, bug_to_func]
 
     def get_file_func_subreport_elements(self, func_metrics_list : list[FunctionDebtMetrics]) -> list[Pair[str, str]]:
-        element_list : list[Pair[str, str]] = []
+        element_list : list[Pair[str, str]] = [] 
 
         for func_metrics in func_metrics_list:
             file_func_risk = self.get_file_func_risk(func_metrics.filename, func_metrics.funcname, func_metrics.complexity)
@@ -121,11 +121,12 @@ class RecommendationsService:
         global_subreport.add_list(global_elements)
         report = RecommendationReport(global_subreport)
 
-        func_nb = len(funcs)
+        
         for element in tech_debt:
+            func_metrics = funcs[element.filename]
             file_subreport = RecommendationReport.SubReport(element.filename)
-            file_elements = self.get_file_subreport_elements(element, func_nb)
-            file_func_elements = self.get_file_func_subreport_elements(funcs[element.filename])
+            file_elements = self.get_file_subreport_elements(element, len(func_metrics))
+            file_func_elements = self.get_file_func_subreport_elements(func_metrics)
             file_subreport.add_list(file_elements)
             file_subreport.add_list(file_func_elements)
             report.add_file(file_subreport)

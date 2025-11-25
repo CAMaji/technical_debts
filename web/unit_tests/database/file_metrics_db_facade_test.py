@@ -24,6 +24,7 @@ def test_get_average_complexities():
         assert len(avg_complexities) == 2
         assert avg_complexities['file0'] == (5+10+15+25) / 4.0
         assert avg_complexities['file1'] == (20+30+40+50) / 4.0
+
     return
 
 def test_get_identifiable_entities_count():
@@ -47,6 +48,7 @@ def test_get_identifiable_entities_count():
         assert len(entities) == 2
         assert entities['file0'] == 2
         assert entities['file1'] == 2
+
     return
 
 def test_get_duplications_metrics():
@@ -71,6 +73,7 @@ def test_get_duplications_metrics():
         assert type(duplications['file0']) == tuple
         assert duplications['file0'][0] == 2 and duplications['file0'][1] == 20
         assert duplications['file1'][0] == 2 and duplications['file1'][1] == 20
+
     return
 
 def test_get_functions_complexity(): 
@@ -79,6 +82,12 @@ def test_get_functions_complexity():
     with app.app_context():
         # arrange
         predef = start_up()
+
+        db.session.add(Function(id='func8', name='def function8():', line_position=0, file_id='file0'))
+        db.session.commit()
+        db.session.add(Complexity(id='cplx8', value='20', function_id='func8'))
+        db.session.commit()
+
         facade = FileMetricsDatabaseFacade()
         files = predef[FILES]
 
@@ -90,16 +99,14 @@ def test_get_functions_complexity():
         except Exception as e: 
             print(e)
             assert False
-
-        print(func_complexities)
-        assert len(func_complexities) == 2              # 2 files
-        assert type(func_complexities['file0']) == list
-        assert type(func_complexities['file1']) == list
-        assert len(func_complexities['file0']) == 4     # 4 functions per file
-        assert len(func_complexities['file1']) == 4
-        
-        _list0 = func_complexities['file0']
-        _tuple0 = _list0[0]
-        assert _tuple0[0] == 'def function0():'
-        assert _tuple0[1] == 5.0
+            
+        assert func_complexities['file0'] == [('def function0():', 5.0), 
+                                              ('def function1():', 10.0),
+                                              ('def function2():', 15.0),
+                                              ('def function3():', 25.0),
+                                              ('def function8():', 20.0)]
+        assert func_complexities['file1'] == [('def function4():', 20.0), 
+                                              ('def function5():', 30.0),
+                                              ('def function6():', 40.0),
+                                              ('def function7():', 50.0)]
     return

@@ -24,7 +24,7 @@ def test_get_no_problem():
 def test_get_global_risk():
     # arrange
     medians_no_problem = FileDebtMetrics(10.0, 11.0, 12.0, 13.0)
-    medians_problem = FileDebtMetrics(30.0, 31.0, 32.0, 33.0)
+    medians_problem = FileDebtMetrics(29.0, 29.0, 29.0, 29.0)
     service = RecommendationsService()
 
     # act
@@ -247,18 +247,37 @@ def test_get_report():
     # arrange 
     class LocalServiceMock(RecommendationsService): 
         global_subreport_called = False
-        file_subreport_called = False
-        file_func_subreport_called = False
+        file_subreport_called = 0
+        file_func_subreport_called = 0
+        params_valid = True
 
         def get_global_subreport_elements(self, tech_debt, duplications):
             LocalServiceMock.global_subreport_called = True
+            LocalServiceMock.params_valid &= (tech_debt._metrics[0].filename == "file0.py" and 
+                                              tech_debt._metrics[1].filename == "file1.py")
+            LocalServiceMock.params_valid &= duplications == {}
+
+            if LocalServiceMock.params_valid == False:
+                print(tech_debt)
+                print(duplications)
+                raise Exception()
+
             return [
                 Pair(ProblemEnum.GLOBAL_RISK_PROBLEM.value, RecommendationEnum.GLOBAL_RISK_RECOMMENDATION.value),
                 Pair(ProblemEnum.NO_PROBLEM.value, "")
             ]
 
         def get_file_subreport_elements(self, file_debt, func_nb):
-            LocalServiceMock.file_subreport_called = True
+            LocalServiceMock.file_subreport_called += 1
+            LocalServiceMock.params_valid &= ((file_debt.filename == "file0.py" and file_debt.priority == 1.0) or
+                                              (file_debt.filename == "file1.py" and file_debt.priority == 1.0))
+            LocalServiceMock.params_valid &= func_nb == 1 
+
+            if LocalServiceMock.params_valid == False:
+                print(file_debt)
+                print(func_nb)
+                raise Exception()
+
             return [
                 Pair(ProblemEnum.FILE_AVG_RISK_PROBLEM.value, RecommendationEnum.FILE_RISK_RECOMMENDATION.value),
                 Pair(ProblemEnum.FILE_FUNC_NUMBER_PROBLEM.value, RecommendationEnum.FILE_FUNC_NUMBER_RECOMMENDATION.value),
@@ -266,27 +285,44 @@ def test_get_report():
             ]
         
         def get_file_func_subreport_elements(self, func_metrics_list):
-            LocalServiceMock.file_func_subreport_called = True
+            LocalServiceMock.file_func_subreport_called += 1
+            LocalServiceMock.params_valid &= len(func_metrics_list) == 1
+            LocalServiceMock.params_valid &= (func_metrics_list[0].funcname == "func1" or
+                                              func_metrics_list[0].funcname == "func2")
+            
+            if LocalServiceMock.params_valid == False:
+                print(func_metrics_list)
+                raise Exception()
+
             return [
                 Pair(ProblemEnum.FILE_FUNC_RISK_PROBLEM.value, RecommendationEnum.FILE_RISK_RECOMMENDATION.value)
             ]
         
     service = LocalServiceMock()
-    dummy_tech_debt_element = TechDebtReport.File("file0.py", 1.0, RiskEnum.HIGH_RISK, FileDebtMetrics())
+    dummy_tech_debt_element_0 = TechDebtReport.File("file0.py", 1.0, RiskEnum.HIGH_RISK, FileDebtMetrics())
+    dummy_tech_debt_element_1 = TechDebtReport.File("file1.py", 1.0, RiskEnum.HIGH_RISK, FileDebtMetrics())
     dummy_tech_debt_report = TechDebtReport(FileDebtMetrics(), FileDebtMetrics(), FileDebtMetrics())
-    dummy_tech_debt_report.add_file(dummy_tech_debt_element)
-    dummy_file_func_metrics = {"file0.py": [FunctionDebtMetrics("file0.py", "...", 0.0)]}
+    dummy_tech_debt_report.add_file(dummy_tech_debt_element_0)
+    dummy_tech_debt_report.add_file(dummy_tech_debt_element_1)
+    dummy_file_func_metrics = {"file0.py": [FunctionDebtMetrics("file0.py", "func1", 0.0)],
+                               "file1.py": [FunctionDebtMetrics("file1.py", "func2", 0.0)]}
 
     # act
     result = service.get_report(dummy_tech_debt_report, {}, dummy_file_func_metrics)
 
     # assert 
-    assert len(result._files) == 1
+    assert (LocalServiceMock.file_subreport_called == 2 and 
+            LocalServiceMock.file_func_subreport_called == 2 and 
+            LocalServiceMock.global_subreport_called)
+    
+    assert LocalServiceMock.params_valid
+    
+    assert len(result._files) == 2
     assert len(result._global.problems) == 1
     assert len(result._global.recommendations) == 1
     assert len(result._files[0].problems) == 4
     assert len(result._files[0].recommendations) == 3 
-        # recommendations have 3 elements instead of 4
+        # recommendations have 3 elements instead of 4 
         # because when adding the problem-recommendation pair, 
         # an elemment is inserted only if it is not already present
         # inside the set. 

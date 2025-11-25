@@ -1,7 +1,7 @@
 from src.database.file_metrics_db_facade import FileMetricsDatabaseFacade
 from src.utilities.smart_list_iterator import SmartListIterator
 from src.reports.tech_debt_report import FileDebtMetrics, FunctionDebtMetrics
-from src.models.model import File
+from src.models.model import File, ID
     
 class FileMetricsService: 
     _facade : FileMetricsDatabaseFacade
@@ -37,15 +37,15 @@ class FileMetricsService:
 
         metrics_dict : dict[str, list[FunctionDebtMetrics]] = {}
         for file in file_list:
-            if file.name not in metrics_dict:
-                metrics_dict[file.name] = []
-
+            metrics_dict[file.name] = []
+            
             if file.id in functions:
-                for func_metrics in functions[file.id]:
-                    metrics = FunctionDebtMetrics()
-                    metrics.filename = file.name
-                    metrics.funcname = func_metrics[0]
-                    metrics.complexity = func_metrics[1]
+                func_cplxty_list = functions[file.id]
+                
+                for func_cplxty in func_cplxty_list:
+                    func_name = func_cplxty[0]
+                    complexity = func_cplxty[1]
+                    metrics = FunctionDebtMetrics(file.name, func_name, complexity)
                     metrics_dict[file.name].append(metrics)
-        
+
         return metrics_dict
