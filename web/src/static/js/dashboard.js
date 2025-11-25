@@ -72,7 +72,8 @@ function display_metrics() {
         console.log(metrics);
         const { commit_date, commit_message, commit_sha, cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis } = metrics;
         render_commit_info(commit_sha, commit_date, commit_message);
-        render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis)
+        render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis);
+        render_code_duplication(duplicated_code_analysis);
     });
 }
 
@@ -275,6 +276,94 @@ function getComplexityBadgeClass(complexity) {
 
 
 // code duplication analysis
-function display_code_duplication() {
+function render_code_duplication(duplicated_code_analysis) {
+    // Initialize or refresh the table
+    const $table = $('#duplication-table');
+    
+    // Destroy existing table if it exists
+    if ($table.bootstrapTable('getOptions')) {
+        $table.bootstrapTable('destroy');
+    }
 
+    // we need to extract the number duplications and format it
+    const values = Object.values(duplicated_code_analysis);
+    let duplication_name_array = [];
+    let index = 1;
+    values.forEach((value) => {
+        duplication_name_array.push({ duplication_number: `Duplication #${index}`, value: value });
+        index++;
+    });
+
+    // Initialize the table with data
+    $table.bootstrapTable({
+        columns: [
+            {
+                field: 'duplication_number',
+                title: 'Duplications',
+                sortable: true,
+            },
+        ],
+        data: duplication_name_array,
+        detailView: true,
+        detailFormatter: duplication_detail_formatter,
+        detailViewIcon: true,
+        detailViewByClick: false,
+        showColumns: false,
+        onPostBody: function() {
+            // Force visibility of detail icons
+            $table.find('.detail-icon').css({
+                'color': '#495057',
+                'font-weight': 'bold',
+                'font-size': '1.2rem',
+            });
+            $table.find('.detail').css({
+                'width': '5%',
+            })
+            $table.find('.detail-icon').parent().css({
+                'text-align': 'center',
+            });
+        }
+    });
+}
+
+function duplication_detail_formatter(index, row) {
+    if (!row.value || row.value.length === 0) {
+        return '<div class="p-3 text-muted">No function data available</div>';
+    }
+
+    const analysis = row.value;
+    let file_extension = "bash";
+    let file_header = "";
+    analysis._files.forEach((file) => {
+        const { filename, columns, lines } = file;
+        file_header += `
+            <tr><td style="width: 100%">${filename} : from (ln ${lines.From}, col ${columns.From}) to (ln ${lines.To}, col ${columns.To})</td></tr>
+        `;
+        file_extension = filename.split(".")[1];
+    });
+
+    let fragment = analysis._fragment;
+    fragment = fragment.replace(/\\n/g, '\n');
+    const highlighted_fragment = hljs.highlight(
+        fragment,
+        { language: file_extension }
+    ).value
+
+    let html = `
+        <div class="p-3">
+            <table class="table table-sm table-striped">
+                <tdbody>
+                    ${file_header}
+                    <tr>
+                        <td>
+                            <pre><code class="hljs">${highlighted_fragment}</code></pre>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    html += '</tbody></table></div>';
+    return html;
 }

@@ -22,7 +22,6 @@ def analyse_repo(repo : Repository, files : list[File]):
 
     wrapper = PMD_CopyPasteDetector(20, [PMD_CopyPasteDetector.Language.PYTHON], PMD_CopyPasteDetector.ReportFormat.XML, repo_dir)
     xml = wrapper.run()
-    print(xml)
 
     parser = PMD_CPD_XmlReader(repo_dir)
     reports = parser.parse(xml[0])
