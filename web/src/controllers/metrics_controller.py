@@ -65,8 +65,8 @@ def display_metrics_by_commit_id():
 
     duplication_analysis = duplication_controller.get_metrics(commit, saved_files) 
     prioritisation_risk = tech_debt_controller.get_metrics(saved_files)
-    print(json.dumps(duplication_analysis, indent=4))
-    print(json.dumps(prioritisation_risk, indent=4))
+    # print(json.dumps(duplication_analysis, indent=4))
+    # print(json.dumps(prioritisation_risk, indent=4))
 
     metrics = {
         "commit_sha": commit.sha,

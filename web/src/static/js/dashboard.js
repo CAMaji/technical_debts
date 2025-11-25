@@ -69,6 +69,7 @@ function display_metrics() {
     const include_duplication = include_duplication_input.checked;
 
     display_metrics_by_commit_id(repository_id, branch_id, commit_id, include_identifiable_identities, include_complexity, include_duplication).then((metrics) => {
+        console.log(metrics);
         const { commit_date, commit_message, commit_sha, cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis } = metrics;
         render_commit_info(commit_sha, commit_date, commit_message);
         render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis)
@@ -263,4 +264,10 @@ function getComplexityBadgeClass(complexity) {
     if (complexity <= 5) return 'bg-success';
     if (complexity <= 10) return 'bg-warning';
     return 'bg-danger';
+}
+
+
+// code duplication analysis
+function display_code_duplication() {
+
 }
