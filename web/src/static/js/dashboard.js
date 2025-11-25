@@ -71,6 +71,7 @@ function display_metrics() {
     display_metrics_by_commit_id(repository_id, branch_id, commit_id, include_identifiable_identities, include_complexity, include_duplication).then((metrics) => {
         const { commit_date, commit_message, commit_sha, cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis } = metrics;
         render_commit_info(commit_sha, commit_date, commit_message);
+        render_code_duplication(duplicated_code_analysis);
         render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis)
     });
 }
@@ -90,6 +91,89 @@ function render_commit_info(commit_sha, commit_date, commit_message) {
     commit_message_display.textContent = commit_message || "";
 }
 
+function render_code_duplication(duplicated_code_analysis) {
+
+    console.log("duplicated_code_analysis");
+    console.log(duplicated_code_analysis);
+
+    const duplicatedCodeArray = duplicated_code_analysis;
+
+    // Initialize or refresh the table
+    const $table = $('#duplication-table');
+    
+    // Destroy existing table if it exists
+    if ($table.bootstrapTable('getOptions')) {
+        $table.bootstrapTable('destroy');
+    }
+
+    // Initialize the table with data
+    $table.bootstrapTable({
+        columns: [
+            {
+                field: 'firstFile',
+                title: 'First File',
+                sortable: true,
+                width: '20%'
+            },
+            {
+                field: 'firstFileLineFrom',
+                title: 'Line From',
+                sortable: true,
+                align: 'center',
+                width: '5%'
+            },
+            {
+                field: 'firstFileLineTo',
+                title: 'Line To',
+                sortable: true,
+                align: 'center',
+                width: '5%'
+            },
+            {
+                field: 'secondFile',
+                title: 'Second File',
+                sortable: true,
+                align: 'center',
+                width: '20%'
+            },
+            {
+                field: 'secondFileLineFrom',
+                title: 'Line From',
+                sortable: true,
+                align: 'center',
+                width: '5%'
+            },
+            {
+                field: 'secondFileLineTo',
+                title: 'Line To',
+                sortable: true,
+                align: 'center',
+                width: '5%'
+            },
+            {
+                field: 'fragment',
+                title: 'Fragment',
+                sortable: true,
+                align: 'center',
+                width: '40%'
+            }
+        ],
+        data: duplicatedCodeArray,
+        detailView: true,
+        detailViewIcon: true,
+        detailViewByClick: false,
+        showColumns: false,
+        onPostBody: function() {
+            // Force visibility of detail icons
+            $table.find('.detail-icon').css({
+                'color': '#495057',
+                'font-weight': 'bold',
+                'font-size': '1.2rem'
+            });
+        }
+    });
+}
+
 function render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis) {
     // Process the data to group by file
     const fileMetrics = processMetricsData(
@@ -97,6 +181,9 @@ function render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_
         identifiable_identities_analysis, 
         duplicated_code_analysis
     );
+
+    console.log("The value of fileMetrics is...");
+    console.log(fileMetrics);
 
     // Initialize or refresh the table
     const $table = $('#metrics-table');
@@ -211,8 +298,11 @@ function processMetricsData(cyclomatic_complexity_analysis, identifiable_identit
 
     // Process duplicate code data
     if (duplicated_code_analysis !== undefined) {
+        console.log(duplicated_code_analysis);
+
 
         const duplicates = Object.values(duplicated_code_analysis);
+        console.log(duplicates);
 
         for (const duplicate of duplicates) {
             const files = duplicate["_files"];
