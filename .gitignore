@@ -5,3 +5,4 @@ env
 __pycache__
 .env
 web/.repo_cache/*
+web/src/.repo_cache/*

@@ -24,16 +24,18 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{POSTGRES_USER}:{POSTGRES
 app.config['SQLALCHEMY_ENABLE_POOL_PRE_PING'] = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-from models import *
+from src.models import *
 db.init_app(app)
 
-import services.repository_service as repository_service
-import services.branch_service as branch_service
+import src.services.repository_service as repository_service
+import src.services.branch_service as branch_service
 
-import controllers.identifiable_entity_controller
-import controllers.commit_controller
-import controllers.metrics_controller
-import controllers.repository_controller
+import src.controllers.identifiable_entity_controller
+import src.controllers.commit_controller
+import src.controllers.metrics_controller
+import src.controllers.repository_controller
+
+import src.services.metrics_service as metrics_service
 
 
 @app.route('/', methods=['GET'])
@@ -46,10 +48,6 @@ def index():
     except Exception:
         repositories = []
 
-    import services.duplicate_code_service as duplicate_code_service
-    duplicates = duplicate_code_service.find_duplicates("Flip-HH", "pfe021-test-repo", "da753db88949953c1ae955900677996a80c2696b")
-    print("here")
-    print(duplicates)
     return render_template('index.html', repositories=repositories)
 
 
@@ -70,6 +68,7 @@ def dashboard(owner, name):
 
 @app.route('/debt_evolution/<owner>/<name>/', methods=['GET'])
 def debt_evolution(owner, name):
+    
     """
         Return the debt evolution page for a repository with Plotly visualization.
     """
@@ -99,13 +98,15 @@ def debt_evolution(owner, name):
             
         debt_data = []
         if selected_branch:
-            import services.metrics_service as metrics_service
+            
             debt_data = metrics_service.calculate_debt_evolution(
                 repo.id, 
                 selected_branch.id, 
                 start_date, 
                 end_date
             )
+
+        print("Print test:", debt_data)
 
         return render_template('debt_evolution.html', 
             repository=repo, 
@@ -121,14 +122,12 @@ def debt_evolution(owner, name):
             branches=None, 
             error=str(e))
 
-# import services.identifiable_entity_service as identifiable_entity_service
+# import src.services.identifiable_entity_service as identifiable_entity_service
 # with app.app_context():
 #     print('dropping...')
-#     db.reflect()
 #     db.drop_all()
+#     db.reflect()
 #     db.create_all()
-
 #     identifiable_entity_service.create_identifiable_entity("todo")
 #     identifiable_entity_service.create_identifiable_entity("fixme")
-
 #     db.session.commit()

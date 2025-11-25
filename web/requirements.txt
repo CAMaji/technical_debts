@@ -8,3 +8,4 @@ requests==2.32.3
 lizard==1.18.0
 python-dotenv==1.1.1
 pydriller>=2.5
+tlv==1.8.0
