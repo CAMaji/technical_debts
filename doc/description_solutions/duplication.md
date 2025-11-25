@@ -70,7 +70,7 @@ def duplicate_three():
 
 ```
 
-Une table `code_duplication` sera créée pour persister le code dupliqué. De plus,  une table d'association `file_code_duplication` sera crée étant donné la relation plusieurs-à-plusieurs entre la table `file` et la table `code_duplication`. Cette table d'association va contenir les informations qui décrivent la duplication dans un fichier (exemple: la ligne de début, la ligne de fin, etc.)
+Une table `code_fragment` sera créée pour stocker un fragment de code unique pour lequel une duplications a été détectée. De plus, une table d'association `duplication` sera crée étant donné la relation plusieurs-à-plusieurs entre la table `file` et la table `code_fragment`. Cette table d'association va contenir les informations qui décrivent la duplication dans un fichier (exemple: la ligne de début, la ligne de fin, etc.)
 
 ---
 #### Référence(s): 

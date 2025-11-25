@@ -23,7 +23,7 @@ La pondération des deux-sous métrique est distribuée ainsi:
 - Nombre d'instance de duplication par fichier: 20%
 - Somme des lignes dupliquées pour un fichier: 10%
 
-la table d'association `file_code_duplication` lie un fichier à des instances de duplication de code. On peut obtenir le nombre d'instance de duplication par fichier en faisant la somme des instances de duplication liées à un fichier donné, alors que la somme des lignes dupliquées pour un fichier se calcule à partir du nombre de ligne dupliqué, inscrit dans la table d'association.
+la table d'association `Duplication` lie un fichier à des fragments unique de code. On peut obtenir le nombre d'instance de duplication par fichier en faisant la somme des instances de duplication liées à un fichier donné, alors que la somme des lignes dupliquées pour un fichier se calcule à partir du nombre de ligne dupliqué, inscrit dans la table d'association.
 
 ### Commentaires _TODO_ et _FIXME_
 La table d'association `file_identifiable_entity` lie un fichier à une ou plusieurs entités identifiables (autrement dit, un mot ou un petit bout de texte). Ainsi, il nous est possible de compter le nombre d'association liant un fichier à l'identité "todo/fixme". 
