@@ -4,7 +4,7 @@ Nous aimerions que le système calcule, trie et affiche les fichiers contenus da
 
 ## Solution envisagée:  
 
-Les fichiers seront priorisés sur une échelle de 0 à 1, 0 étant le moins prioritaire et 1 étant le plus. 
+Les fichiers seront priorisés sur une échelle de 0 à 1. Un pointage de 0 se rapprochant de zéro indique une priorité faible, alors qu'un pointage de 1 indique une priorité plus élevée. 
 
 La pondération de chaque métrique sera distribué ainsi: 
 - Complexité cyclomatique: 40 % 
@@ -25,5 +25,5 @@ La pondération des deux-sous métrique est distribuée ainsi:
 
 la table d'association `Duplication` lie un fichier à des fragments unique de code. On peut obtenir le nombre d'instance de duplication par fichier en faisant la somme des instances de duplication liées à un fichier donné, alors que la somme des lignes dupliquées pour un fichier se calcule à partir du nombre de ligne dupliqué, inscrit dans la table d'association.
 
-### Commentaires _TODO_ et _FIXME_
+### Commentaires TODO et FIXME
 La table d'association `file_identifiable_entity` lie un fichier à une ou plusieurs entités identifiables (autrement dit, un mot ou un petit bout de texte). Ainsi, il nous est possible de compter le nombre d'association liant un fichier à l'identité "todo/fixme". 
