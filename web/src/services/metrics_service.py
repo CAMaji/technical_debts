@@ -62,6 +62,10 @@ class MetricsClass:
                 # calculate identifiable entities for this file
                 identifiable_identities_analysis = calculate_identifiable_identities_analysis(file, code)
 
+                if file.totalLignes is None:  # only calculate if not already set
+                    file.totalLignes = calculate_total_lines(code)
+                    db.session.add(file)
+
                 # Count occurrences by entity type
                 for entity_analysis in identifiable_identities_analysis:
                     entity_name = entity_analysis["entity_name"]
@@ -124,7 +128,11 @@ def calculate_cyclomatic_complexity_analysis(file, code):
 
         # update or create complexity
         existing_complexity = Complexity.query.filter_by(function_id=function.id).first()
-
+        
+        # update function line count
+        function.totalLignes = func.end_line - func.start_line + 1
+        db.session.add(function)
+        
         if existing_complexity:
             existing_complexity.value = func.cyclomatic_complexity
             db.session.commit()
@@ -233,6 +241,10 @@ def calculate_bug_counts_in_range(commits_in_range):
     print("Linked bugs count: ", linked_bugs["total"])
     return linked_bugs
 
+def calculate_total_lines(code):
+    return sum(1 for line in code.splitlines() if line.strip())
+
+
 def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
     print("Calculating bug-related commit counts...")
     """
@@ -298,7 +310,7 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
                 "total_identifiable_entities": total_identifiable_entities,
                 "entity_breakdown": entity_counts,
                 "complexity_data": complexity_count,
-                 "linked_bugs_total": linked_bugs["total"],
+                "linked_bugs_total": linked_bugs["total"],
             })
             timing_stats['build_result'].append(time.time() - step_start)
             
@@ -323,6 +335,8 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
 
         #Bug: this line breaks the a part in debt_evolution.js because it is not json
         #debt_evolution.append({"linked_bugs_total": linked_bugs["total"]})
+        import json
+        print(json.dumps(debt_evolution, indent=4, default=str))
     except Exception as e:
         print(f"Error calculating debt evolution: {str(e)}")
         raise

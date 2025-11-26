@@ -89,6 +89,7 @@ class File(ModelMixin, db.Model):
     __tablename__ = "file"
     id = Column(String(36), primary_key=True)
     name = Column(Text, nullable=False)
+    totalLignes =  Column(Integer, nullable=True) 
 
     commit_id = Column(String(36), ForeignKey("commit.id"))
 
@@ -97,6 +98,7 @@ class Function(ModelMixin, db.Model):
     id = Column(String(36), primary_key=True)
     name = Column(Text, nullable=False)
     line_position = Column(Integer)
+    totalLignes = Column(Integer, nullable=True)
 
     file_id = Column(String(36), ForeignKey("file.id"))
 
