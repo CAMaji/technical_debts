@@ -16,13 +16,19 @@ def analyse_repo(repo : Repository, files : list[File]):
 
     facade = CodeDuplicationDatabaseFacade()
     service = CodeDuplicationService(facade)
-
-    wrapper = PMD_CopyPasteDetector(20, [PMD_CopyPasteDetector.Language.PYTHON], repo_dir)
-    xml = wrapper.run()
-
     parser = PMD_CPD_XmlReader(repo_dir)
-    reports = parser.read(xml[0])
-    service.insert_from_report(reports, files)
+    lang_list = [PMD_CopyPasteDetector.Language.PYTHON]       
+    wrapper = PMD_CopyPasteDetector(20, lang_list, repo_dir)
+
+    xml_list = wrapper.run()
+    report_list = []
+
+    for xml in xml_list:
+        new_report_list = parser.read(xml)
+        report_list.extend(new_report_list)
+        continue
+
+    service.insert_from_report(report_list, files)
     return 
 
 #def get_metrics(commit : Commit, files):
