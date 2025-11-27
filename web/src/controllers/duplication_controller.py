@@ -2,6 +2,7 @@ from src.models.model import Repository, File
 from src.tools.pmd_copy_paste_detector import PMD_CopyPasteDetector
 from src.database.code_duplication_db_facade import CodeDuplicationDatabaseFacade
 from src.services.code_duplication_service import CodeDuplicationService
+from src.utilities.extensions import Extensions
 
 import src.services.github_service as github_service
 
@@ -10,19 +11,9 @@ def analyse_repo(repo : Repository, files : list[File]):
     
     # --temporaire--
     # pour trouver les langages utilisés dans le projet
-    file_extensions = set()
-    for f in files: 
-        filename = str(f.name)
-        tokens = filename.split(".")
-        token_nb = len(tokens)
-        if token_nb == 0:
-            continue
-        
-        extension = "." + tokens[token_nb - 1]
-        file_extensions.add(extension)
-        continue
+    file_extensions = Extensions.get_extension_list(files)
 
-    facade = CodeDuplicationDatabaseFacade()
+    facade = CodeDuplicationDatabaseFacade() 
     service = CodeDuplicationService(facade)
     wrapper = PMD_CopyPasteDetector()
     
