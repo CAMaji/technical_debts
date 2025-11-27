@@ -13,8 +13,6 @@ const commit_sha_display = document.getElementById("commit-sha");
 const commit_date_display = document.getElementById("commit-date");
 const commit_message_display = document.getElementById("commit-message");
 
-const total_technical_debt = document.getElementById("total-technical-debt")
-
 // once doc is ready
 document.addEventListener("DOMContentLoaded", () => {
     init_period_select();
@@ -96,6 +94,8 @@ function render_commit_info(commit_sha, commit_date, commit_message) {
 }
 
 function render_global_statistics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis) {
+    
+    // Generate the total technical debt (all instances of duplicates + identifiable identities, and cylomatic complexity above 10)
     let totalTechnicalDebt = 0;
 
     for (const file of cyclomatic_complexity_analysis) {
@@ -113,6 +113,20 @@ function render_global_statistics(cyclomatic_complexity_analysis, identifiable_i
     totalTechnicalDebt += duplicatesCount;
 
     document.getElementById("total-technical-debt").innerHTML = totalTechnicalDebt;
+
+    // Generate the high risk files
+    let totalHighRiskFiles = 0;
+    
+    const files = duplicated_code_analysis["tech_debt"]["_metrics"];
+
+    for (file of files) {
+
+        if (file.risk[0] === "MEDIUM_RISK" || file.risk[0] === "HIGH_RISK" || file.risk[0] === "VERY_HIGH_RISK") {
+            totalHighRiskFiles++;
+        }
+    }
+
+    document.getElementById("high-risk-files").innerHTML = totalHighRiskFiles;
 }
 
 function render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis) {
