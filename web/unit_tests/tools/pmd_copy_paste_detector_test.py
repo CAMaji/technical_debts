@@ -48,7 +48,7 @@ def test_run():
     mock = LocalToolMock()
 
     # act
-    result = mock.run("/app/unit_tests/tools", [".py", ".invalid_extension"])
+    result = mock.run("/app/unit_tests/tools", {".py", ".invalid_extension"})
 
     # assert 
     assert result[0]._files[0].filename == "test.py"
@@ -63,7 +63,7 @@ def test_run_no_extensions():
     tool = PMD_CopyPasteDetector()
 
     # act
-    result = tool.run("folder", [])
+    result = tool.run("folder", {})
 
     # assert
     assert result == []

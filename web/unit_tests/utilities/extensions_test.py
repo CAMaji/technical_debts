@@ -13,7 +13,7 @@ def test_get_extensions():
     ]
 
     # act
-    extensions = Extensions.get_extension_list(files)
+    extensions = Extensions.get_extension_set(files)
 
     # assert
     assert ".py" in extensions

@@ -1,7 +1,7 @@
 from src.models.model import File
 
 class Extensions: 
-    def get_extension_list(file_list : list[File]) -> set[str]:
+    def get_extension_set(file_list : list[File]) -> set[str]:
         file_extensions = set()
         for f in file_list: 
             #print(f.name)

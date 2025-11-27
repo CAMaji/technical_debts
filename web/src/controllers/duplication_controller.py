@@ -11,7 +11,7 @@ def analyse_repo(repo : Repository, files : list[File]):
     
     # --temporaire--
     # pour trouver les langages utilisés dans le projet
-    file_extensions = Extensions.get_extension_list(files)
+    file_extensions = Extensions.get_extension_set(files)
 
     facade = CodeDuplicationDatabaseFacade() 
     service = CodeDuplicationService(facade)
