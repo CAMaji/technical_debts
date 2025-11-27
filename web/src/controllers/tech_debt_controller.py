@@ -52,13 +52,13 @@ def get_reports(files : list[File]) -> dict[str, object]:
     ffm_report = get_file_function_metrics_report(files)
     r_report = get_recommendations_report(d_reports, td_report, ffm_report)
 
-    #temp_result = {
-    #    "recommendations": JsonEncoder.breakdown(r_report),
-    #    "duplications": JsonEncoder.breakdown(d_reports),
-    #    "tech_debt": JsonEncoder.breakdown(td_report)
-    #}
+    result = {
+       "recommendations": JsonEncoder.breakdown(r_report),
+       "duplications": JsonEncoder.breakdown(d_reports),
+       "tech_debt": JsonEncoder.breakdown(td_report)
+    }
     #
     #print(json.dumps(temp_result))
 
-    result = JsonEncoder.breakdown(d_reports)
+    result = JsonEncoder.breakdown(result)
     return result

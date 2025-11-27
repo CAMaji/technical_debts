@@ -69,11 +69,11 @@ function display_metrics() {
     const include_duplication = include_duplication_input.checked;
 
     display_metrics_by_commit_id(repository_id, branch_id, commit_id, include_identifiable_identities, include_complexity, include_duplication).then((metrics) => {
-        console.log(metrics);
         const { commit_date, commit_message, commit_sha, cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis } = metrics;
         render_commit_info(commit_sha, commit_date, commit_message);
         render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis);
         render_code_duplication(duplicated_code_analysis);
+        render_files_recommendations(duplicated_code_analysis);
     });
 }
 
@@ -214,7 +214,7 @@ function processMetricsData(cyclomatic_complexity_analysis, identifiable_identit
     // Process duplicate code data
     if (duplicated_code_analysis !== undefined) {
 
-        const duplicates = Object.values(duplicated_code_analysis);
+        const duplicates = Object.values(duplicated_code_analysis["duplications"]);
 
         for (const duplicate of duplicates) {
             const files = duplicate["_files"];
@@ -243,6 +243,7 @@ function processMetricsData(cyclomatic_complexity_analysis, identifiable_identit
 
 // Detail formatter for expandable rows
 function detailFormatter(index, row) {
+
     if (!row.functions || row.functions.length === 0) {
         return '<div class="p-3 text-muted">No function data available</div>';
     }
@@ -286,7 +287,7 @@ function render_code_duplication(duplicated_code_analysis) {
     }
 
     // we need to extract the number duplications and format it
-    const values = Object.values(duplicated_code_analysis);
+    const values = Object.values(duplicated_code_analysis["duplications"]);
     let duplication_name_array = [];
     let index = 1;
     values.forEach((value) => {
@@ -328,7 +329,7 @@ function render_code_duplication(duplicated_code_analysis) {
 
 function duplication_detail_formatter(index, row) {
     if (!row.value || row.value.length === 0) {
-        return '<div class="p-3 text-muted">No function data available</div>';
+        return '<div class="p-3 text-muted">No function data available</div>'; //TODO: Vérifier qu'est-ce qui arrive lorsqu'il y a aucune duplication.
     }
 
     const analysis = row.value;
@@ -357,6 +358,111 @@ function duplication_detail_formatter(index, row) {
                     <tr>
                         <td>
                             <pre><code class="hljs">${highlighted_fragment}</code></pre>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    html += '</tbody></table></div>';
+    return html;
+}
+
+function render_files_recommendations(duplicated_code_analysis) {
+    // Initialize or refresh the table
+    const $table = $('#recommendations-table');
+    
+    // Destroy existing table if it exists
+    if ($table.bootstrapTable('getOptions')) {
+        $table.bootstrapTable('destroy');
+    }
+
+    let recommendations_array = [];
+    recommendations_array.push({ filename: "Global", value: duplicated_code_analysis["recommendations"]["_global"] });
+    
+    const values = Object.values(duplicated_code_analysis["recommendations"]["_files"]);
+    values.forEach((value) => {
+        if (value.problems.length > 0) {
+            recommendations_array.push({ filename: value.subject, value: value});
+        }
+    });
+
+    // Initialize the table with data
+    $table.bootstrapTable({
+        columns: [
+            {
+                field: 'filename',
+                title: 'Problems and recommendations',
+                sortable: true,
+            },
+        ],
+        data: recommendations_array,
+        detailView: true,
+        detailFormatter: recommendations_detail_formatter,
+        detailViewIcon: true,
+        detailViewByClick: false,
+        showColumns: false,
+        onPostBody: function() {
+            // Force visibility of detail icons
+            $table.find('.detail-icon').css({
+                'color': '#495057',
+                'font-weight': 'bold',
+                'font-size': '1.2rem',
+            });
+            $table.find('.detail').css({
+                'width': '5%',
+            })
+            $table.find('.detail-icon').parent().css({
+                'text-align': 'center',
+            });
+        }
+    });
+}
+
+function recommendations_detail_formatter(index, row) {
+    if (!row.value.problems || row.value.problems.length === 0) {
+        return '<div class="p-3 text-muted">No recommendation data available</div>';
+    }
+
+    const analysis = row.value;
+
+    let problems_list = '<td style="width: 100%">';
+    let problem_count = 1;
+    analysis.problems.forEach((problem) => {
+        problems_list += `${problem_count}. ${problem} <br />`;
+        problem_count++;
+    });
+    problems_list += '</td>'
+
+    let recommendations_list = "";
+    let recommendations_count = 1;
+    analysis.recommendations.forEach((recommendation) => {
+        recommendations_list += `
+            <td style="width: 100%">${recommendations_count}. ${recommendation}</td>
+        `;
+        recommendations_count++;
+    });
+
+
+    let html = `
+        <div class="p-3">
+            <table class="table table-sm table-striped">
+                <tbody>
+                    <tr>
+                        <td>
+                            Problem(s)
+                        </td>
+                        <td>
+                            ${problems_list}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            Recommendations(s)
+                        </td>
+                        <td>
+                            ${recommendations_list}
                         </td>
                     </tr>
                 </tbody>
