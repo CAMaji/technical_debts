@@ -1,24 +1,20 @@
 from enum import Enum
-from src.tools.tool_interface import ToolInterface
+from src.tools.duplication_tool_interface import DuplicationToolInterface
 from subprocess import *
 
 # PMD-CDP: https://pmd.github.io/pmd/pmd_userdocs_cpd.html
-class PMD_CopyPasteDetector(ToolInterface): 
+class PMD_CopyPasteDetector(DuplicationToolInterface): 
     
     # Languages supported by PMD-CPD
     # https://docs.pmd-code.org/latest/tag_languages.html
     class Language(Enum): 
         PYTHON = "python"
 
-    class ReportFormat(Enum):
-        XML = "xml"
-
     minimum_tokens : int
     languages : list[Language]
-    format : ReportFormat
     dir : str
 
-    def __init__(self, minimum_tokens : int, languages : list[Language], format : ReportFormat, dir : str):
+    def __init__(self, minimum_tokens : int, languages : list[Language], dir : str):
         self.minimum_tokens = minimum_tokens
         self.languages = languages
         self.format = format
@@ -32,7 +28,7 @@ class PMD_CopyPasteDetector(ToolInterface):
                 "/pmd/pmd-bin-7.18.0/bin/pmd", "cpd", 
                 "--minimum-tokens", str(self.minimum_tokens), 
                 "--language", lang.value, 
-                "--format", self.format.value, 
+                "--format", "xml", 
                 "--dir", self.dir, 
             ]
 

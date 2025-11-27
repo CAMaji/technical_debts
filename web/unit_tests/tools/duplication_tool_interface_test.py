@@ -1,8 +1,8 @@
-from src.tools.tool_interface import ToolInterface
+from src.tools.duplication_tool_interface import DuplicationToolInterface
 
 def test_run__expecting_exception():
     # arrange
-    tool = ToolInterface()
+    tool = DuplicationToolInterface()
 
     # act
     result = tool.run()

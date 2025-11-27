@@ -8,7 +8,7 @@ def test_parse():
     parser = PMD_CPD_XmlReader("/app/unit_tests/tools")
 
     # act 
-    reports = parser.parse(xml_content)
+    reports = parser.read(xml_content)
 
     # assert
     

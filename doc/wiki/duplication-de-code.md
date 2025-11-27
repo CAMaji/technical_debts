@@ -111,8 +111,22 @@ Nous nous sommes inspirés du rapport XML généré par PMD pour organiser les m
                             |    | to_column            |
                             |---------------------------|
 ```
+### Couche dorsale 
 
-### Conception logicielle
+#### Emballage (Wrapper)
+
+Initialement, PMD était fortement couplé avec le service de duplication et la lecture du rapport XML : nous avions une grosse fonction qui exécutait PMD, faisait la lecture du rapport XML et insérait les objets modèles `Duplication` et `CodeFragment` dans la base de données. Pour découpler PMD de notre logique et faciliter un potentiel remplacement vers un autre outil (ou même permettre à plusieurs outils de coexister), nous avons encapsulé le code exécutant PMD dans une classe emballage (wrapper en anglais), de même pour le code lisant le rapport XML de PMD. 
+
+![](images/wrapper_diagrams.svg)
+
+Puisque la classe lisant le XML ne peut pas directement insérer les données dans la base de données, nous avons implémenté une classe servant à l'échange de données entre les différents objets.
+
+#### Service 
+
+Nous avons ajouté une classe nommée `CodeDuplicationService` qui serait responsable de insérer et obtenir des rapports de duplications. 
+
+#### Communication avec la base de données
+
 
 
 
