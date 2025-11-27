@@ -1,0 +1,7 @@
+@startuml duplication_db
+hide circle
+skinparam classAttributeIconSize 0
+
+
+
+@enduml

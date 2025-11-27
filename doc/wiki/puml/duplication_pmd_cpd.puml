@@ -1,7 +1,7 @@
-@startuml PMD_CopyPasteDetector
+@startuml duplication_pmd_cpd
 hide circle
 skinparam classAttributeIconSize 0
-title PMD_CopyPasteDetector
+title Wrapper DuplicationToolInterface
 
 class "<<Abstract>>\nDuplicationToolInterface" as DuplicationToolInterface {
     + run(): list<str>

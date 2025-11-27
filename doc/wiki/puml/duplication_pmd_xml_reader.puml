@@ -1,9 +1,7 @@
-@startuml PMD_CPD_XmlReader
+@startuml duplication_pmd_xml_reader
 hide circle
 skinparam classAttributeIconSize 0
-title PMD_CPD_XmlReader
-
-
+title Wrapper DuplicationReportReaderInterface
 
 class "<<Abstract>>\nDuplicationReportReaderInterface" as DuplicationReportReaderInterface {
     + read(text): list<DuplicationReport>
