@@ -122,7 +122,7 @@ function render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_
                 title: 'Avg Complexity',
                 sortable: true,
                 align: 'center',
-                width: '20%',
+                width: '15%',
                 formatter: (value) => value !== null ? value.toFixed(2) : '-'
             },
             {
@@ -130,14 +130,21 @@ function render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_
                 title: 'Identifiable Identities',
                 sortable: true,
                 align: 'center',
-                width: '20%'
+                width: '15%'
             },
             {
                 field: 'duplicateCodeCount',
                 title: 'Duplicate Code',
                 sortable: true,
                 align: 'center',
-                width: '20%'
+                width: '15%'
+            },
+            {
+                field: 'priorityScore',
+                title: 'Priority Score',
+                sortable: true,
+                align: 'center',
+                width: '15%'
             }
         ],
         data: fileMetrics,
@@ -167,15 +174,7 @@ function processMetricsData(cyclomatic_complexity_analysis, identifiable_identit
             if (Array.isArray(fileArray) && fileArray.length > 0) {
                 const fileName = fileArray[0].file;
                 
-                if (!fileMap.has(fileName)) {
-                    fileMap.set(fileName, {
-                        fileName: fileName,
-                        functions: [],
-                        avgComplexity: 0,
-                        identifiableIdentitiesCount: 0,
-                        duplicateCodeCount: 0
-                    });
-                }
+                createNewFileMapSet(fileMap, fileName);
 
                 const fileData = fileMap.get(fileName);
                 fileData.functions = fileArray.map(func => ({
@@ -196,15 +195,7 @@ function processMetricsData(cyclomatic_complexity_analysis, identifiable_identit
         identifiable_identities_analysis.forEach(entity => {
             const fileName = entity.file_name;
             
-            if (!fileMap.has(fileName)) {
-                fileMap.set(fileName, {
-                    fileName: fileName,
-                    functions: [],
-                    avgComplexity: null,
-                    identifiableIdentitiesCount: 0,
-                    duplicateCodeCount: 0
-                });
-            }
+            createNewFileMapSet(fileMap, fileName);
 
             const fileData = fileMap.get(fileName);
             fileData.identifiableIdentitiesCount++;
@@ -222,19 +213,26 @@ function processMetricsData(cyclomatic_complexity_analysis, identifiable_identit
             for (const file of files) {
                 const fileName = file.filename;
 
-                if (!fileMap.has(fileName)) {
-                    fileMap.set(fileName, {
-                        fileName: fileName,
-                        functions: [],
-                        avgComplexity: null,
-                        identifiableIdentitiesCount: 0,
-                        duplicateCodeCount: 0
-                    });
-                }
+                createNewFileMapSet(fileMap, fileName);
 
                 const fileData = fileMap.get(fileName);
                 fileData.duplicateCodeCount++;
             }
+        }
+    }
+
+    // Process priority score data
+    if (duplicated_code_analysis !== undefined) { 
+        
+        const techDebtMetrics = Object.values(duplicated_code_analysis["tech_debt"]["_metrics"]);
+
+        for (const file of techDebtMetrics) {
+            const fileName = file.filename;
+
+            createNewFileMapSet(fileMap, fileName);
+
+            const fileData = fileMap.get(fileName);
+            fileData.priorityScore = file.priority;
         }
     }
 
@@ -472,4 +470,18 @@ function recommendations_detail_formatter(index, row) {
 
     html += '</tbody></table></div>';
     return html;
+}
+
+
+function createNewFileMapSet(fileMap, fileName) {
+    if (!fileMap.has(fileName)) {
+        fileMap.set(fileName, {
+            fileName: fileName,
+            functions: [],
+            avgComplexity: null,
+            identifiableIdentitiesCount: 0,
+            duplicateCodeCount: 0,
+            priorityScore: 0
+        });
+    }
 }
