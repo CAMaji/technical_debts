@@ -97,20 +97,11 @@ def duplicate_three():
 
 Nous nous sommes inspirés du rapport XML généré par PMD pour organiser les métriques dans la base de donnée. Initialement, notre base de données avait une table `file` contenant un identifiant unique, le nom du fichier et l'identifiant du commit Git associé. Les métriques de duplications sont conservées dans deux tables: `duplication` et `code_fragment`. La table `duplication` sert de table d'association entre la table `file` et la table `code_fragment` puisque la relation entre ces deux tables est de type plusieurs-à-plusieurs (many-to-many).
 
-```
-|-----------------|         |---------------------------|         |-----------------|
-| file            |         | duplication               |         | code_fragment   |
-|-----------------| 1     * |---------------------------| *     1 |-----------------|
-| PK | id         |<--------| PK | id                   |-------->| PK | id         |
-| FK | commit_id  |         | FK | file_id              |         |    | line_count |
-|    | name       |         | FK | code_fragment_id     |         |    | text       |
-|-----------------|         |    | line_count           |         |-----------------|
-                            |    | from_line            |
-                            |    | to_line              |
-                            |    | from_column          |
-                            |    | to_column            |
-                            |---------------------------|
-```
+---
+![](puml/duplication_db.svg)
+
+--- 
+
 ### Couche dorsale 
 
 #### Emballage (Wrapper)
@@ -118,18 +109,18 @@ Nous nous sommes inspirés du rapport XML généré par PMD pour organiser les m
 Initialement, PMD était fortement couplé avec le service de duplication et la lecture du rapport XML : nous avions une grosse fonction qui exécutait PMD, faisait la lecture du rapport XML et insérait les objets modèles `Duplication` et `CodeFragment` dans la base de données. Pour découpler PMD de notre logique et faciliter un potentiel remplacement vers un autre outil (ou même permettre à plusieurs outils de coexister), nous avons encapsulé le code exécutant PMD et le code lisant le XML généré par PMD dans des classes "Emballage" (Wrapper en anglais) : `DuplicationToolInterface` et `DuplicationReportReaderInterface`.
 
 ---
-![](puml/PMD_CopyPasteDetector.svg)
+![](puml/duplication_pmd_cpd.svg)
 
 --- 
 
-![](puml/PMD_CPD_XmlReader.svg)
+![](puml/duplication_pmd_xml_reader.svg)
 
 --- 
 Puisque la classe lisant le XML ne peut pas directement insérer les données dans la base de données, nous avons implémenté une classe servant à l'échange de données entre les différents objets.
 
 #### Service 
 
-Nous avons ajouté une classe nommée `CodeDuplicationService` qui serait responsable de insérer et obtenir des rapports de duplications. 
+La logique d'affaire de la duplication de code se situe dans une classe de service, nommée `CodeDuplicationService`. Cette classe est responsable de convertir les données d'un objet `DuplicationReport` en objets insérables. 
 
 #### Communication avec la base de données
 

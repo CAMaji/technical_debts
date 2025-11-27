@@ -1,4 +1,4 @@
 for file in $(find ./doc/wiki/puml -name '*.puml')
 do
-    plantuml $file -svg
+    java -jar plantuml/plantuml.jar $file -svg
 done
