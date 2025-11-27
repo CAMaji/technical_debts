@@ -69,11 +69,11 @@ function display_metrics() {
     const include_duplication = include_duplication_input.checked;
 
     display_metrics_by_commit_id(repository_id, branch_id, commit_id, include_identifiable_identities, include_complexity, include_duplication).then((metrics) => {
-        console.log(metrics);
         const { commit_date, commit_message, commit_sha, cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis } = metrics;
         render_commit_info(commit_sha, commit_date, commit_message);
         render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis);
         render_code_duplication(duplicated_code_analysis);
+        render_files_recommendations(duplicated_code_analysis);
     });
 }
 
@@ -107,6 +107,9 @@ function render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_
     if ($table.bootstrapTable('getOptions')) {
         $table.bootstrapTable('destroy');
     }
+
+    console.log("File metrics below for statistics");
+    console.log(fileMetrics);
 
     // Initialize the table with data
     $table.bootstrapTable({
@@ -214,7 +217,7 @@ function processMetricsData(cyclomatic_complexity_analysis, identifiable_identit
     // Process duplicate code data
     if (duplicated_code_analysis !== undefined) {
 
-        const duplicates = Object.values(duplicated_code_analysis);
+        const duplicates = Object.values(duplicated_code_analysis["duplications"]);
 
         for (const duplicate of duplicates) {
             const files = duplicate["_files"];
@@ -243,6 +246,11 @@ function processMetricsData(cyclomatic_complexity_analysis, identifiable_identit
 
 // Detail formatter for expandable rows
 function detailFormatter(index, row) {
+
+    console.log("row value of STATISTICS");
+    console.log(row);
+
+
     if (!row.functions || row.functions.length === 0) {
         return '<div class="p-3 text-muted">No function data available</div>';
     }
@@ -286,13 +294,16 @@ function render_code_duplication(duplicated_code_analysis) {
     }
 
     // we need to extract the number duplications and format it
-    const values = Object.values(duplicated_code_analysis);
+    const values = Object.values(duplicated_code_analysis["duplications"]);
     let duplication_name_array = [];
     let index = 1;
     values.forEach((value) => {
         duplication_name_array.push({ duplication_number: `Duplication #${index}`, value: value });
         index++;
     });
+
+    console.log("Duplication_name_array for duplication table");
+    console.log(duplication_name_array);
 
     // Initialize the table with data
     $table.bootstrapTable({
@@ -328,7 +339,7 @@ function render_code_duplication(duplicated_code_analysis) {
 
 function duplication_detail_formatter(index, row) {
     if (!row.value || row.value.length === 0) {
-        return '<div class="p-3 text-muted">No function data available</div>';
+        return '<div class="p-3 text-muted">No function data available</div>'; //TODO: Vérifier qu'est-ce qui arrive lorsqu'il y a aucune duplication.
     }
 
     const analysis = row.value;
@@ -366,4 +377,92 @@ function duplication_detail_formatter(index, row) {
 
     html += '</tbody></table></div>';
     return html;
+}
+
+function render_files_recommendations(duplicated_code_analysis) {
+
+    console.log("All Recommendations");
+    console.log(duplicated_code_analysis["recommendations"]);
+
+    console.log("Recommendations global");
+    console.log(duplicated_code_analysis["recommendations"]["_global"]);
+
+    console.log("Recommendations global problems");
+
+    const global_problems = duplicated_code_analysis["recommendations"]["_global"]["problems"];
+    console.log(global_problems);
+
+    const global_recommendations = duplicated_code_analysis["recommendations"]["_global"]["recommendations"];
+    console.log("duplicated_code_analysis[recommendations][_global][recommendations]");
+    console.log(global_recommendations);
+
+    // Create a data structure that has the information like in the table
+    // All files in the commit
+    // -> Problems | Each problem
+    // -> Recommendations | Each recommendation
+    // Each file
+    // -> Problems | Each problem
+    // -> Recommendations | Each recommendation
+
+    // Initialize or refresh the table
+    const $table = $('#recommendations-table');
+    
+    // Destroy existing table if it exists
+    if ($table.bootstrapTable('getOptions')) {
+        $table.bootstrapTable('destroy');
+    }
+
+    const global_problems_values = Object.values(duplicated_code_analysis["recommendations"]["_global"]["problems"]);
+    console.log("Value of Object.values(duplicated_code_analysis[recommendations][_global][problems]");
+    console.log(global_problems_values);
+
+    const global_recommendations_values = Object.values(duplicated_code_analysis["recommendations"]["_global"]["recommendations"]);
+    console.log("Value of Object.values(duplicated_code_analysis[recommendations][_global][recommendations]");
+    console.log(global_recommendations_values);
+
+    let global_recommendations_array = [];
+    let index = 1;
+    global_problems_values.forEach((value) => {
+        global_recommendations_array.push({ global_problems: `${index}. ${value}`});
+        index++;
+    });
+    global_recommendations_values.forEach((value) => {
+        global_recommendations_array.push({ global_recommendations: `${index}. ${value}`});
+        index++;
+    });
+
+    console.log("Array of recommendations");
+    console.log(global_recommendations_array);
+
+
+    // Initialize the table with data
+    $table.bootstrapTable({
+        columns: [
+            {
+                field: 'global_problems',
+                title: 'Global Problems',
+                sortable: true,
+                width: '50%'
+            },
+            {
+                field: 'global_recommendations',
+                title: 'Global Recommandations',
+                sortable: true,
+                width: '50%'
+            }
+        ],
+        data: global_recommendations_array,
+        detailView: false,
+        detailViewIcon: false,
+        detailViewByClick: false,
+        showColumns: false,
+        onPostBody: function() {
+            // Force visibility of detail icons
+            $table.find('.detail-icon').css({
+                'color': '#495057',
+                'font-weight': 'bold',
+                'font-size': '1.2rem'
+            });
+        }
+    });
 }
