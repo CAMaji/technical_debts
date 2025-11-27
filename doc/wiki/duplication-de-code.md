@@ -53,8 +53,8 @@ Les paramètres utilisés pour exécuter CPD sont:
 - le format utilisé (XML): `--format XML`
 - le dossier où se situant les fichiers à analyser: `--dir <un chemin>`
 
-** note 1: les identifiants de chaque langage supportés sont identifiés [ici](https://pmd.github.io/pmd/tag_CpdCapableLanguage.html).
-** note 2: L'argument `--language` 
+_Note 1: les identifiants de chaque langage supportés sont identifiés [_--ici--_](https://pmd.github.io/pmd/tag_CpdCapableLanguage.html)._
+_Note 2: l'argument `--langage` est limité qu'à un seul langage de programmation. Pour chaque langage d'un projet, relancer PMD._
 
 ### Rapport
 
@@ -95,32 +95,31 @@ def duplicate_three():
 
 ### Base de données
 
-Nous nous sommes inspirés du rapport XML généré par PMD pour organiser les métriques dans la base de donnée. Initialement, notre base de données avait une table `file` contenant un identifiant unique, le nom du fichier et l'identifiant du commit Git associé. Les métriques de duplications sont conservées dans deux tables: `duplication` et `code_fragment`. La table `duplication` sert de table d'association entre la table `file` et la table `code_fragment` puisque la relation entre ces deux tables est de type plusieurs-à-plusieurs (many-to-many).
+Nous nous sommes inspirés du rapport XML généré par PMD pour organiser les métriques dans la base de donnée. Initialement, la base de données avait une table `file` contenant un identifiant unique, le nom du fichier et l'identifiant du commit Git associé. Les métriques de duplications sont conservées dans deux tables: `duplication` et `code_fragment`. La table `duplication` représente l'occurence et l'emplacement d'un fragment de code situé dans un fichier, alors que la table `code_fragment` représente le contenu d'un bout de code unique, repéré dans de multiples fichiers. Puisque la relation entre `file` et `code_fragment` est de type plusieurs-à-plusieurs, `duplication` agit en tant que table d'association. 
 
 ---
 ![](puml/duplication_db.svg)
-
 --- 
 
 ### Couche dorsale 
 
-#### Emballage (Wrapper)
+#### Classes enveloppantes (Wrapper classes)
 
-Initialement, PMD était fortement couplé avec le service de duplication et la lecture du rapport XML : nous avions une grosse fonction qui exécutait PMD, faisait la lecture du rapport XML et insérait les objets modèles `Duplication` et `CodeFragment` dans la base de données. Pour découpler PMD de notre logique et faciliter un potentiel remplacement vers un autre outil (ou même permettre à plusieurs outils de coexister), nous avons encapsulé le code exécutant PMD et le code lisant le XML généré par PMD dans des classes "Emballage" (Wrapper en anglais) : `DuplicationToolInterface` et `DuplicationReportReaderInterface`.
+Bien que peu d'alternatives à PMD existent pour détecter le code dupliqué, nous voulions éviter d'introduire un fort couplage avec PMD afin de permettre et faciliter l'intégration d'un ou plusieurs autres logiciels de détection de duplications. Pour assurer un faible couplage, nous avons créé l'interface `DuplicationToolInterface` pour abstraire la façon 
 
 ---
 ![](puml/duplication_pmd_cpd.svg)
-
 --- 
-
 ![](puml/duplication_pmd_xml_reader.svg)
-
 --- 
-Puisque la classe lisant le XML ne peut pas directement insérer les données dans la base de données, nous avons implémenté une classe servant à l'échange de données entre les différents objets.
 
-#### Service 
+
+
+#### Service
 
 La logique d'affaire de la duplication de code se situe dans une classe de service, nommée `CodeDuplicationService`. Cette classe est responsable de convertir les données d'un objet `DuplicationReport` en objets insérables. 
+
+Puisque la classe lisant le XML ne peut pas directement insérer les données dans la base de données, nous avons implémenté une classe servant à l'échange de données entre les différents objets.
 
 #### Communication avec la base de données
 

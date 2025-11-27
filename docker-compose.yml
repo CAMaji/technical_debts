@@ -48,7 +48,7 @@ services:
     depends_on:
       - postgres
     command: >
-      pytest --cov=src --show-capture=all unit_tests
+      pytest --cov=src --show-capture=all unit_tests --cov-report=term-missing
 
   postgres:
     restart: always

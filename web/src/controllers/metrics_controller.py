@@ -53,6 +53,7 @@ def display_metrics_by_commit_id():
             cyclomatic_complexity_analysis = metrics_service.calculate_cyclomatic_complexity_analysis(file, code)
             identifiable_identities_analysis = metrics_service.calculate_identifiable_identities_analysis(file, code)
 
+        # temp fix
         files = file_service.get_files_by_commit_id(commit.id)
         duplication_controller.analyse_repo(repo, files)
 
@@ -64,11 +65,10 @@ def display_metrics_by_commit_id():
         for entity in entities:
             identifiable_identities_analysis.append(entity) 
 
-    # duplication_analysis = duplication_controller.get_metrics(commit, saved_files) 
-    # prioritisation_risk = tech_debt_controller.get_metrics(saved_files)
-    # json.dumps(duplication_analysis, indent=4)
-    # print(json.dumps(prioritisation_risk, indent=4))
-
+    # duplication de code
+    # priorisation par fichier
+    # risque par fichier
+    # trouve des problèmes et génère des recommandations
     reports = tech_debt_controller.get_reports(saved_files)
 
     metrics = {

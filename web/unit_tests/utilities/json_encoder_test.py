@@ -44,6 +44,28 @@ def test__dict_to_raw():
     assert result["A"] == 1
     assert result[14] == "b"
 
+def test_():
+    # arrange
+    class ABC:
+        a : int
+        b : range
+        c : str
+
+    abc = ABC()
+    abc.a = 0
+    abc.b = range(0, 10)
+    abc.c = ""
+
+    # act
+    try:
+        JsonEncoder._object_to_raw(abc)
+    
+    # assert 
+        assert False
+    except Exception as e:
+        assert True
+    return
+
 def test__dict_to_raw__invalid_key_exception():
      # arrange
     dummy = DummyClass(2, 3.0, "s")
