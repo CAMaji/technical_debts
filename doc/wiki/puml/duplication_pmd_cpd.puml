@@ -1,0 +1,25 @@
+@startuml duplication_pmd_cpd
+hide circle
+skinparam classAttributeIconSize 0
+title Wrapper DuplicationToolInterface
+
+class "<<Abstract>>\nDuplicationToolInterface" as DuplicationToolInterface {
+    + run(): list<str>
+}
+
+enum "<<Enum>>\nLanguage" as PMD_CPD_Language {
+    PYTHON = "python"
+}
+
+class PMD_CopyPasteDetector {
+    - minimum_tokens : int
+    - languages : list<Language>
+    - dir : str
+    + ctor(minimum_tokens, languages, dir) 
+    + run() : list<str>
+}
+
+PMD_CopyPasteDetector .up.|> DuplicationToolInterface : "Implémente"
+PMD_CopyPasteDetector o-right- PMD_CPD_Language
+
+@enduml

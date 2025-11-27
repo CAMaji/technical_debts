@@ -35,12 +35,6 @@ class DuplicationReport(JsonEncoder.Interface):
     def add_file(self, file : File):
         self._files.append(file)
 
-    def set_fragment(self, fragment : str):
-        if(self._fragment == ""):
-            self._fragment = fragment
-        else:
-            raise Exception("Cannot set fragment twice!")
-
     def get_lines(self) -> int:
         return self._lines
     

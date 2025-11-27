@@ -3,7 +3,7 @@ import re
 
 def test_run_python(): 
     # arrange
-    wrapper = PMD_CopyPasteDetector(20, [PMD_CopyPasteDetector.Language.PYTHON], PMD_CopyPasteDetector.ReportFormat.XML, "/app/unit_tests/tools/pmd_cpd_test_directory")
+    wrapper = PMD_CopyPasteDetector(20, [PMD_CopyPasteDetector.Language.PYTHON], "/app/unit_tests/tools/pmd_cpd_test_directory")
     expected_output = ""
 
     with open("/app/unit_tests/tools/pmd_cpd_test_directory/pmd_cpd_python_output.xml") as f:

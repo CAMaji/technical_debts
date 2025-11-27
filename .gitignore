@@ -8,3 +8,4 @@ web/src/.repo_cache/*
 web/.repo_cache/*
 .pytest_cache
 .coverage
+plantuml
