@@ -13,6 +13,8 @@ const commit_sha_display = document.getElementById("commit-sha");
 const commit_date_display = document.getElementById("commit-date");
 const commit_message_display = document.getElementById("commit-message");
 
+const total_technical_debt = document.getElementById("total-technical-debt")
+
 // once doc is ready
 document.addEventListener("DOMContentLoaded", () => {
     init_period_select();
@@ -71,6 +73,7 @@ function display_metrics() {
     display_metrics_by_commit_id(repository_id, branch_id, commit_id, include_identifiable_identities, include_complexity, include_duplication).then((metrics) => {
         const { commit_date, commit_message, commit_sha, cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis } = metrics;
         render_commit_info(commit_sha, commit_date, commit_message);
+        render_global_statistics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis);
         render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis);
         render_code_duplication(duplicated_code_analysis);
         render_files_recommendations(duplicated_code_analysis);
@@ -90,6 +93,26 @@ function render_commit_info(commit_sha, commit_date, commit_message) {
     commit_sha_display.textContent = commit_sha || "-";
     commit_date_display.textContent = commit_date || "-";
     commit_message_display.textContent = commit_message || "";
+}
+
+function render_global_statistics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis) {
+    let totalTechnicalDebt = 0;
+
+    for (const file of cyclomatic_complexity_analysis) {
+        for (const funct of file) {
+            if (funct.cyclomatic_complexity > 10) {
+                totalTechnicalDebt++;
+            }
+        }
+    }
+
+    const identifiableIdentitiesCount = identifiable_identities_analysis.length
+    totalTechnicalDebt += identifiableIdentitiesCount;
+
+    const duplicatesCount = Object.values(duplicated_code_analysis["duplications"]).length;
+    totalTechnicalDebt += duplicatesCount;
+
+    document.getElementById("total-technical-debt").innerHTML = totalTechnicalDebt;
 }
 
 function render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis) {
