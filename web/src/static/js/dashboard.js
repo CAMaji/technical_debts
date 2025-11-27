@@ -71,6 +71,7 @@ function display_metrics() {
     display_metrics_by_commit_id(repository_id, branch_id, commit_id, include_identifiable_identities, include_complexity, include_duplication).then((metrics) => {
         const { commit_date, commit_message, commit_sha, cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis } = metrics;
         render_commit_info(commit_sha, commit_date, commit_message);
+        render_global_statistics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis);
         render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis);
         render_code_duplication(duplicated_code_analysis);
         render_files_recommendations(duplicated_code_analysis);
@@ -90,6 +91,42 @@ function render_commit_info(commit_sha, commit_date, commit_message) {
     commit_sha_display.textContent = commit_sha || "-";
     commit_date_display.textContent = commit_date || "-";
     commit_message_display.textContent = commit_message || "";
+}
+
+function render_global_statistics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis) {
+    
+    // Generate the total technical debt (all instances of duplicates + identifiable identities, and cylomatic complexity above 10)
+    let totalTechnicalDebt = 0;
+
+    for (const file of cyclomatic_complexity_analysis) {
+        for (const funct of file) {
+            if (funct.cyclomatic_complexity > 10) {
+                totalTechnicalDebt++;
+            }
+        }
+    }
+
+    const identifiableIdentitiesCount = identifiable_identities_analysis.length
+    totalTechnicalDebt += identifiableIdentitiesCount;
+
+    const duplicatesCount = Object.values(duplicated_code_analysis["duplications"]).length;
+    totalTechnicalDebt += duplicatesCount;
+
+    document.getElementById("total-technical-debt").innerHTML = totalTechnicalDebt;
+
+    // Generate the high risk files
+    let totalHighRiskFiles = 0;
+    
+    const files = duplicated_code_analysis["tech_debt"]["_metrics"];
+
+    for (file of files) {
+
+        if (file.risk[0] === "MEDIUM_RISK" || file.risk[0] === "HIGH_RISK" || file.risk[0] === "VERY_HIGH_RISK") {
+            totalHighRiskFiles++;
+        }
+    }
+
+    document.getElementById("high-risk-files").innerHTML = totalHighRiskFiles;
 }
 
 function render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis) {
