@@ -99,36 +99,38 @@ Nous nous sommes inspirés du rapport XML généré par PMD pour organiser les m
 
 ---
 ![](puml/duplication_db.svg)
+
 --- 
 
 ### Couche dorsale 
 
 #### Classes enveloppantes (Wrapper classes)
 
-Bien que peu d'alternatives à PMD existent pour détecter le code dupliqué, nous voulions éviter d'introduire un fort couplage avec PMD afin de permettre et faciliter l'intégration d'un ou plusieurs autres logiciels de détection de duplications. Pour assurer un faible couplage, nous avons créé l'interface `DuplicationToolInterface` pour abstraire la façon 
+Bien que peu d'alternatives à PMD existent pour détecter le code dupliqué, nous voulions éviter d'introduire un fort couplage avec PMD afin de permettre et faciliter l'intégration d'un ou plusieurs autres logiciels de détection de duplications. Pour assurer un faible couplage, nous avons créé l'interface `DuplicationToolInterface` avec la méthode abstraite `run(dir, file_extensions) : list<DuplicationReport>`  à implémenter. Cette structure permet d'aisément créer une nouvelle sous-classe pour l'ajout d'un outil : les modifications nécessaire à l'extérieur de l'enveloppe seront inexistantes, ou très mineures. 
+
+Dans le diagramme de classe ci-dessous, la classe `PMD_CopyPasteDetector` implémente la méthode `run` de l'interface `DuplicationToolInterface`. Cette sous-classe est responsable d'obtenir le rapport généré par PMD, puis de le convertir en un objet Python `DuplicationReport`. La classe `DuplicationReport` contraint les sous-classes enveloppantes à respecter organisation attendue des données par le système : les sous-classes enveloppant les outils ne doivent pas insérer eux-mêmes les données afin de respecter la responsabilité des classes et assurer une haute cohérence. 
 
 ---
 ![](puml/duplication_pmd_cpd.svg)
---- 
-![](puml/duplication_pmd_xml_reader.svg)
---- 
 
-
+--- 
 
 #### Service
 
-La logique d'affaire de la duplication de code se situe dans une classe de service, nommée `CodeDuplicationService`. Cette classe est responsable de convertir les données d'un objet `DuplicationReport` en objets insérables. 
+La logique d'affaire de la duplication de code se situe dans une classe de service, nommée `CodeDuplicationService`. Cette classe est responsable de convertir les données d'un objet `DuplicationReport` en objets SQL Alchemy. Tel qu'expliqué précédemment, la classe `DuplicationReport` dicte l'organisation dans laquelle le système s'attend à recevoir les données. 
 
-Puisque la classe lisant le XML ne peut pas directement insérer les données dans la base de données, nous avons implémenté une classe servant à l'échange de données entre les différents objets.
+Pour faciliter l'écriture de tests unitaires et abstraire la façon dont le service communique avec la base de données, nous avons créé une classe façade `CodeDuplicationDatabaseFacade` dont la seule responsabilité est d'effectuer les appels à la base de données et convertir les objets du ORM SQL Alchemy en objets primitifs Python. 
 
-#### Communication avec la base de données
+---
+![](puml/duplication_service.svg)
+
+---
+
+### Interface utilisateur 
 
 
 
-
-### Interface utilisateur
-
-----
+---
 
 ##### Références
 
