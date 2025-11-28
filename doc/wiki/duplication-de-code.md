@@ -115,7 +115,7 @@ Dans le diagramme de classe ci-dessous, la classe `PMD_CopyPasteDetector` implé
 
 --- 
 
-#### Service
+#### Façade, service & contrôlleur
 
 La classe `CodeDuplicationService` est responsable de transformer des rapports `DuplicationReport` en objets SQL Alchemy (classes `CodeFragment` et `Duplication`), puis utiliser la facade `CodeDuplicationDatabaseFacade` pour sauvegarder les objets SQL Alchemy dans la base de données. Cette classe service est aussi responsable de l'opération inverse, soit d'obtenir les objets SQL Alchemy `CodeFragment` et `Duplication` associés à une liste d'objets SQL Alchemy `File` pour reconstruire une liste de rapports `DuplicationReport`. 
 
@@ -128,20 +128,22 @@ Nous avons utilisé une façade pour plusieurs raisons :
 - Les tests unitaires du service peuvent utiliser un mock de façade pour éviter de dépendre de la base de données
 - La façade permet de convertir les objets non-mappés SQL Alchemy (`Row`) en objets natifs Python (`tuple`)
 
-
+La classe `DuplicationController` est responsable du lancement de l'exécution de l'outil d'analyse, d'assurer la transmission les données provenant de l'outil vers le service de duplication et d'obtenir les rapports de duplications obtenus du service de duplication. Cette classe permet d'abstraire le service de duplication et l'exécution de l'outil dernière une interface simplifiée, afin de réduire le couplage entre les routes web, le service de duplication et les outils d'analyse (comme PMD). 
 
 ---
 ![](puml/duplication_service.svg)
 
 ---
 
-### Contrôlleur
+### Interfaces utilisateurs
 
+- à faire
 
+## Limitations
 
-### Interface utilisateur 
+- L'organisation des données dans la base de données est un facteur limitant. La normalisation prévient la duplication des informations, mais peut ralentir substentiellement les requêtes et l'obtention des données. 
 
-L'interface utilisateur r
+- L'utilisation de PMD est limitant, puisque cet outil analyse un projet un langage à la fois, ce qui peut ralentir substentiellement l'analyse de plusieurs commits pour visualiser l'évolution de la duplication de code.
 
 ---
 

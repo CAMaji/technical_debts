@@ -1,0 +1,77 @@
+@startuml duplication_etoile
+hide circle
+skinparam classAttributeIconSize 0
+
+!define pk <b><color:#000000>P K\\t</color></b>
+!define fk <b><color:#000000>F K\\t</color></b>
+!define cl <b><color:#000000>   \\t</color></b>
+!define nl <b><color:#000000> N \\t</color></b>
+
+class dup {
+    pk id 
+    fk file
+    cl fragment
+    cl line_from 
+    cl line_to
+    cl column_from
+    cl column_to
+    cl lines
+}
+
+class todofixme {
+    pk id 
+    fk file
+    cl text
+    cl position
+}
+
+class file_complexity {
+    pk id
+    fk file
+    cl complexity
+    cl risk
+}
+
+class func_complexity {
+    pk id
+    fk function
+    cl complexity
+    cl risk
+}
+
+class file {
+    pk id
+    cl filename
+    cl lines
+    cl date 
+    cl lines
+}
+
+class function {
+    pk id 
+    fk file
+    cl name
+    cl signature
+    cl lines
+    cl line_from
+    cl line_to
+}
+
+class commit {
+    pk id
+    fk file
+    cl repo_url 
+    cl commit_sha
+    cl commit_name
+    cl commit_msg
+    cl branch
+}
+
+dup -up-> file
+todofixme -left-> file
+file_complexity -right-> file
+commit -up-> file
+function --> file
+func_complexity --> function
+
+@enduml

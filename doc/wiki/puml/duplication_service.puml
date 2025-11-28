@@ -37,7 +37,7 @@ class CodeDuplicationDatabaseFacade {
     + insert_many_fragments(fragments)
     + insert_many_duplications(duplications)
     + get_duplication_by_id(id) : CodeFragment
-    + get_fragments_for_many_files(file_list_iterator) : list<tuple<CodeFragment, Duplication>
+    + get_fragments_for_many_files(file_list_iterator) : list<tuple<CodeFragment, Duplication>>
 }
 
 class DuplicationReport {
@@ -51,14 +51,26 @@ class DuplicationReport {
     + get_file_nb() : int
 }
 
-class "<<SQLAlchemy>>\nFile" as File {
-    + id : Column<String>
-    + name : Column<Text>
-    + commit_id : Column<String>
+class DuplicationController {
+    - {static} singleton : DuplicationController
+    - service : CodeDuplicationService
+    - tools : dict<str, DuplicationToolInterface>
+    + ctor()
+    - load_service()
+    - load_tools()
+    + find_duplications(tool, dir, files)
+    + get_report_dict(files) : dict<str, DuplicationReport>
+    + get_tool_name_set() : set<str>
+    + {static} singleton() : DuplicationController
 }
 
-CodeDuplicationService -down- CodeDuplicationDatabaseFacade
-CodeDuplicationService .left.> File : "Utilise"
+class "<<Abstract>>\nDuplicationToolInterface" as DuplicationToolInterface {
+    + read(dir, file_extensions): list<DuplicationReport>
+}
+
+DuplicationController -right-> CodeDuplicationService
+DuplicationController -down-* DuplicationToolInterface : "Composition"
+CodeDuplicationService -right-> CodeDuplicationDatabaseFacade
 CodeDuplicationService .up.> Duplication : "Crée"
 CodeDuplicationService .up.> CodeFragment : "Crée"
 CodeDuplicationService .up.> DuplicationReport : "Crée"

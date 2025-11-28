@@ -82,12 +82,12 @@ table(duplication) {
     column(end_line) : Integer
 }
 
-project "0..*" -right-> "1" commit : space
-project "0..*" -left-> "1" file : space
-project "0..*" -down-> "1" function : space
-project "0..*" -up-> "1" repository : space
-project "0..*" -up-> "1" duplication : space
-project "0..*" -down-> "1" identifiable_entity : space
+project  -right-> commit : space
+project  -left-> file : space
+project  -down-> function : space
+project  -up-> repository : space
+project  -up-> duplication : space
+project  -down-> identifiable_entity : space
 
 
 ' Référence pour la base du style: 
