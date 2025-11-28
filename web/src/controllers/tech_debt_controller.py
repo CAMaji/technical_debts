@@ -1,5 +1,6 @@
-from src.database.code_duplication_db_facade import CodeDuplicationDatabaseFacade
-from src.services.code_duplication_service import CodeDuplicationService
+#from src.database.code_duplication_db_facade import CodeDuplicationDatabaseFacade
+#from src.services.code_duplication_service import CodeDuplicationService
+from src.controllers.duplication_controller import DuplicationController
 from src.database.file_metrics_db_facade import FileMetricsDatabaseFacade
 from src.services.recommendations_service import RecommendationsService
 from src.services.file_metrics_service import FileMetricsService
@@ -17,10 +18,13 @@ FileDebtMetricsReportDict : TypeAlias = dict[str, FileDebtMetrics]
 FuncDebtMetricsReportDict : TypeAlias = dict[str, list[FunctionDebtMetrics]]
 
 def get_duplications_reports(files : list[File]) -> DuplicationReportDict:
-    facade = CodeDuplicationDatabaseFacade()
-    service = CodeDuplicationService(facade)
-    report = service.get_reports_for_many_files(files)
-    return report
+    #facade = CodeDuplicationDatabaseFacade()
+    #service = CodeDuplicationService(facade)
+    #report = service.get_reports_for_many_files(files)
+    #return report
+    controller : DuplicationController = DuplicationController.singleton()
+    report_dict = controller.get_report_dict(files)
+    return report_dict
 
 def get_file_metrics_report(files : list[File]) -> FileDebtMetricsReportDict:
     facade = FileMetricsDatabaseFacade()
