@@ -135,15 +135,28 @@ La classe `DuplicationController` est responsable du lancement de l'exécution d
 
 ---
 
+### Transmission des données
+
+Étant donné l'approche client-serveur de la solution logicielle, nous devions transmettre au client les métriques, statistiques et données liées aux duplication de code, dans le but d'intégrer ces informations à une page web. L'objet retourné par la méthode `get_report_dict`, de la classe `DuplicationController`, est de type `dict[str, DuplicationReport]`, soit un dictionnaire liant un ID de fragment de code à une instance de classe `DuplicationReport`. 
+
+Puisque l'interface utilisateur est une page web, les données de duplications doivent être envoyées au client en format JSON. Étant donné que seuls les types de base de Python sont supportés par la fonctionnalité `json.dumps`, nous avons créé une classe utilitaire `JsonEncoder` qui converti des instances de classes et des types plus complexes en objets Python sérialisables. Cette classe permet d'automatiser la sérialisation et éviter d'écrire manuellement un dictionnaire de clés-valeurs sérialisable. Par exemple, la classe `DuplicationReport` étend la classe `JsonEncoder.Interface`, ce qui permet aux instances de types `DuplicationReport` d'être convertis en dictionnaire sérialisable par `json.dumps`, puis d'être trasmis par le réseau au client.  
+
+---
+![](puml/duplication_json_encoder.svg)
+
+---
+
 ### Interfaces utilisateurs
 
-- à faire
+
 
 ## Limitations
 
-- L'organisation des données dans la base de données est un facteur limitant. La normalisation prévient la duplication des informations, mais peut ralentir substentiellement les requêtes et l'obtention des données. 
+- L'organisation des données dans la base de données est un facteur limitant. La normalisation prévient la duplication des informations, mais peut ralentir substentiellement les requêtes sur de larges plages de données.
 
 - L'utilisation de PMD est limitant, puisque cet outil analyse un projet un langage à la fois, ce qui peut ralentir substentiellement l'analyse de plusieurs commits pour visualiser l'évolution de la duplication de code.
+
+- 
 
 ---
 
@@ -158,4 +171,8 @@ https://github.com/terryyin/lizard
 3. Documentation Index | PMD Source Code Analyzer. (n.d.). Pmd.github.io. 
 https://pmd.github.io/pmd/index.html
 
+4. Python Software Foundation. (2023). json — JSON encoder and decoder — Python 3.8.3rc1 documentation. Docs.python.org. 
+https://docs.python.org/3/library/json.html
+
+‌
 ‌
