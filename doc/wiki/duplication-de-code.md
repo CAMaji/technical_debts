@@ -148,7 +148,16 @@ Puisque l'interface utilisateur est une page web, les données de duplications d
 
 ### Interfaces utilisateurs
 
+Initialement, il était planifié d'afficher le nombre de duplication par fichier pour un commmit. Toutefois, avec les données que nous pouvions obtenir et les données que nous sauvgardions, nous avons décidé d'ajouter un composant de visualisation des duplications de code par fichiers à l'interface utilisateur. 
 
+---
+<u>Prototype d'interface - réalisé avec LibreOffice Draw</u>
+
+![](imgs/duplication_proto_ui.svg)
+
+--- 
+
+- insérer image page web
 
 ## Limitations
 
@@ -156,7 +165,7 @@ Puisque l'interface utilisateur est une page web, les données de duplications d
 
 - L'utilisation de PMD est limitant, puisque cet outil analyse un projet un langage à la fois, ce qui peut ralentir substentiellement l'analyse de plusieurs commits pour visualiser l'évolution de la duplication de code.
 
-- 
+- L'utilisation de classes utilitaires "fait maison" peuvent devenir problématiques lors des transferts de responsabilités d'une équipe à la suivante, surtout si elles sont insuffisament documentées : il est généralement préférable d'utiliser des librairies ou cadriciels bien documentés, testés et surtout maintenus. 
 
 ---
 
