@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function() {
     if (typeof debtData !== 'undefined' && debtData.length > 0) {
         createDebtEvolutionChart();
         createComplexityEvolutionChart();
+        createDuplicationEvolutionChart();
         updateSummaryStats();
     }
 });
@@ -188,6 +189,141 @@ function createComplexityEvolutionChart() {
 
     // Create the chart
     Plotly.newPlot('complexity-evolution-chart', traces, layout, config);
+}
+
+function createDuplicationEvolutionChart() {
+    // Prepare data for duplication chart
+    const dates = [];
+    const duplicatedFragments = [];
+    const duplicatedLines = [];
+    
+    debtData.forEach(commit => {
+        dates.push(new Date(commit.commit_date));
+        
+        // Calculate total duplications and duplicated lines for this commit
+        let totalDuplications = 0;
+        let totalDuplicatedLines = 0;
+        
+        // If commit has duplication data in file metrics format
+        if (commit.file_metrics) {
+            Object.values(commit.file_metrics).forEach(fileMetric => {
+                totalDuplications += fileMetric.duplications || 0;
+                totalDuplicatedLines += fileMetric.duplicated_lines || 0;
+            });
+        }
+        // Alternative: if duplication data is directly in commit object
+        else if (commit.duplication_data) {
+            totalDuplications = commit.duplication_data.total_duplications || 0;
+            totalDuplicatedLines = commit.duplication_data.total_duplicated_lines || 0;
+        }
+        
+        duplicatedFragments.push(totalDuplications);
+        duplicatedLines.push(totalDuplicatedLines);
+    });
+
+    // Create traces for duplications
+    const traces = [
+        {
+            x: dates,
+            y: duplicatedFragments,
+            mode: 'lines+markers',
+            name: 'Duplicate Fragments',
+            line: {
+                color: '#ff6b6b',
+                width: 2
+            },
+            marker: {
+                size: 6,
+                color: '#ff6b6b'
+            },
+            hovertemplate: 
+                '<b>Duplicate Fragments</b><br>' +
+                'Date: %{x}<br>' +
+                'Count: %{y}<br>' +
+                '<extra></extra>'
+        },
+        {
+            x: dates,
+            y: duplicatedLines,
+            mode: 'lines+markers',
+            name: 'Duplicated Lines',
+            yaxis: 'y2',
+            line: {
+                color: '#ffa726',
+                width: 2
+            },
+            marker: {
+                size: 6,
+                color: '#ffa726'
+            },
+            hovertemplate: 
+                '<b>Duplicated Lines</b><br>' +
+                'Date: %{x}<br>' +
+                'Count: %{y}<br>' +
+                '<extra></extra>'
+        }
+    ];
+
+    // Chart layout with dual y-axes
+    const layout = {
+        title: {
+            text: `Code Duplication Evolution - ${repositoryName}`,
+            font: { size: 18 }
+        },
+        xaxis: {
+            title: 'Commit Date',
+            type: 'date',
+            tickformat: '%Y-%m-%d',
+            tickangle: -45
+        },
+        yaxis: {
+            title: 'Number of Duplicate Fragments',
+            rangemode: 'tozero',
+            side: 'left'
+        },
+        yaxis2: {
+            title: 'Number of Duplicated Lines',
+            rangemode: 'tozero',
+            side: 'right',
+            overlaying: 'y',
+            showgrid: false
+        },
+        legend: {
+            x: 0.02,
+            y: 0.98,
+            bgcolor: 'rgba(255,255,255,0.8)',
+            bordercolor: 'rgba(0,0,0,0.2)',
+            borderwidth: 1
+        },
+        hovermode: 'x unified',
+        showlegend: true,
+        plot_bgcolor: 'rgba(240,240,240,0.3)',
+        paper_bgcolor: 'white',
+        margin: {
+            l: 60,
+            r: 60,
+            t: 60,
+            b: 80
+        }
+    };
+
+    // Chart configuration
+    const config = {
+        responsive: true,
+        displayModeBar: true,
+        modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+        displaylogo: false,
+        toImageButtonOptions: {
+            format: 'png',
+            filename: `duplication_evolution_${repositoryName.replace('/', '_')}`,
+            height: 600,
+            width: 1200,
+            scale: 1
+        }
+    };
+
+    // Create the chart
+    Plotly.newPlot('duplication-evolution-chart', traces, layout, config);
 }
 
 function getUniqueEntityTypes() {
