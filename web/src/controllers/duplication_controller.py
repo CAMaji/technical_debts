@@ -1,43 +1,81 @@
-from src.models.model import Repository, Commit, File
+from src.models.model import Repository, File
 from src.tools.pmd_copy_paste_detector import PMD_CopyPasteDetector
-from src.tools.pmd_cpd_xml_reader import PMD_CPD_XmlReader
+from src.tools.duplication_tool_interface import DuplicationToolInterface
 from src.database.code_duplication_db_facade import CodeDuplicationDatabaseFacade
 from src.services.code_duplication_service import CodeDuplicationService
-from src.utilities.json_encoder import JsonEncoder
+from src.reports.duplication_report import DuplicationReport
+from src.utilities.extensions import Extensions
 
 import src.services.github_service as github_service
-import json
 
-def analyse_repo(repo : Repository, files : list[File]): 
-    repo_dir = github_service.ensure_local_repo(repo.owner, repo.name) 
+class DuplicationController: 
+    _singleton = None
+    _service : CodeDuplicationService
+    _tools : dict[str, DuplicationToolInterface]
 
-    #print(type(files).__name__) 
-    #print(CustomJsonEncoder.breakdown(files)) 
+    def singleton():
+        if DuplicationController._singleton == None:
+            controller = DuplicationController()
+            DuplicationController._singleton = controller
 
-    facade = CodeDuplicationDatabaseFacade()
-    service = CodeDuplicationService(facade)
-    parser = PMD_CPD_XmlReader(repo_dir)
-    lang_list = [PMD_CopyPasteDetector.Language.PYTHON]       
-    wrapper = PMD_CopyPasteDetector(20, lang_list, repo_dir)
+        return DuplicationController._singleton
 
-    xml_list = wrapper.run()
-    report_list = []
+    def __init__(self): 
+        self._service = None
+        self._tools = dict()
+        self._load_tools()
+        self._load_service()
+        return
+    
+    def _load_service(self):
+        facade = CodeDuplicationDatabaseFacade()
+        self._service = CodeDuplicationService(facade)
+        return
+        
+    def _load_tools(self):
+        # instancier les outils ici
+        pmd_cpd = PMD_CopyPasteDetector()
 
-    for xml in xml_list:
-        new_report_list = parser.read(xml)
-        report_list.extend(new_report_list)
-        continue
+        # insérer les outils ici
+        self._tools["pmd_cpd"] = pmd_cpd
+        return 
 
-    service.insert_from_report(report_list, files)
-    return 
+    def find_duplications(self, tool : str, dir : str, files : list[File]):
 
-#def get_metrics(commit : Commit, files):
-#    facade = CodeDuplicationDatabaseFacade()
-#    service = CodeDuplicationService(facade)
-#
-#    duplications = service.get_reports_for_many_files(files)
-#    metrics = JsonEncoder.breakdown(duplications) 
+        if len(files) > 0:
+            print(type(files[0]))
+            assert isinstance(files[0], File)
+
+        # --temporaire-- 
+        # pour trouver les langages utilisés dans le projet 
+        file_extensions = Extensions.get_extension_set(files)
+
+        if tool not in self._tools:
+            raise Exception(tool + " is not a valid duplication tool.")
+        
+        duplication_tool = self._tools[tool]
+        report_list = duplication_tool.run(dir, file_extensions)
+
+        self._service.insert_from_report(report_list, files)
+        return
+    
+    def get_report_dict(self, files : list[File]) -> dict[str, DuplicationReport]:
+        return self._service.get_reports_for_many_files(files)
+    
+    def get_tool_name_set(self) -> set[str]:
+        return set(self._tools.keys())
+
+#def analyse_repo(repo : Repository, files : list[File]): 
+#    repo_dir = github_service.ensure_local_repo(repo.owner, repo.name) 
 #    
-#    #print(json.dumps(metrics, indent=4)) 
+#    # --temporaire--
+#    # pour trouver les langages utilisés dans le projet
+#    file_extensions = Extensions.get_extension_set(files)
 #
-#    return metrics
+#    facade = CodeDuplicationDatabaseFacade() 
+#    service = CodeDuplicationService(facade)
+#    wrapper = PMD_CopyPasteDetector()
+#    
+#    report_list = wrapper.run(repo_dir, file_extensions)
+#    service.insert_from_report(report_list, files)
+#    return 

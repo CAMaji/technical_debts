@@ -53,8 +53,8 @@ Les paramètres utilisés pour exécuter CPD sont:
 - le format utilisé (XML): `--format XML`
 - le dossier où se situant les fichiers à analyser: `--dir <un chemin>`
 
-** note 1: les identifiants de chaque langage supportés sont identifiés [ici](https://pmd.github.io/pmd/tag_CpdCapableLanguage.html).
-** note 2: L'argument `--language` 
+_Note 1: les identifiants de chaque langage supportés sont identifiés [_--ici--_](https://pmd.github.io/pmd/tag_CpdCapableLanguage.html)._
+_Note 2: l'argument `--langage` est limité qu'à un seul langage de programmation. Pour chaque langage d'un projet, relancer PMD._
 
 ### Rapport
 
@@ -95,7 +95,7 @@ def duplicate_three():
 
 ### Base de données
 
-Nous nous sommes inspirés du rapport XML généré par PMD pour organiser les métriques dans la base de donnée. Initialement, notre base de données avait une table `file` contenant un identifiant unique, le nom du fichier et l'identifiant du commit Git associé. Les métriques de duplications sont conservées dans deux tables: `duplication` et `code_fragment`. La table `duplication` sert de table d'association entre la table `file` et la table `code_fragment` puisque la relation entre ces deux tables est de type plusieurs-à-plusieurs (many-to-many).
+Nous nous sommes inspirés du rapport XML généré par PMD pour organiser les métriques dans la base de donnée. Initialement, la base de données avait une table `file` contenant un identifiant unique, le nom du fichier et l'identifiant du commit Git associé. Les métriques de duplications sont conservées dans deux tables: `duplication` et `code_fragment`. La table `duplication` représente l'occurence et l'emplacement d'un fragment de code situé dans un fichier, alors que la table `code_fragment` représente le contenu d'un bout de code unique, repéré dans de multiples fichiers. Puisque la relation entre `file` et `code_fragment` est de type plusieurs-à-plusieurs, `duplication` agit en tant que table d'association. 
 
 ---
 ![](puml/duplication_db.svg)
@@ -104,32 +104,70 @@ Nous nous sommes inspirés du rapport XML généré par PMD pour organiser les m
 
 ### Couche dorsale 
 
-#### Emballage (Wrapper)
+#### Classes enveloppantes (Wrapper classes)
 
-Initialement, PMD était fortement couplé avec le service de duplication et la lecture du rapport XML : nous avions une grosse fonction qui exécutait PMD, faisait la lecture du rapport XML et insérait les objets modèles `Duplication` et `CodeFragment` dans la base de données. Pour découpler PMD de notre logique et faciliter un potentiel remplacement vers un autre outil (ou même permettre à plusieurs outils de coexister), nous avons encapsulé le code exécutant PMD et le code lisant le XML généré par PMD dans des classes "Emballage" (Wrapper en anglais) : `DuplicationToolInterface` et `DuplicationReportReaderInterface`.
+Bien que peu d'alternatives à PMD existent pour détecter le code dupliqué, nous voulions éviter d'introduire un fort couplage avec PMD afin de permettre et faciliter l'intégration d'un ou plusieurs autres logiciels de détection de duplications. Pour assurer un faible couplage, nous avons créé l'interface `DuplicationToolInterface` avec la méthode abstraite `run(dir, file_extensions) : list<DuplicationReport>`  à implémenter. Cette structure permet d'aisément créer une nouvelle sous-classe pour l'ajout d'un outil : les modifications nécessaire à l'extérieur de l'enveloppe seront inexistantes, ou très mineures. 
+
+Dans le diagramme de classe ci-dessous, la classe `PMD_CopyPasteDetector` implémente la méthode `run` de l'interface `DuplicationToolInterface`. Cette sous-classe est responsable d'obtenir le rapport généré par PMD, puis de le convertir en un objet Python `DuplicationReport`. La classe `DuplicationReport` contraint les sous-classes enveloppantes à respecter l'organisation attendue des données par le système : les sous-classes enveloppant les outils ne doivent pas insérer eux-mêmes les données afin de respecter la responsabilité des classes et assurer une haute cohérence. 
 
 ---
 ![](puml/duplication_pmd_cpd.svg)
 
 --- 
 
-![](puml/duplication_pmd_xml_reader.svg)
+#### Façade, service & contrôlleur
+
+La classe `CodeDuplicationService` est responsable de transformer des rapports `DuplicationReport` en objets SQL Alchemy (classes `CodeFragment` et `Duplication`), puis utiliser la facade `CodeDuplicationDatabaseFacade` pour sauvegarder les objets SQL Alchemy dans la base de données. Cette classe service est aussi responsable de l'opération inverse, soit d'obtenir les objets SQL Alchemy `CodeFragment` et `Duplication` associés à une liste d'objets SQL Alchemy `File` pour reconstruire une liste de rapports `DuplicationReport`. 
+
+Nous avons utilisé une façade pour plusieurs raisons : 
+- Assure une haute cohérence en séparant clairement les responsabilités
+- Réduit la taille des classes et des méthodes
+- Sépare les requêtes SQL Alchemy de la logique service
+- Facilite l'écriture de tests unitaires
+- L'instanciation externe de la façade permet de mieux contrôller le comportement du service lors des tests unitaires
+- Les tests unitaires du service peuvent utiliser un mock de façade pour éviter de dépendre de la base de données
+- La façade permet de convertir les objets non-mappés SQL Alchemy (`Row`) en objets natifs Python (`tuple`)
+
+La classe `DuplicationController` est responsable du lancement de l'exécution de l'outil d'analyse, d'assurer la transmission les données provenant de l'outil vers le service de duplication et d'obtenir les rapports de duplications obtenus du service de duplication. Cette classe permet d'abstraire le service de duplication et l'exécution de l'outil dernière une interface simplifiée, afin de réduire le couplage entre les routes web, le service de duplication et les outils d'analyse (comme PMD). 
+
+---
+![](puml/duplication_service.svg)
+
+---
+
+### Transmission des données
+
+Étant donné l'approche client-serveur de la solution logicielle, nous devions transmettre au client les métriques, statistiques et données liées aux duplication de code, dans le but d'intégrer ces informations à une page web. L'objet retourné par la méthode `get_report_dict`, de la classe `DuplicationController`, est de type `dict[str, DuplicationReport]`, soit un dictionnaire liant un ID de fragment de code à une instance de classe `DuplicationReport`. 
+
+Puisque l'interface utilisateur est une page web, les données de duplications doivent être envoyées au client en format JSON. Étant donné que seuls les types de base de Python sont supportés par la fonctionnalité `json.dumps`, nous avons créé une classe utilitaire `JsonEncoder` qui converti des instances de classes et des types plus complexes en objets Python sérialisables. Cette classe permet d'automatiser la sérialisation et éviter d'écrire manuellement un dictionnaire de clés-valeurs sérialisable. Par exemple, la classe `DuplicationReport` étend la classe `JsonEncoder.Interface`, ce qui permet aux instances de types `DuplicationReport` d'être convertis en dictionnaire sérialisable par `json.dumps`, puis d'être trasmis par le réseau au client.  
+
+---
+![](puml/duplication_json_encoder.svg)
+
+---
+
+### Interfaces utilisateurs
+
+Initialement, il était planifié d'afficher le nombre de duplication par fichier pour un commmit. Toutefois, avec les données que nous pouvions obtenir et les données que nous sauvgardions, nous avons décidé d'ajouter un composant de visualisation des duplications de code par fichiers à l'interface utilisateur. 
+
+---
+<u>Prototype d'interface - réalisé avec LibreOffice Draw</u>
+
+![](imgs/duplication_proto_ui.svg)
 
 --- 
-Puisque la classe lisant le XML ne peut pas directement insérer les données dans la base de données, nous avons implémenté une classe servant à l'échange de données entre les différents objets.
 
-#### Service 
+- insérer image page web
 
-La logique d'affaire de la duplication de code se situe dans une classe de service, nommée `CodeDuplicationService`. Cette classe est responsable de convertir les données d'un objet `DuplicationReport` en objets insérables. 
+## Limitations
 
-#### Communication avec la base de données
+- L'organisation des données dans la base de données est un facteur limitant. La normalisation prévient la duplication des informations, mais peut ralentir substentiellement les requêtes sur de larges plages de données.
 
+- L'utilisation de PMD est limitant, puisque cet outil analyse un projet un langage à la fois, ce qui peut ralentir substentiellement l'analyse de plusieurs commits pour visualiser l'évolution de la duplication de code.
 
+- L'utilisation de classes utilitaires "fait maison" peuvent devenir problématiques lors des transferts de responsabilités d'une équipe à la suivante, surtout si elles sont insuffisament documentées : il est généralement préférable d'utiliser des librairies ou cadriciels bien documentés, testés et surtout maintenus. 
 
-
-### Interface utilisateur
-
-----
+---
 
 ##### Références
 
@@ -142,4 +180,8 @@ https://github.com/terryyin/lizard
 3. Documentation Index | PMD Source Code Analyzer. (n.d.). Pmd.github.io. 
 https://pmd.github.io/pmd/index.html
 
+4. Python Software Foundation. (2023). json — JSON encoder and decoder — Python 3.8.3rc1 documentation. Docs.python.org. 
+https://docs.python.org/3/library/json.html
+
+‌
 ‌

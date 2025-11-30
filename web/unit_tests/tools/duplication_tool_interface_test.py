@@ -5,7 +5,7 @@ def test_run__expecting_exception():
     tool = DuplicationToolInterface()
 
     # act
-    result = tool.run()
+    result = tool.run("", set())
 
     # assert
     assert result == []

@@ -4,22 +4,45 @@ skinparam classAttributeIconSize 0
 title Wrapper DuplicationToolInterface
 
 class "<<Abstract>>\nDuplicationToolInterface" as DuplicationToolInterface {
-    + run(): list<str>
-}
-
-enum "<<Enum>>\nLanguage" as PMD_CPD_Language {
-    PYTHON = "python"
+    + read(dir, file_extensions): list<DuplicationReport>
 }
 
 class PMD_CopyPasteDetector {
-    - minimum_tokens : int
-    - languages : list<Language>
-    - dir : str
-    + ctor(minimum_tokens, languages, dir) 
-    + run() : list<str>
+    - {static} EXTENSIONS : dict<str, str>
+    - read_report(xmlNode, dir) : DuplicationReport
+    - read_xml(text, dir) : list<DuplicationReport>
+    - format_dir(dir) : str
+    - start_pmd(language_id, dir) : str
+    + run(dir, file_extensions) : list<DuplicationReport>
 }
 
+enum "<<Enum>>\nPMD_CPD_XMLTag" as PMD_CPD_XMLTag {
+    DUPLICATION_TAG
+    FILE_TAG
+    CODE_FRAGMENT_TAG
+}
+
+class DuplicationReport {
+    - lines : int
+    - fragment : str
+    - files : list<DuplicationReport.File>
+    + ctor(lines, fragment)
+    + add_file(file)
+    + get_lines() : int
+    + get_fragment() : str
+    + get_file_nb() : int
+}
+
+class "DuplicationReport.File" as DRFile {
+    + filename : str
+    + lines : ValueRange
+    + columns : ValueRange
+    + ctor(filename, lines, columns)
+}
+
+DuplicationReport -down-o DRFile : "Aggrégation"
 PMD_CopyPasteDetector .up.|> DuplicationToolInterface : "Implémente"
-PMD_CopyPasteDetector o-right- PMD_CPD_Language
+PMD_CopyPasteDetector .down.> PMD_CPD_XMLTag : "Utilise"
+PMD_CopyPasteDetector .down.> DuplicationReport : "Crée"
 
 @enduml
