@@ -11,7 +11,12 @@
 			Showing dashboard for
 			<strong>{{ repository.owner }}</strong>/<strong>{{ repository.name }}</strong>
 		</p>
-		<div class="mt-3">
+		<div class="mt-3 d-flex justify-content-center">
+			<a href="{{ url_for('index') }}"
+       			class="btn btn-outline-secondary me-2">
+        		<i class="bi bi-arrow-left"></i> Back to main page
+    		</a>
+
 			<a href="{{ url_for('debt_evolution', owner=repository.owner, name=repository.name) }}"
 				class="btn btn-outline-primary">
 				<i class="bi bi-graph-up"></i> View Debt Evolution
@@ -149,7 +154,12 @@
 		<div class="card-body">
 			<h3 class="card-title fw-bold mb-4">Technical Debt Metrics</h3>
 			<div class="table-responsive">
-				<table id="metrics-table" data-toggle="table" data-detail-view="true"
+				<table id="metrics-table"
+					data-toggle="table"
+					data-pagination="true"
+					data-page-size="10"
+					data-page-list="[10, 25, 50, 100]"
+					data-detail-view="true"
 					data-detail-formatter="detailFormatter">
 				</table>
 			</div>
@@ -161,15 +171,21 @@
 <div class="container my-4">
 	<div class="card shadow-sm">
 		<div class="card-body">
-			<h3 class="card-title fw-bold mb-4">Code Duplication</h3>
+			<h3 class="card-title fw-bold mb-4">Code Duplication Overview</h3>
 			<div class="table-responsive">
-				<table id="duplication-table" data-toggle="table" data-detail-view="true"
+				<table id="duplication-table"
+					data-toggle="table"
+					data-pagination="true"
+					data-page-size="10"
+					data-page-list="[10, 25, 50, 100]"
+					data-detail-view="true"
 					data-detail-formatter="detailFormatter">
 				</table>
 			</div>
 		</div>
 	</div>
 </div>
+
 
 <!-- Debt evolution diagram -->
 {% else %}
