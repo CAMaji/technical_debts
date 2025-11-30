@@ -4,6 +4,7 @@ from collections import defaultdict
 
 from src.models import db
 from src.models.model import *
+from src.models.duplication import Duplication
 
 from lizard import analyze_file
 import src.services.function_service as function_service
@@ -14,6 +15,8 @@ import src.services.repository_service as repository_service
 import src.services.branch_service as branch_service
 import src.services.commit_service as commit_service
 import src.services.file_service as file_service
+from src.controllers.duplication_controller import DuplicationController
+from src.utilities.extensions import Extensions
 
 
 class MetricsClass:
@@ -56,8 +59,19 @@ class MetricsClass:
             complexity_values = []
 
             # Process each file and accumulate counts
+            files_for_duplication = []
             for filename, code in remote_files:
                 file = file_service.create_file(filename, commit_to_check.id)
+                
+                # Check if duplications already exist for this specific file
+                existing_file_duplications = (
+                    db.session.query(Duplication)
+                    .filter(Duplication.file_id == file.id)
+                    .first()
+                )
+                
+                if not existing_file_duplications:
+                    files_for_duplication.append(file)
 
                 # calculate identifiable entities for this file
                 identifiable_identities_analysis = calculate_identifiable_identities_analysis(file, code)
@@ -80,6 +94,22 @@ class MetricsClass:
                     total_complexity += complexity_value
                     function_count += 1
                     complexity_values.append(complexity_value)
+
+            # Calculate code duplications for files that don't have them yet
+            if files_for_duplication:
+                try:
+                    # Ensure local repository is available
+                    repo_dir = github_service.ensure_local_repo(self.repo.owner, self.repo.name)
+                    
+                    # Get duplication controller and run analysis
+                    duplication_controller = DuplicationController.singleton()
+                    duplication_controller.find_duplications("pmd_cpd", repo_dir, files_for_duplication)
+                    print(f"Calculated duplications for commit {commit_to_check.sha}: analyzed {len(files_for_duplication)} new files")
+                except Exception as e:
+                    print(f"Error calculating duplications for commit {commit_to_check.sha}: {str(e)}")
+                    # Continue with the rest of the processing even if duplication detection fails
+            else:
+                print(f"Skipping duplication calculation for commit {commit_to_check.sha}: all files already have duplication data")
 
             # Store the entity counts in the database
             if not existing_counts:
@@ -166,11 +196,6 @@ def calculate_identifiable_identities_analysis(file, code):
 # get all the commits in the specified range of date
 # commits_in_range = github_service.get_commits_in_date_range(repo.owner, repo.name, branch.name, start_date, end_date)
 
-
-
-
-
-    
 
 def get_identifiable_entity_counts_for_commit(commit_id):
     """
