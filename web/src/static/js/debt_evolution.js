@@ -194,38 +194,17 @@ function createComplexityEvolutionChart() {
 function createDuplicationEvolutionChart() {
     // Prepare data for duplication chart
     const dates = [];
-    const duplicatedFragments = [];
-    const duplicatedLines = [];
+    const duplicated_instances = [];
     
     debtData.forEach(commit => {
         dates.push(new Date(commit.commit_date));
-        
-        // Calculate total duplications and duplicated lines for this commit
-        let totalDuplications = 0;
-        let totalDuplicatedLines = 0;
-        
-        // If commit has duplication data in file metrics format
-        if (commit.file_metrics) {
-            Object.values(commit.file_metrics).forEach(fileMetric => {
-                totalDuplications += fileMetric.duplications || 0;
-                totalDuplicatedLines += fileMetric.duplicated_lines || 0;
-            });
-        }
-        // Alternative: if duplication data is directly in commit object
-        else if (commit.duplication_data) {
-            totalDuplications = commit.duplication_data.total_duplications || 0;
-            totalDuplicatedLines = commit.duplication_data.total_duplicated_lines || 0;
-        }
-        
-        duplicatedFragments.push(totalDuplications);
-        duplicatedLines.push(totalDuplicatedLines);
+        duplicated_instances.push(commit.total_number_duplications)
     });
 
-    // Create traces for duplications
     const traces = [
         {
             x: dates,
-            y: duplicatedFragments,
+            y: duplicated_instances,
             mode: 'lines+markers',
             name: 'Duplicate Fragments',
             line: {
@@ -242,26 +221,6 @@ function createDuplicationEvolutionChart() {
                 'Count: %{y}<br>' +
                 '<extra></extra>'
         },
-        {
-            x: dates,
-            y: duplicatedLines,
-            mode: 'lines+markers',
-            name: 'Duplicated Lines',
-            yaxis: 'y2',
-            line: {
-                color: '#ffa726',
-                width: 2
-            },
-            marker: {
-                size: 6,
-                color: '#ffa726'
-            },
-            hovertemplate: 
-                '<b>Duplicated Lines</b><br>' +
-                'Date: %{x}<br>' +
-                'Count: %{y}<br>' +
-                '<extra></extra>'
-        }
     ];
 
     // Chart layout with dual y-axes
@@ -277,16 +236,9 @@ function createDuplicationEvolutionChart() {
             tickangle: -45
         },
         yaxis: {
-            title: 'Number of Duplicate Fragments',
+            title: 'Number of Duplicate Code Instaces',
             rangemode: 'tozero',
             side: 'left'
-        },
-        yaxis2: {
-            title: 'Number of Duplicated Lines',
-            rangemode: 'tozero',
-            side: 'right',
-            overlaying: 'y',
-            showgrid: false
         },
         legend: {
             x: 0.02,
@@ -340,7 +292,6 @@ function getUniqueEntityTypes() {
 
 function updateSummaryStats() {
     if (debtData.length === 0) return;
-    console.log(debtData)
     // Calculate statistics
     const totalCommits = debtData.length;
     const totalDebts = debtData.map(commit => commit.total_identifiable_entities);

@@ -65,7 +65,7 @@
 		</div>
 
 		<!-- Complexity Chart Section -->
-		<div class="card shadow-sm">
+		<div class="card shadow-sm mb-4">
 			<div class="card-body">
 				<h3 class="card-title fw-bold mb-4">Complexity Evolution Over Time</h3>
 				
@@ -74,6 +74,22 @@
 				{% else %}
 					<div class="text-center py-5">
 						<p class="text-muted">No complexity data available for the selected period.</p>
+						<p class="text-muted">Try adjusting the date range or ensure the repository has been analyzed.</p>
+					</div>
+				{% endif %}
+			</div>
+		</div>
+
+		<!-- Duplication Chart Section -->
+		<div class="card shadow-sm">
+			<div class="card-body">
+				<h3 class="card-title fw-bold mb-4">Duplication Evolution Over Time</h3>
+				
+				{% if debt_data %}
+					<div id="duplication-evolution-chart" style="width:100%;height:600px;"></div>
+				{% else %}
+					<div class="text-center py-5">
+						<p class="text-muted">No duplication data available for the selected period.</p>
 						<p class="text-muted">Try adjusting the date range or ensure the repository has been analyzed.</p>
 					</div>
 				{% endif %}

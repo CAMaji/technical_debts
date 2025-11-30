@@ -1,10 +1,7 @@
 import uuid
-import time
-from collections import defaultdict
 
 from src.models import db
 from src.models.model import *
-from src.models.duplication import Duplication
 
 from lizard import analyze_file
 import src.services.function_service as function_service
@@ -16,7 +13,6 @@ import src.services.branch_service as branch_service
 import src.services.commit_service as commit_service
 import src.services.file_service as file_service
 from src.controllers.duplication_controller import DuplicationController
-from src.utilities.extensions import Extensions
 
 
 class MetricsClass:
@@ -139,7 +135,6 @@ class MetricsClass:
             db.session.rollback()
             print(f"Error calculating metrics for commit {commit_to_check.sha}: {str(e)}")
             raise
-
 
 
 def calculate_cyclomatic_complexity_analysis(file, code):
@@ -280,41 +275,30 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
         # Get commits in the date range
         commits_in_range = metrics_class.get_commits_in_date_range(start_date, end_date)
 
-        # Initialize timing statistics
-        timing_stats = defaultdict(list)
-        total_iterations = len(commits_in_range)
-        
-        print(f"Processing {total_iterations} commits...")
-
         for i, found_commit in enumerate(commits_in_range, 1):
-            iteration_start = time.time()
-            
             # 1 - Create commit in database, if missing
-            step_start = time.time()
             commit = commit_service.ensure_commit_exists_by_sha(found_commit, branch_id)
-            timing_stats['ensure_commit'].append(time.time() - step_start)
 
             # 2 - Calculate metrics, if the commit was missing
-            step_start = time.time()
             metrics_class.ensure_metric_snapshot(commit)
-            timing_stats['ensure_metric_snapshot'].append(time.time() - step_start)
 
             # Get entity counts for current commit, if missing
-            step_start = time.time()
             entity_counts = get_identifiable_entity_counts_for_commit(commit.id)
             total_identifiable_entities = 0
             for count in entity_counts.values():
                 total_identifiable_entities += count
-            timing_stats['get_entity_counts'].append(time.time() - step_start)
 
             # Get complexity counts for current commit, if missing
-            step_start = time.time()
             complexity_count = get_complexity_count_for_commit(commit.id)
-            timing_stats['get_complexity_counts'].append(time.time() - step_start)
             linked_bugs = calculate_bug_counts_in_range(commits_in_range)
 
+            total_number_duplications = 0
+            files = File.query.filter_by(commit_id=commit.id).all()
+            for file in files:
+                file_duplication_count = Duplication.query.filter_by(file_id=file.id).count()
+                total_number_duplications += file_duplication_count
+
             # Build result data
-            step_start = time.time()
             debt_evolution.append({
                 "commit_sha": commit.sha,
                 "commit_date": commit.date,
@@ -323,25 +307,9 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
                 "total_identifiable_entities": total_identifiable_entities,
                 "entity_breakdown": entity_counts,
                 "complexity_data": complexity_count,
-                 "linked_bugs_total": linked_bugs["total"],
+                "linked_bugs_total": linked_bugs["total"],
+                "total_number_duplications": total_number_duplications,
             })
-            timing_stats['build_result'].append(time.time() - step_start)
-            
-            iteration_time = time.time() - iteration_start
-            timing_stats['total_iteration'].append(iteration_time)
-            
-            # Print progress every 10% or every 10 commits (whichever is more frequent)
-            progress_interval = max(1, min(10, total_iterations // 10))
-            if i % progress_interval == 0 or i == total_iterations:
-                print(f"Progress: {i}/{total_iterations} commits processed ({i/total_iterations*100:.1f}%)")
-
-        # Print overall timing statistics
-        if timing_stats['total_iteration']:
-            total_time = sum(timing_stats['total_iteration'])
-            print(f"\n=== Execution Time Analysis ===")
-            print(f"Total execution time: {total_time:.2f} seconds")
-            print(f"Average time per commit: {total_time/total_iterations:.3f} seconds")
-            print(f"\nTime breakdown by function:")
 
         # Sort by date
         debt_evolution.sort(key=lambda x: x["commit_date"] or "")
