@@ -115,18 +115,18 @@ function render_global_statistics(cyclomatic_complexity_analysis, identifiable_i
     document.getElementById("total-technical-debt").innerHTML = totalTechnicalDebt;
 
     // Generate the high risk files
-    let totalHighRiskFiles = 0;
-    
-    const files = duplicated_code_analysis["tech_debt"]["_metrics"];
+    //let totalHighRiskFiles = 0;
+    //
+    //const files = duplicated_code_analysis["tech_debt"]["_metrics"];
+    //
+    //for (file of files) {
+    //
+    //    if (file.risk[0] === "MEDIUM_RISK" || file.risk[0] === "HIGH_RISK" || file.risk[0] === "VERY_HIGH_RISK") {
+    //        totalHighRiskFiles++;
+    //    }
+    //}
 
-    for (file of files) {
-
-        if (file.risk[0] === "MEDIUM_RISK" || file.risk[0] === "HIGH_RISK" || file.risk[0] === "VERY_HIGH_RISK") {
-            totalHighRiskFiles++;
-        }
-    }
-
-    document.getElementById("high-risk-files").innerHTML = totalHighRiskFiles;
+    document.getElementById("high-risk-files").innerHTML = "<temporairement désactivé>";
 }
 
 function render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis) {
@@ -259,19 +259,19 @@ function processMetricsData(cyclomatic_complexity_analysis, identifiable_identit
     }
 
     // Process priority score data
-    if (duplicated_code_analysis !== undefined) { 
-        
-        const techDebtMetrics = Object.values(duplicated_code_analysis["tech_debt"]["_metrics"]);
-
-        for (const file of techDebtMetrics) {
-            const fileName = file.filename;
-
-            createNewFileMapSet(fileMap, fileName);
-
-            const fileData = fileMap.get(fileName);
-            fileData.priorityScore = file.priority;
-        }
-    }
+    //if (duplicated_code_analysis !== undefined) { 
+    //    
+    //    const techDebtMetrics = Object.values(duplicated_code_analysis["tech_debt"]["_metrics"]);
+    //
+    //    for (const file of techDebtMetrics) {
+    //        const fileName = file.filename;
+    //
+    //        createNewFileMapSet(fileMap, fileName);
+    //
+    //        const fileData = fileMap.get(fileName);
+    //        fileData.priorityScore = file.priority;
+    //    }
+    //}
 
     return Array.from(fileMap.values());
 }

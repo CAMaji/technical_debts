@@ -116,7 +116,7 @@ class RecommendationsService:
         return element_list
 
     def get_report(self, tech_debt : TechDebtReport, duplications : dict[str, DuplicationReport], funcs : dict[str, list[FunctionDebtMetrics]]) -> RecommendationReport:
-        global_subreport = RecommendationReport.SubReport("")
+        global_subreport = RecommendationReport.Summary("")
         global_elements = self.get_global_subreport_elements(tech_debt, duplications)
         global_subreport.add_list(global_elements)
         report = RecommendationReport(global_subreport)
@@ -124,7 +124,7 @@ class RecommendationsService:
         
         for element in tech_debt:
             func_metrics = funcs[element.filename]
-            file_subreport = RecommendationReport.SubReport(element.filename)
+            file_subreport = RecommendationReport.Summary(element.filename)
             file_elements = self.get_file_subreport_elements(element, len(func_metrics))
             file_func_elements = self.get_file_func_subreport_elements(func_metrics)
             file_subreport.add_list(file_elements)

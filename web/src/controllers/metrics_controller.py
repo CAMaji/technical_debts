@@ -17,7 +17,10 @@ import time
 import json
 
 import src.controllers.duplication_controller as duplication_controller
-import src.controllers.tech_debt_controller as tech_debt_controller
+#import src.controllers.tech_debt_controller as tech_debt_controller
+import src.services.recommendation_service as recommendation_service
+import src.reports.recommendation_generator as recommendation_generator
+import src.services.compatibility_service as compat_svc
 
 def save_commit_and_analyse(repo : Repository, commit : Commit) -> list[File]: 
     files = file_service.get_files_by_commit_id(commit.id)
@@ -58,6 +61,17 @@ def get_todofixme(files : list[File]) -> list:
             todofixme_analysis.append(entity) 
     return todofixme_analysis
 
+def get_recommendations(files : list[File], complexity : list, todofixme : list, duplication : dict[str, DuplicationReport]):
+    compatibility = compat_svc.CompatibilityService()
+    generator = recommendation_generator.RecommendationGenerator()
+    service = recommendation_service.RecommendationService(generator)
+
+    typed_complexity = compatibility.obj_to_file_complexity_dict(complexity)
+    typed_entity = compatibility.obj_to_entity_dict(todofixme)
+
+    report = service.get_recommendations(files, typed_complexity, typed_entity, duplication)
+    return report
+
 @app.route('/api/display_metrics_by_commit_id', methods=['POST'])
 def display_metrics_by_commit_id():
     data = request.get_json()
@@ -74,11 +88,8 @@ def display_metrics_by_commit_id():
 
     cyclomatic_complexity_analysis = get_complexity(saved_files)
     identifiable_identities_analysis = get_todofixme(saved_files)
-    # duplication de code
-    # priorisation par fichier
-    # risque par fichier
-    # trouve des problèmes et génère des recommandations
-    duplication_analysis = tech_debt_controller.get_reports(saved_files)
+    duplication_analysis = duplication_controller.DuplicationController.singleton().get_report_dict(saved_files)
+    recommendation_analysis = get_recommendations(saved_files, cyclomatic_complexity_analysis, identifiable_identities_analysis, duplication_analysis)
 
     metrics = {
         "commit_sha": commit.sha,
@@ -97,7 +108,11 @@ def display_metrics_by_commit_id():
         metrics["identifiable_identities_analysis"] = identifiable_identities_analysis
 
     if include_code_duplication: 
-        metrics["duplicated_code_analysis"] = duplication_analysis
+        metrics["duplicated_code_analysis"] = {
+            "duplications": JsonEncoder.breakdown(duplication_analysis),
+            "recommendations": JsonEncoder.breakdown(recommendation_analysis),
+            "tech_debt": {}
+        }
 
     return jsonify(metrics)
 
