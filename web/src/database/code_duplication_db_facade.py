@@ -1,5 +1,4 @@
 from src.models import db
-from src.models.duplication import *
 from src.models.model import *
 from src.utilities.selector import Selector
 from sqlalchemy.orm import Query
