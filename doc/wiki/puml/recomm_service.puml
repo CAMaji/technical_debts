@@ -15,9 +15,9 @@ class "<<Singleton>>\nRecommendationController" as RecommendationController {
 }
 
 class CompatibilityService {
-    + convert_func_complexity_objects(func_list) : dict<str, list<FunctionComplexityReport>>
-    + convert_file_complexity_objects(file_list) : dict<str, FileComplexityReport>
-    + convert_entity_objects(entity_list) : dict<str, list<EntityReport>>
+    + convert_func_complexity_objects(func_list) : dict<...>
+    + convert_file_complexity_objects(file_list) : dict<...>
+    + convert_entity_objects(entity_list) : dict<...>
 }
 
 class RecommendationService {

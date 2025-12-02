@@ -42,6 +42,8 @@ Une classe de compatibilité a été créée pour faciliter l'utilisation des do
 Les classes `FunctionComplexityReport` et `EntityReport` contiennent une méthode `validate_keys` qui valide la présence de toutes les clés contenues dans l'attribut `FIELDS`. Une exception est soulevée lorsqu'une clée est introuvable. 
 
 #### Générateur
+ 
+
 
 ---
 ![](puml/recomm_generator.svg)

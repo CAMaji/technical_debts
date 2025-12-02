@@ -18,28 +18,6 @@ class RecommendationGenerator {
     + file_func_nb(complexity) : Pair<str, str>
 }
 
-class "<<Enum>>\nProblemEnum" as ProblemEnum {
-    NO_PROBLEM,
-    GLOBAL_RISK_PROBLEM,
-    GLOBAL_DUPLICATION_PROBLEM,
-    GLOBAL_BUG_PROBLEM,
-    FILE_AVG_RISK_PROBLEM,
-    FILE_FUNC_RISK_PROBLEM,
-    FILE_FUNC_NUMBER_PROBLEM,
-    FILE_BUG_TO_FUNCTION_PROBLEM
-}
-
-class "<<Enum>>\nRecommendationEnum" as RecommendationEnum {
-    NO_RECOMMENDATION,
-    GLOBAL_RISK_RECOMMENDATION,
-    GLOBAL_DUPLICATION_RECOMMENDATION,
-    GLOBAL_BUG_RECOMMENDATION,
-    FILE_AVG_RISK_RECOMMENDATION,
-    FILE_FUNC_RISK_RECOMMENDATION,
-    FILE_FUNC_NUMBER_RECOMMENDATION,
-    FILE_BUG_TO_FUNCTION_RECOMMENDATION
-}
-
 class EntityReport {
     - {static} FIELDS 
     + file_name : str
@@ -85,8 +63,6 @@ RecommendationGenerator .up.> EntityReport : "Utilise"
 RecommendationGenerator .down.> FileComplexityReport : "Utilise"
 RecommendationGenerator .down.> FunctionComplexityReport : "Utilise"
 RecommendationGenerator .up.> DuplicationReport : "Utilise"
-RecommendationGenerator .up.> ProblemEnum : "Utilise"
-RecommendationGenerator .down.> RecommendationEnum : "Utilise"
 FileComplexityReport -left-o FunctionComplexityReport: "Aggrégation"
 
 

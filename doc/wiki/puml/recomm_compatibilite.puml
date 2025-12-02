@@ -4,7 +4,7 @@ skinparam classAttributeIconSize 0
 title Compatibilité
 
 class EntityReport {
-    - FIELDS = {"file_name", "entity_name", "line_position"}
+    - {static} FIELDS
     + file_name : str
     + entity_name : str
     + line_position : int
@@ -23,7 +23,7 @@ class FileComplexityReport {
 }
 
 class FunctionComplexityReport {
-    - FIELDS = {"file", "function", "start_line", "cyclomatic_complexity"}
+    - {static} FIELDS
     + file : str
     + function : str
     + start_line : int 
