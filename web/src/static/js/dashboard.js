@@ -97,10 +97,12 @@ function render_global_statistics(cyclomatic_complexity_analysis, identifiable_i
     
     // Generate the total technical debt (all instances of duplicates + identifiable identities, and cylomatic complexity above 10)
     let totalTechnicalDebt = 0;
+    let totalHighRiskFiles = 0;
 
     for (const file of cyclomatic_complexity_analysis) {
         for (const funct of file) {
             if (funct.cyclomatic_complexity > 10) {
+                totalHighRiskFiles++;
                 totalTechnicalDebt++;
             }
         }
@@ -126,7 +128,7 @@ function render_global_statistics(cyclomatic_complexity_analysis, identifiable_i
     //    }
     //}
 
-    document.getElementById("high-risk-files").innerHTML = "<temporairement désactivé>";
+    document.getElementById("high-risk-files").innerHTML = totalHighRiskFiles;
 }
 
 function render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis) {
@@ -259,6 +261,17 @@ function processMetricsData(cyclomatic_complexity_analysis, identifiable_identit
     }
 
     // Process priority score data
+
+    for(key of fileMap.keys()) {
+        createNewFileMapSet(fileMap, key);
+    }
+
+    fileMap.forEach((value, key, map) => {
+        const fileData = fileMap.get(key);
+        fileData.priorityScore = (fileData.duplicateCodeCount + fileData.identifiableIdentitiesCount + fileData.avgComplexity).toFixed(2)
+    })
+    
+
     //if (duplicated_code_analysis !== undefined) { 
     //    
     //    const techDebtMetrics = Object.values(duplicated_code_analysis["tech_debt"]["_metrics"]);

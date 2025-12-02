@@ -34,5 +34,16 @@ def test_iterator():
     assert len(file_list) == 2
     assert file_list[0] == file0
     assert file_list[1] == file1
-    
+
+def test_get_file_nb():
+    # arrange
+    report = DuplicationReport(1, "test")
+    report.add_file(DuplicationReport.File("abc.py", ValueRange(0, 1), ValueRange(0, 1)))
+    report.add_file(DuplicationReport.File("def.py", ValueRange(0, 1), ValueRange(0, 1)))
+
+    # act
+    result = report.get_file_nb()
+
+    # assert
+    assert result == 2
     

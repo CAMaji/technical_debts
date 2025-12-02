@@ -5,18 +5,18 @@ from enum import Enum
 
 class RecommendationReport(JsonEncoder.Interface):
     class Summary(JsonEncoder.Interface):
-        subject : str = ""
-        problems : set[str] = set()
-        recommendations : set[str] = set()
+        subject : str
+        problems : set[str]
+        recommendations : set[str]
         
         def __init__(self, subject : str):
             self.subject = subject
-            self.problems = set()
-            self.recommendations = set()
+            self.problems = set[str]()
+            self.recommendations = set[str]()
 
         def add(self, problem_recomm : Pair[str, str]):
             if problem_recomm.first == ProblemEnum.NO_PROBLEM.value:
-                return
+                return self
 
             self.problems.add(problem_recomm.first)
             self.recommendations.add(problem_recomm.second)

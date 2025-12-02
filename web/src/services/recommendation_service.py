@@ -15,9 +15,9 @@ class RecommendationService:
 
     def get_global_summary(self, 
                            total_file_nb : int,
-                           complexity : dict[str, FileComplexityReport], 
-                           entity : dict[str, list[EntityReport]], 
-                           duplication : dict[str, DuplicationReport]) -> RecommendationReport.Summary:
+                           complexity    : dict[str, FileComplexityReport], 
+                           entity        : dict[str, list[EntityReport]], 
+                           duplication   : dict[str, DuplicationReport]) -> RecommendationReport.Summary:
         summary = RecommendationReport.Summary("All")
         summary.add(self._generator._global_risk(complexity))
         summary.add(self._generator._global_duplication(duplication))
@@ -37,16 +37,14 @@ class RecommendationService:
         return summary
      
     def get_file_summary(self, 
-                         filename : str, 
-                         complexity : dict[str, FileComplexityReport],
-                         entity : dict[str, list[EntityReport]],
+                         filename    : str, 
+                         complexity  : dict[str, FileComplexityReport],
+                         entity      : dict[str, list[EntityReport]],
                          duplication : dict[str, DuplicationReport]) -> RecommendationReport.Summary:
         summary = RecommendationReport.Summary(filename)
         if filename in complexity:
             summary = self.get_file_complexity_summary(summary, complexity[filename])
             
-        # no recommendation on a file basis for TODO-FIXME or duplications.
-
         #if filename in entity:
             #...
 
@@ -56,9 +54,9 @@ class RecommendationService:
         return summary
     
     def get_recommendations(self, 
-                            file_list : list[File],
-                            complexity : dict[str, FileComplexityReport], 
-                            entity : dict[str, list[EntityReport]], 
+                            file_list   : list[File],
+                            complexity  : dict[str, FileComplexityReport], 
+                            entity      : dict[str, list[EntityReport]], 
                             duplication : dict[str, DuplicationReport]) -> RecommendationReport:
         total_file_nb = len(file_list)
         global_summary = self.get_global_summary(total_file_nb, complexity, entity, duplication)

@@ -77,7 +77,7 @@ class RecommendationGenerator:
         bugged_normal_ratio = float(bugged_file_count) / float(total_file_nb)
         mapping = {"@1": str(total_file_nb), "@2": str(bugged_file_count)}
 
-        MINIMUM_RATIO = 0.07 # considered a problem if at least 7% of all files in commit have at least one bug. 
+        MINIMUM_RATIO = 0.07 # considered a problem if at least 7% of all files in commit have at least one bug.
         return self._generate(ProblemEnum.GLOBAL_BUG_PROBLEM,
                               RecommendationEnum.GLOBAL_BUG_RECOMMENDATION,
                               mapping,

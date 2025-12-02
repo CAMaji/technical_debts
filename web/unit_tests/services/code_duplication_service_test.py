@@ -72,11 +72,11 @@ def test_get_fragments_for_many_file():
         called = False
         params_valid = False
 
-        def get_fragments_for_many_file(self, file_list_iterator):
+        def get_fragments_for_many_file(self, file_list):
             LocalFacadeMock.called = True
             LocalFacadeMock.params_valid = (
-                file_list_iterator.data[0].id == 'file0' and 
-                file_list_iterator.data[1].id == 'file1'
+                file_list[0].id == 'file0' and 
+                file_list[1].id == 'file1'
             )
             
             cf0 = CodeFragment("hello", 10)

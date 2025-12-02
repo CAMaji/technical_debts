@@ -3,7 +3,7 @@ from src.reports.file_complexity_report import FileComplexityReport
 from src.reports.entity_report import EntityReport
 from src.services.compatibility_service import CompatibilityService
 
-def test_obj_to_func_complexity_dict():
+def test_convert_func_complexity_objects():
     # arrange
     complixities = [{"file": "abc.py",
                      "function": "hello_world()",
@@ -17,7 +17,7 @@ def test_obj_to_func_complexity_dict():
     service = CompatibilityService()
 
     # act
-    func_reports = service.obj_to_func_complexity_dict(complixities)
+    func_reports = service.convert_func_complexity_objects(complixities)
 
     # assert
     assert len(func_reports) == 1
@@ -26,7 +26,7 @@ def test_obj_to_func_complexity_dict():
     assert func_reports["abc.py"][1].cyclomatic_complexity == 15
     return
 
-def test_obj_to_file_complexity_dict():
+def test_convert_file_complexity_objects():
     # mock
     class LocalServiceMock(CompatibilityService):
         called = 0
@@ -40,7 +40,7 @@ def test_obj_to_file_complexity_dict():
                           "start_line": 1,
                           "cyclomatic_complexity": 8}]]
 
-        def obj_to_func_complexity_dict(self, func_list):
+        def convert_func_complexity_objects(self, func_list):
             LocalServiceMock.called += 1
             LocalServiceMock.params_valid &= len(func_list) == 1
             if(func_list[0] == LocalServiceMock.complexities[0][0]):
@@ -55,16 +55,16 @@ def test_obj_to_file_complexity_dict():
     service = LocalServiceMock()
 
     # act
-    file_reports : dict[str, FileComplexityReport] = service.obj_to_file_complexity_dict(LocalServiceMock.complexities)
+    file_reports : dict[str, FileComplexityReport] = service.convert_file_complexity_objects(LocalServiceMock.complexities)
 
     # assert
-    assert LocalServiceMock.called and LocalServiceMock.params_valid
+    assert LocalServiceMock.called == 2 and LocalServiceMock.params_valid
     assert len(file_reports) == 1
     assert file_reports["abc.py"].complexity == 8
     assert len(file_reports["abc.py"].functions) == 2
     return
 
-def test_obj_to_entity_dict():
+def test_convert_entity_objects():
     # arrange
     entities = [{"file_name": "abc.py", 
                  "entity_name": "todo",
@@ -75,7 +75,7 @@ def test_obj_to_entity_dict():
     service = CompatibilityService()
 
     # act
-    result = service.obj_to_entity_dict(entities)
+    result = service.convert_entity_objects(entities)
 
     # assert
     assert len(result) == 1

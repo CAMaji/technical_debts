@@ -7,7 +7,7 @@ class CompatibilityService:
     Assembles data structures containing file complexities, function complexities and identifiable entities (todo-fixme) 
     into type-enforced, workable, class instances. This is intended to provide compatibility with the recommendation service.
     """
-    def obj_to_func_complexity_dict(self, func_list : list[dict[str, object]]) -> dict[str, list[FunctionComplexityReport]]:
+    def convert_func_complexity_objects(self, func_list : list[dict[str, object]]) -> dict[str, list[FunctionComplexityReport]]:
         assert type(func_list) == list
 
         result = dict[str, list[FunctionComplexityReport]]()
@@ -22,12 +22,12 @@ class CompatibilityService:
 
         return result
 
-    def obj_to_file_complexity_dict(self, file_list : list[list[dict[str, object]]]) -> dict[str, FileComplexityReport]:
+    def convert_file_complexity_objects(self, file_list : list[list[dict[str, object]]]) -> dict[str, FileComplexityReport]:
         assert type(file_list) == list
 
         result = dict[str, FileComplexityReport]()
         for obj_list in file_list:
-            functions = self.obj_to_func_complexity_dict(obj_list)
+            functions = self.convert_func_complexity_objects(obj_list)
 
             for key in functions:
                 if key in result:
@@ -38,7 +38,7 @@ class CompatibilityService:
             continue
         return result
     
-    def obj_to_entity_dict(self, entity_list : list[dict[str, object]]) -> dict[str, list[EntityReport]]:
+    def convert_entity_objects(self, entity_list : list[dict[str, object]]) -> dict[str, list[EntityReport]]:
         assert type(entity_list) == list
 
         report_dict = dict[str, list[EntityReport]]()
