@@ -8,17 +8,17 @@ class EntityReport(JsonEncoder.Interface):
     entity_name : str = ""
     line_position : int = 0
 
-    def _validate_keys(self, func : dict):
+    def _validate_keys(self, entities : dict):
         for key in EntityReport._FIELDS:
-            assert key in func   # validates that the dict contains expected keys. 
+            assert key in entities   # validates that the dict contains expected keys. 
             continue
 
-    def load(self, entity): 
-        assert type(entity) == dict
+    def load(self, entities): 
+        assert type(entities) == dict
         
-        self._validate_keys(entity)
+        self._validate_keys(entities)
         for key in EntityReport._FIELDS:
-            setattr(self, key, entity[key])
+            setattr(self, key, entities[key])
             continue
         
         return self

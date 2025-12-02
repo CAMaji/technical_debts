@@ -30,6 +30,29 @@ Cette fonctionnalité est supportée par une implémentation dans la couche dors
 
 La fonctionnalité de recommandation s'intègre dans le processus d'analyse de dette technique pour un commit. Ce processus englobe l'analyse de dette technique et l'obtention des données pour chaque catégorie de métrique, soit la complexité, les bogues et la duplication de code. Étant donné que les recommandations font parties du processus d'analyse et que ce processus traite les données de dette techniques, la génération des recommandations est réalisée lorsque l'analyse du commit et l'obtention des données sont complétées : le processus de recommandation prendra ces données obtenues et les utilisera pour la génération des recommandations, évitant de devoir refaire le processus d'obtention. 
 
+#### Compatibilité
 
+Une classe de compatibilité a été créée pour faciliter l'utilisation des données fournies par les processus d'obtention de la complexité et des bogues : les fonctions qui obtiennent les données de dette technique sauvegardées dans la base de données nous retournent ces données dans des listes de dictionnaires. La classe de compatibilité vient réorganiser les données dans des collections d'instances de classes pour permettre à l'outil de suggestion de code de détecter les attributs de l'instance; cela a aussi pour effet de réduire les chances d'entrer une clé invalide dans un dictionnaire.
 
+---
+![](puml/recomm_compatibilite.svg)
 
+---
+
+Les classes `FunctionComplexityReport` et `EntityReport` contiennent une méthode `validate_keys` qui valide la présence de toutes les clés contenues dans l'attribut `FIELDS`. Une exception est soulevée lorsqu'une clée est introuvable. 
+
+#### Générateur
+
+---
+![](puml/recomm_generator.svg)
+
+---
+
+#### Service & contrôlleur
+
+Une classe Contrôlleur a été créée pour servir d'interface entre les autres services et le service de recommandation afin de minimiser les dépendances et assurer un faible couplage. Le contrôlleur est aussi responsable de l'exécution de la conversion des données brutes en données structurées afin de converser une haute cohésion et un nombre limité de responsabilité dans la classe Service. La classe Contrôlleur est nommée `RecommendationController` et la classe Service est nommée `RecommendationService`. 
+
+---
+![](puml/recomm_service.svg)
+
+---

@@ -15,13 +15,13 @@ class RecommendationService:
 
     def get_global_summary(self, 
                            total_file_nb : int,
-                           complexity    : dict[str, FileComplexityReport], 
-                           entity        : dict[str, list[EntityReport]], 
-                           duplication   : dict[str, DuplicationReport]) -> RecommendationReport.Summary:
+                           complexities    : dict[str, FileComplexityReport], 
+                           entities        : dict[str, list[EntityReport]], 
+                           duplications    : dict[str, DuplicationReport]) -> RecommendationReport.Summary:
         summary = RecommendationReport.Summary("All")
-        summary.add(self._generator._global_risk(complexity))
-        summary.add(self._generator._global_duplication(duplication))
-        summary.add(self._generator._global_bug(entity, total_file_nb))
+        summary.add(self._generator._global_risk(complexities))
+        summary.add(self._generator._global_duplication(duplications))
+        summary.add(self._generator._global_bug(entities, total_file_nb))
         return summary
     
     def get_file_complexity_summary(self,  
@@ -37,13 +37,13 @@ class RecommendationService:
         return summary
      
     def get_file_summary(self, 
-                         filename    : str, 
-                         complexity  : dict[str, FileComplexityReport],
-                         entity      : dict[str, list[EntityReport]],
-                         duplication : dict[str, DuplicationReport]) -> RecommendationReport.Summary:
+                         filename      : str, 
+                         complexities  : dict[str, FileComplexityReport],
+                         entities      : dict[str, list[EntityReport]],
+                         duplications  : dict[str, DuplicationReport]) -> RecommendationReport.Summary:
         summary = RecommendationReport.Summary(filename)
-        if filename in complexity:
-            summary = self.get_file_complexity_summary(summary, complexity[filename])
+        if filename in complexities:
+            summary = self.get_file_complexity_summary(summary, complexities[filename])
             
         #if filename in entity:
             #...
@@ -54,16 +54,16 @@ class RecommendationService:
         return summary
     
     def get_recommendations(self, 
-                            file_list   : list[File],
-                            complexity  : dict[str, FileComplexityReport], 
-                            entity      : dict[str, list[EntityReport]], 
-                            duplication : dict[str, DuplicationReport]) -> RecommendationReport:
+                            file_list     : list[File],
+                            complexities  : dict[str, FileComplexityReport], 
+                            entities      : dict[str, list[EntityReport]], 
+                            duplications  : dict[str, DuplicationReport]) -> RecommendationReport:
         total_file_nb = len(file_list)
-        global_summary = self.get_global_summary(total_file_nb, complexity, entity, duplication)
+        global_summary = self.get_global_summary(total_file_nb, complexities, entities, duplications)
         file_summaries = list[RecommendationReport.Summary]()
 
         for file in file_list:
-            summary = self.get_file_summary(file.name, complexity, entity, duplication)
+            summary = self.get_file_summary(file.name, complexities, entities, duplications)
             file_summaries.append(summary)
             continue
         
