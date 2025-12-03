@@ -53,13 +53,11 @@ class "RecommendationReport.Summary" as RRSummary {
     + add(problem_recomm) : Summary
 }
 
-RecommendationController -down-> RecommendationService
-RecommendationController -left-> CompatibilityService
+RecommendationController -right-> RecommendationService
+RecommendationController -down-> CompatibilityService
 RecommendationService .down.> RecommendationReport : "Crée"
 RecommendationService .down.> RRSummary : "Crée"
-RecommendationReport -left-o RRSummary : "Aggrégation"
-RecommendationService -left-> RecommendationGenerator 
-
-
+RecommendationReport -right-o RRSummary : "Aggrégation"
+RecommendationService -right-> RecommendationGenerator
 
 @enduml

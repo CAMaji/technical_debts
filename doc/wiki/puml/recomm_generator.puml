@@ -3,11 +3,6 @@ hide circle
 skinparam classAttributeIconSize 0
 title Générateur de recommandations
 
-class RecommendationService { 
-    - generator : RecommendationGenerator
-    + ctor(generator)
-}
-
 class RecommendationGenerator {
     + generate(problem, recommendation, mapping, is_problem) : Pair<str, str>
     + global_risk(complexities) : Pair<str, str>
@@ -58,12 +53,11 @@ class DuplicationReport {
     + get_file_nb() : int
 }
 
-RecommendationService -right-> RecommendationGenerator 
 RecommendationGenerator .up.> EntityReport : "Utilise"
 RecommendationGenerator .down.> FileComplexityReport : "Utilise"
 RecommendationGenerator .down.> FunctionComplexityReport : "Utilise"
 RecommendationGenerator .up.> DuplicationReport : "Utilise"
-FileComplexityReport -left-o FunctionComplexityReport: "Aggrégation"
+FileComplexityReport -right-o FunctionComplexityReport: "Aggrégation"
 
 
 @enduml
