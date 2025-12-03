@@ -14,6 +14,7 @@ import src.services.repository_service as repository_service
 import src.services.branch_service as branch_service
 import src.services.commit_service as commit_service
 import src.services.file_service as file_service
+import re
 
 
 class MetricsClass:
@@ -212,6 +213,23 @@ def get_complexity_count_for_commit(commit_id):
         "average_complexity": complexity_count.average_complexity
     }
 
+
+BUG_COMMIT_PATTERN = re.compile(
+    r"""
+    \b(
+        bug|bugs|bugfix|bugfixes|
+        fix|fixes|fixed|hotfix|
+        issue|issues|
+        error|errors|
+        crash|crashes|
+        correction|corrected|
+        corrige|corrigé|répare|réparé|résout
+    )\b
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+
 def calculate_bug_counts_in_range(commits_in_range):
     """
     Receives a list of commits (each being a dict with a 'message' field)
@@ -222,16 +240,22 @@ def calculate_bug_counts_in_range(commits_in_range):
 
     if not commits_in_range:
         return linked_bugs
-    else:
-        count = 0
-        for commit in commits_in_range:
-            message = commit.get("message", "").lower()
-            if "bug" in message or "fix" in message or "fixes" in message or "fixed" in message:
-                count += 1
-        linked_bugs["total"] = count
+
+    count = 0
+    for commit in commits_in_range:
+        message = commit.get("message", "") or ""
+        message = message.strip().lower()
+
+        # Only count meaningful bug-related terms, not debug/prefix/etc.
+        if BUG_COMMIT_PATTERN.search(message):
+            count += 1
+
+    linked_bugs["total"] = count
+    print("Linked bugs count:2", linked_bugs["total"])
     
-    print("Linked bugs count: ", linked_bugs["total"])
+
     return linked_bugs
+
 
 def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
     print("Calculating bug-related commit counts...")
