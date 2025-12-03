@@ -153,7 +153,7 @@ Initialement, il était planifié d'afficher le nombre de duplication par fichie
 ---
 <u>Prototype d'interface - réalisé avec LibreOffice Draw</u>
 
-![](imgs/duplication_proto_ui.svg)
+![](imgs/proto-duplications-ui.svg)
 
 --- 
 
