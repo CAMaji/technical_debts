@@ -183,5 +183,13 @@ https://pmd.github.io/pmd/index.html
 4. Python Software Foundation. (2023). json — JSON encoder and decoder — Python 3.8.3rc1 documentation. Docs.python.org. 
 https://docs.python.org/3/library/json.html
 
-‌
+5. Duplicate Code. (2025). Refactoring.guru. 
+https://refactoring.guru/fr/smells/duplicate-code
+
+6. Juergens, E., Deissenboeck, F., & Hummel, B. (n.d.). Code Similarities Beyond Copy & Paste. Retrieved December 4, 2025, from 
+https://teamscale.com/hubfs/Publications/2010-code-similarities-beyond-copy-paste.pdf (Repéré sur: https://en.wikipedia.org/wiki/Duplicate_code)
+
+7. GeeksforGeeks. (2018, July 30). Coupling and Cohesion Software Engineering. GeeksforGeeks. 
+https://www.geeksforgeeks.org/software-engineering/software-engineering-coupling-and-cohesion/#types-of-coupling
+
 ‌

@@ -145,3 +145,11 @@ Puisque l'interface utilisateur est une page web, les recommandations doivent ê
 ## Limitations
 
 - À faire
+
+##### Références
+
+1. Murphy, James & Robinson III, John. (2007). Design of a Research Platform for En Route Conflict Detection and Resolution. 10.2514/6.2007-7803. 
+https://www.researchgate.net/figure/Cyclomatic-Complexity-Thresholds_tbl2_238659831
+
+2. McCabe, T. (2008). Software Quality Metrics to Identify Risk (p. 22, p. 36) [Review of Software Quality Metrics to Identify Risk]. Department of Homeland Security Software Assurance Working Group.
+https://web.archive.org/web/20220329072759/http://www.mccabe.com/ppt/SoftwareQualityMetricsToIdentifyRisk.ppt
