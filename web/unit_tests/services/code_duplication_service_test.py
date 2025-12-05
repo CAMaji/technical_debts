@@ -2,7 +2,6 @@ from src.database.code_duplication_db_facade import CodeDuplicationDatabaseFacad
 from src.services.code_duplication_service import CodeDuplicationService
 from src.reports.duplication_report import DuplicationReport
 from src.utilities.value_range import ValueRange
-from src.models.duplication import Duplication
 from src.models.model import *
 
 def test_insert():

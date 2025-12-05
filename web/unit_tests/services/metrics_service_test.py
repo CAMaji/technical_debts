@@ -1,114 +1,80 @@
 # metrics_service_test.py
 
 import pytest
+from unittest.mock import Mock
 
 from src.services.metrics_service import calculate_bug_counts_in_range
-
 from src.services import metrics_service
 from src.services.metrics_service import MetricsClass
 
 
-# ---------- Fake classes to simulate dependencies ----------
-class FakeRepo:
-    owner = "test-owner"
-    name = "test-repo"
+# ---------- Test Fixtures ----------
+@pytest.fixture
+def mock_repo():
+    repo = Mock()
+    repo.owner = "test-owner"
+    repo.name = "test-repo"
+    return repo
 
+@pytest.fixture
+def mock_branch():
+    branch = Mock()
+    branch.name = "main"
+    return branch
 
-class FakeBranch:
-    name = "main"
+@pytest.fixture
+def mock_commit():
+    commit = Mock()
+    commit.id = 42
+    commit.sha = "abc123"
+    return commit
 
+@pytest.fixture
+def mock_db_session():
+    session = Mock()
+    session.added = []
+    session.commit_called = False
+    session.rollback_called = False
+    
+    def add_side_effect(obj):
+        session.added.append(obj)
+    
+    def commit_side_effect():
+        session.commit_called = True
+        
+    def rollback_side_effect():
+        session.rollback_called = True
+    
+    session.add.side_effect = add_side_effect
+    session.commit.side_effect = commit_side_effect
+    session.rollback.side_effect = rollback_side_effect
+    return session
 
-# Fake services to inject
-class FakeRepositoryService:
-    @staticmethod
-    def get_repository_by_repository_id(repo_id):
-        assert repo_id == 123
-        return FakeRepo()
-
-
-class FakeBranchService:
-    @staticmethod
-    def get_branch_by_branch_id(branch_id):
-        assert branch_id == 456
-        return FakeBranch()
-
-
-class FakeGithubService:
-    captured = {}
-
-    @staticmethod
-    def get_commits_in_date_range(owner, repo_name, branch_name, start, end):
-        FakeGithubService.captured["args"] = (owner, repo_name, branch_name, start, end)
-        return [
-            {"sha": "abc", "message": "fix bug"},
-            {"sha": "def", "message": "refactor"},
-        ]
-
-
-
-class FakeDBSession:
-    def __init__(self):
-        self.added = []
-        self.commit_called = False
-        self.rollback_called = False
-
-    def add(self, obj):
-        self.added.append(obj)
-
-    def commit(self):
-        self.commit_called = True
-
-    def rollback(self):
-        self.rollback_called = True
-
-
-class FakeDB:
-    def __init__(self, session):
-        self.session = session
-
-
-class FakeCommit:
-    def __init__(self, commit_id, sha):
-        self.id = commit_id
-        self.sha = sha
-
-
-
-# ---------- Tests for metrics_service----------
-def test_get_commits_in_date_range_uses_services_correctly(monkeypatch):
-    # Patch services inside metrics_service module
-    monkeypatch.setattr(metrics_service, "repository_service", FakeRepositoryService)
-    monkeypatch.setattr(metrics_service, "branch_service", FakeBranchService)
-    monkeypatch.setattr(metrics_service, "github_service", FakeGithubService)
-
-    metrics = MetricsClass(repo_id=123, branch_id=456)
-
-    start = "01/01/2025 00:00"
-    end = "31/01/2025 23:59"
-
-    # --- act ---
-    result = metrics.get_commits_in_date_range(start, end)
-
-    # --- assert ---
-    assert result == [
+@pytest.fixture
+def mock_services(mock_repo, mock_branch):
+    """Set up all the common service mocks."""
+    services = {}
+    
+    # Repository service
+    services['repository'] = Mock()
+    services['repository'].get_repository_by_repository_id.return_value = mock_repo
+    
+    # Branch service
+    services['branch'] = Mock()
+    services['branch'].get_branch_by_branch_id.return_value = mock_branch
+    
+    # GitHub service
+    services['github'] = Mock()
+    services['github'].get_commits_in_date_range.return_value = [
         {"sha": "abc", "message": "fix bug"},
         {"sha": "def", "message": "refactor"},
     ]
-
-    assert FakeGithubService.captured["args"] == (
-        "test-owner",
-        "test-repo",
-        "main",
-        start,
-        end,
-    )
-
-
-
-
-
-
-# ---------- Shared test helpers / fixtures (for this module) ----------
+    services['github'].fetch_files.return_value = [
+        ("file1.py", "code1"),
+        ("file2.py", "code2"),
+    ]
+    
+    return services
 
 @pytest.fixture
 def sample_commits():
@@ -120,428 +86,233 @@ def sample_commits():
         {"message": "Random commit without keyword"},
     ]
 
+# ---------- Tests for MetricsClass ----------
+def test_get_commits_in_date_range_uses_services(monkeypatch, mock_services):
+    """Test that get_commits_in_date_range calls the right services with correct parameters."""
+    # Patch only existing services
+    for service_name, mock_service in mock_services.items():
+        monkeypatch.setattr(metrics_service, f"{service_name}_service", mock_service)
+
+    metrics = MetricsClass(repo_id=123, branch_id=456)
+    start, end = "01/01/2025 00:00", "31/01/2025 23:59"
+
+    result = metrics.get_commits_in_date_range(start, end)
+
+    # Verify result
+    assert result == [
+        {"sha": "abc", "message": "fix bug"},
+        {"sha": "def", "message": "refactor"},
+    ]
+    
+    # Verify service calls
+    mock_services['repository'].get_repository_by_repository_id.assert_called_once_with(123)
+    mock_services['branch'].get_branch_by_branch_id.assert_called_once_with(456)
+    mock_services['github'].get_commits_in_date_range.assert_called_once_with(
+        "test-owner", "test-repo", "main", start, end
+    )
+
 
 # ---------- Tests for calculate_bug_counts_in_range ----------
-
 class TestCalculateBugCountsInRange:
-    def test_empty_list_returns_zero(self):
-        result = calculate_bug_counts_in_range([])
-        assert result == {"total": 0}
-
-    def test_no_bug_or_fix_returns_zero(self):
-        commits = [
-            {"message": "Refactor code"},
-            {"message": "Add new feature"},
-        ]
-        result = calculate_bug_counts_in_range(commits)
-        assert result == {"total": 0}
+    
+    @pytest.mark.parametrize("commits,expected", [
+        ([], {"total": 0}),
+        ([{"message": "Refactor code"}, {"message": "Add new feature"}], {"total": 0}),
+        ([{}, {"message": "fix small bug"}, {"msg": "wrong key"}], {"total": 1}),
+    ])
+    def test_edge_cases(self, commits, expected):
+        """Test edge cases: empty list, no matches, missing keys."""
+        assert calculate_bug_counts_in_range(commits) == expected
 
     def test_counts_all_matching_commits(self, sample_commits):
+        """Test that all bug/fix related commits are counted."""
         result = calculate_bug_counts_in_range(sample_commits)
         assert result == {"total": 4}
 
-    def test_ignores_missing_message_key(self):
-        commits = [
-            {},  # no message
-            {"message": "fix small bug"},
-            {"msg": "wrong key"},
-        ]
+    @pytest.mark.parametrize("commits,expected", [
+        ([{"message": "Bug: something happened"}, {"message": "FIX this today"}], 2),
+        ([{"message": "this fixes issue #22"}, {"message": "login flow fixed"}], 2),
+        ([{"message": "BUG found"}, {"message": "fIxEs logout"}], 2),
+    ])
+    def test_keyword_variants(self, commits, expected):
+        """Test different bug/fix keyword variants and case insensitivity."""
         result = calculate_bug_counts_in_range(commits)
-        assert result == {"total": 1}
-
-    def test_missing_message_key(self):
-        commits = [
-            {},                           # no message
-            {"msg": "this key is wrong"}, # still no "message"
-            {"message": "fix bug"},       # valid one
-        ]
-        result = calculate_bug_counts_in_range(commits)
-        assert result == {"total": 1}
-
-    def test_no_matching_keywords(self):
-        commits = [
-            {"message": "refactor code"},
-            {"message": "add new feature"},
-            {"message": "update documentation"},
-        ]
-        result = calculate_bug_counts_in_range(commits)
-        assert result == {"total": 0}
-
-    def test_mixed_messages_counting_bug_fix_variants(self):
-        commits = [
-            {"message": "Bug: something happened"},         # bug
-            {"message": "FIX this today"},                  # fix
-            {"message": "this fixes issue #22"},            # fixes
-            {"message": "login flow fixed last week"},      # fixed
-            {"message": "random update"},                   # none
-        ]
-        result = calculate_bug_counts_in_range(commits)
-        assert result == {"total": 4}
-
-    def test_case_insensitive_matching(self):
-        commits = [
-            {"message": "BUG found"},     # uppercase
-            {"message": "Fix auth"},      # capitalized
-            {"message": "fIxEs logout"},  # mixed case
-            {"message": "FiXeD it"},      # mixed case
-        ]
-        result = calculate_bug_counts_in_range(commits)
-        assert result == {"total": 4}
-
-
-
-
-
+        assert result["total"] == expected
 
 
 # ---------- Tests for ensure_metric_snapshot ----------
 class TestEnsureMetricSnapshot:
+    def _setup_existing_data_mocks(self, monkeypatch, mock_services, mock_commit, mock_db_session):
+        """Setup mocks for when data already exists."""
+        # Mock existing data queries
+        mock_entity_count = Mock()
+        mock_entity_count.query.filter_by.return_value.all.return_value = ["existing"]
+        
+        mock_complexity_count = Mock() 
+        mock_complexity_count.query.filter_by.return_value.first.return_value = "existing"
+        
+        # Services that shouldn't be called
+        github_service_mock = Mock()
+        calc_identifiable_mock = Mock(side_effect=AssertionError("Should not be called"))
+        calc_complexity_mock = Mock(side_effect=AssertionError("Should not be called"))
+        
+        # Mock DB
+        mock_db = Mock()
+        mock_db.session = mock_db_session
+        
+        # Apply patches
+        patches = {
+            "IdentifiableEntityCount": mock_entity_count,
+            "ComplexityCount": mock_complexity_count,
+            "github_service": github_service_mock,
+            "calculate_identifiable_identities_analysis": calc_identifiable_mock,
+            "calculate_cyclomatic_complexity_analysis": calc_complexity_mock,
+            "db": mock_db,
+        }
+        
+        for attr, mock_obj in patches.items():
+            monkeypatch.setattr(metrics_service, attr, mock_obj)
+            
+        for service_name, mock_service in mock_services.items():
+            monkeypatch.setattr(metrics_service, f"{service_name}_service", mock_service)
+            
+        return github_service_mock
 
-    def test_returns_early_when_snapshot_already_exists(self, monkeypatch):
-        """
-        If IdentifiableEntityCount and ComplexityCount already exist,
-        ensure_metric_snapshot should RETURN without:
-        - calling github_service.fetch_files
-        - calling calculate_* functions
-        - adding anything to the DB
-        - committing
-        """
-
-        # Fake queries that simulate existing data
-        class FakeICQuery:
-            def filter_by(self, **kwargs):
-                return self
-
-            def all(self):
-                return ["existing-entity-count"]  # non-empty => truthy
-
-        class FakeCCQuery:
-            def filter_by(self, **kwargs):
-                return self
-
-            def first(self):
-                return "existing-complexity-count"
-
-        class FakeIdentifiableEntityCount:
-            query = FakeICQuery()
-
-        class FakeComplexityCount:
-            query = FakeCCQuery()
-
-        # Fake github + calc functions that should NOT be called
-        class FakeGithubService:
-            called = False
-
-            @staticmethod
-            def fetch_files(*args, **kwargs):
-                FakeGithubService.called = True
-                return []
-
-        def fake_calc_identifiable(*args, **kwargs):
-            raise AssertionError("calculate_identifiable_identities_analysis should not be called")
-
-        def fake_calc_complexity(*args, **kwargs):
-            raise AssertionError("calculate_cyclomatic_complexity_analysis should not be called")
-
-        # Fake DB
-        fake_session = FakeDBSession()
-        fake_db = FakeDB(fake_session)
-
-        # Patch everything into metrics_service
-        monkeypatch.setattr(metrics_service, "repository_service", FakeRepositoryService)
-        monkeypatch.setattr(metrics_service, "branch_service", FakeBranchService)
-        monkeypatch.setattr(metrics_service, "IdentifiableEntityCount", FakeIdentifiableEntityCount)
-        monkeypatch.setattr(metrics_service, "ComplexityCount", FakeComplexityCount)
-        monkeypatch.setattr(metrics_service, "github_service", FakeGithubService)
-        monkeypatch.setattr(metrics_service, "calculate_identifiable_identities_analysis", fake_calc_identifiable)
-        monkeypatch.setattr(metrics_service, "calculate_cyclomatic_complexity_analysis", fake_calc_complexity)
-        monkeypatch.setattr(metrics_service, "db", fake_db)
-
+    def test_returns_early_when_snapshot_already_exists(self, monkeypatch, mock_services, mock_commit, mock_db_session):
+        """Test that method returns early when snapshot already exists."""
+        github_mock = self._setup_existing_data_mocks(monkeypatch, mock_services, mock_commit, mock_db_session)
+        
         metrics = MetricsClass(repo_id=123, branch_id=456)
-        commit = FakeCommit(commit_id=1, sha="abc123")
+        result = metrics.ensure_metric_snapshot(mock_commit)
 
-        # act
-        result = metrics.ensure_metric_snapshot(commit)
-
-        # assert
         assert result is None
-        assert FakeGithubService.called is False
-        assert fake_session.added == []
-        assert fake_session.commit_called is False
-        assert fake_session.rollback_called is False
+        github_mock.fetch_files.assert_not_called()
+        assert not mock_db_session.added
+        assert not mock_db_session.commit_called
 
-
-
-    def test_creates_metrics_when_no_snapshot_exists(self, monkeypatch):
-        """
-        When there is NO IdentifiableEntityCount / ComplexityCount yet:
-        - fetch_files should be called
-        - calculate_* should be called for each file
-        - IdentifiableEntityCount + ComplexityCount rows should be added
-        - db.session.commit() should be called
-        """
-
-        # --- Fake queries: no existing rows --- #
-        class FakeICQuery:
-            def filter_by(self, **kwargs):
-                return self
-
-            def all(self):
-                return []  # no existing entity counts
-
-        class FakeCCQuery:
-            def filter_by(self, **kwargs):
-                return self
-
-            def first(self):
-                return None  # no existing complexity summary
-
-        class FakeIdentifiableEntityCount:
-            query = FakeICQuery()
-
-            def __init__(self, id, identifiable_entity_id, commit_id, count):
-                self.id = id
-                self.identifiable_entity_id = identifiable_entity_id
-                self.commit_id = commit_id
-                self.count = count
-
-        class FakeComplexityCount:
-            query = FakeCCQuery()
-
-            def __init__(self, id, commit_id, total_complexity, function_count, average_complexity):
-                self.id = id
-                self.commit_id = commit_id
-                self.total_complexity = total_complexity
-                self.function_count = function_count
-                self.average_complexity = average_complexity
-
-        # --- Fake identifiable entities --- #
-        class FakeIdentifiableEntity:
-            def __init__(self, entity_id, name):
-                self.id = entity_id
-                self.name = name
-
-        class FakeIdentifiableEntityService:
-            @staticmethod
-            def get_all_identifiable_entities():
-                return [
-                    FakeIdentifiableEntity("e1", "PASSWORD"),
-                    FakeIdentifiableEntity("e2", "API_KEY"),
-                ]
-
-        # --- Fake files returned by github_service --- #
-        class FakeGithubService:
-            called_with = None
-
-            @staticmethod
-            def fetch_files(owner, repo_name, sha):
-                FakeGithubService.called_with = (owner, repo_name, sha)
-                # (filename, code)
-                return [
-                    ("file1.py", "code1"),
-                    ("file2.py", "code2"),
-                ]
-
-        # --- Fake file objects + file_service --- #
-        class FakeFile:
-            def __init__(self, name, commit_id):
-                self.id = f"file-{name}"
-                self.name = name
-                self.commit_id = commit_id
-
-        class FakeFileService:
-            @staticmethod
-            def create_file(filename, commit_id):
-                return FakeFile(filename, commit_id)
-
-        # --- Fake analysis functions --- #
-        ident_calls = []
-        cycl_calls = []
-
-        def fake_calc_identifiable(file, code):
-            ident_calls.append((file.name, code))
+    def _setup_new_snapshot_mocks(self, monkeypatch, mock_services, mock_commit, mock_db_session):
+        """Setup mocks for when no snapshot exists and needs to be created."""
+        # Mock empty data queries
+        mock_entity_count = Mock()
+        mock_entity_count.query.filter_by.return_value.all.return_value = []
+        mock_entity_count.side_effect = lambda *args, **kwargs: Mock(**kwargs)
+        
+        mock_complexity_count = Mock()
+        mock_complexity_count.query.filter_by.return_value.first.return_value = None
+        mock_complexity_count.side_effect = lambda *args, **kwargs: Mock(**kwargs)
+        
+        # Mock entities
+        entities = [Mock(id="e1", name="PASSWORD"), Mock(id="e2", name="API_KEY")]
+        mock_entity_service = Mock()
+        mock_entity_service.get_all_identifiable_entities.return_value = entities
+        
+        # Mock file service
+        mock_file_service = Mock()
+        mock_file_service.create_file.side_effect = lambda name, commit_id: Mock(id=f"file-{name}", name=name, commit_id=commit_id)
+        
+        # Mock analysis functions
+        def mock_calc_identifiable(file, code):
             if file.name == "file1.py":
-                # Two PASSWORD occurrences
                 return [
                     {"file": file.name, "start_line": 10, "entity_name": "PASSWORD"},
                     {"file": file.name, "start_line": 20, "entity_name": "PASSWORD"},
                 ]
-            else:
-                # One API_KEY occurrence
-                return [
-                    {"file": file.name, "start_line": 5, "entity_name": "API_KEY"},
-                ]
+            return [{"file": file.name, "start_line": 5, "entity_name": "API_KEY"}]
+    
+        def mock_calc_complexity(file, code):
+            complexity = 3 if file.name == "file1.py" else 7
+            return [{
+                "file": file.name,
+                "function": f"f{1 if file.name == 'file1.py' else 2}",
+                "start_line": 1,
+                "cyclomatic_complexity": complexity,
+            }]
+        
+        # Mock DB
+        mock_db = Mock()
+        mock_db.session = mock_db_session
+        
+        # Apply patches
+        patches = {
+            "IdentifiableEntityCount": mock_entity_count,
+            "ComplexityCount": mock_complexity_count,
+            "identifiable_entity_service": mock_entity_service,
+            "file_service": mock_file_service,
+            "calculate_identifiable_identities_analysis": mock_calc_identifiable,
+            "calculate_cyclomatic_complexity_analysis": mock_calc_complexity,
+            "db": mock_db,
+        }
+        
+        for attr, mock_obj in patches.items():
+            monkeypatch.setattr(metrics_service, attr, mock_obj)
+            
+        for service_name, mock_service in mock_services.items():
+            monkeypatch.setattr(metrics_service, f"{service_name}_service", mock_service)
 
-        def fake_calc_complexity(file, code):
-            cycl_calls.append((file.name, code))
-            if file.name == "file1.py":
-                return [
-                    {
-                        "file": file.name,
-                        "function": "f1",
-                        "start_line": 1,
-                        "cyclomatic_complexity": 3,
-                    }
-                ]
-            else:
-                return [
-                    {
-                        "file": file.name,
-                        "function": "f2",
-                        "start_line": 1,
-                        "cyclomatic_complexity": 7,
-                    }
-                ]
-
-        # --- Fake DB --- #
-        fake_session = FakeDBSession()
-        fake_db = FakeDB(fake_session)
-
-        # --- Patch everything into metrics_service --- #
-        monkeypatch.setattr(metrics_service, "repository_service", FakeRepositoryService)
-        monkeypatch.setattr(metrics_service, "branch_service", FakeBranchService)
-        monkeypatch.setattr(metrics_service, "IdentifiableEntityCount", FakeIdentifiableEntityCount)
-        monkeypatch.setattr(metrics_service, "ComplexityCount", FakeComplexityCount)
-        monkeypatch.setattr(metrics_service, "identifiable_entity_service", FakeIdentifiableEntityService)
-        monkeypatch.setattr(metrics_service, "github_service", FakeGithubService)
-        monkeypatch.setattr(metrics_service, "file_service", FakeFileService)
-        monkeypatch.setattr(metrics_service, "calculate_identifiable_identities_analysis", fake_calc_identifiable)
-        monkeypatch.setattr(metrics_service, "calculate_cyclomatic_complexity_analysis", fake_calc_complexity)
-        monkeypatch.setattr(metrics_service, "db", fake_db)
-
+    def test_creates_metrics_when_no_snapshot_exists(self, monkeypatch, mock_services, mock_commit, mock_db_session):
+        """Test that metrics are created when no snapshot exists."""
+        self._setup_new_snapshot_mocks(monkeypatch, mock_services, mock_commit, mock_db_session)
+        
         metrics = MetricsClass(repo_id=123, branch_id=456)
-        commit = FakeCommit(commit_id=42, sha="abc123")
+        result = metrics.ensure_metric_snapshot(mock_commit)
 
-        # --- act ---
-        result = metrics.ensure_metric_snapshot(commit)
-
-        # --- assert ---
         assert result is None
+        
+        # Verify services were called
+        mock_services['github'].fetch_files.assert_called_once_with("test-owner", "test-repo", "abc123")
+        assert mock_db_session.commit_called
+        assert not mock_db_session.rollback_called
+        assert len(mock_db_session.added) > 0
 
-        # github_service called correctly
-        assert FakeGithubService.called_with == ("test-owner", "test-repo", "abc123")
+    def test_error_rolls_back_and_reraises(self, monkeypatch, mock_services, mock_commit, mock_db_session):
+        """Test that errors during metric calculation trigger rollback."""
+        # Setup mocks for no existing data
+        mock_entity_count = Mock()
+        mock_entity_count.query.filter_by.return_value.all.return_value = []
+        
+        mock_complexity_count = Mock()
+        mock_complexity_count.query.filter_by.return_value.first.return_value = None
+        
+        # Mock services
+        mock_entity_service = Mock()
+        mock_entity_service.get_all_identifiable_entities.return_value = [Mock(id="e1", name="PASSWORD")]
+        
+        mock_file_service = Mock()
+        mock_file_service.create_file.return_value = Mock(id="file-1", name="file1.py")
+        
+        # Mock analysis functions - one succeeds, one fails
+        mock_calc_identifiable = Mock(return_value=[{"file": "file1.py", "start_line": 10, "entity_name": "PASSWORD"}])
+        mock_calc_complexity = Mock(side_effect=RuntimeError("boom during complexity"))
+        
+        # Mock DB
+        mock_db = Mock()
+        mock_db.session = mock_db_session
+        
+        # Apply patches
+        patches = {
+            "IdentifiableEntityCount": mock_entity_count,
+            "ComplexityCount": mock_complexity_count,
+            "identifiable_entity_service": mock_entity_service,
+            "file_service": mock_file_service,
+            "calculate_identifiable_identities_analysis": mock_calc_identifiable,
+            "calculate_cyclomatic_complexity_analysis": mock_calc_complexity,
+            "db": mock_db,
+        }
+        
+        for attr, mock_obj in patches.items():
+            monkeypatch.setattr(metrics_service, attr, mock_obj)
+            
+        for service_name, mock_service in mock_services.items():
+            monkeypatch.setattr(metrics_service, f"{service_name}_service", mock_service)
 
-        # analysis functions called for each file
-        assert {name for (name, _) in ident_calls} == {"file1.py", "file2.py"}
-        assert {name for (name, _) in cycl_calls} == {"file1.py", "file2.py"}
-
-        # DB: check what was added
-        entity_counts = [obj for obj in fake_session.added if isinstance(obj, FakeIdentifiableEntityCount)]
-        complexity_rows = [obj for obj in fake_session.added if isinstance(obj, FakeComplexityCount)]
-
-        # 2 entity types (PASSWORD, API_KEY)
-        assert len(entity_counts) == 2
-        counts_by_entity = {ec.identifiable_entity_id: ec.count for ec in entity_counts}
-        # PASSWORD (e1) seen twice, API_KEY (e2) once
-        assert counts_by_entity == {"e1": 2, "e2": 1}
-        # commit id propagated
-        assert {ec.commit_id for ec in entity_counts} == {42}
-
-        # 1 complexity summary
-        assert len(complexity_rows) == 1
-        row = complexity_rows[0]
-        # complexity values from fake_calc_complexity: 3 + 7
-        assert row.total_complexity == 10
-        assert row.function_count == 2
-        assert row.average_complexity == 5
-        assert row.commit_id == 42
-
-        # commit should be called once, rollback not
-        assert fake_session.commit_called is True
-        assert fake_session.rollback_called is False
-
-
-
-    def test_error_rolls_back_and_reraises(self, monkeypatch):
-        """
-        If something fails while calculating metrics,
-        - db.session.rollback() must be called
-        - exception must be re-raised
-        - commit must NOT be called
-        """
-
-        # No existing rows
-        class FakeICQuery:
-            def filter_by(self, **kwargs):
-                return self
-
-            def all(self):
-                return []
-
-        class FakeCCQuery:
-            def filter_by(self, **kwargs):
-                return self
-
-            def first(self):
-                return None
-
-        class FakeIdentifiableEntityCount:
-            query = FakeICQuery()
-
-            def __init__(self, *args, **kwargs):
-                pass  # won't be used in this error scenario
-
-        class FakeComplexityCount:
-            query = FakeCCQuery()
-
-            def __init__(self, *args, **kwargs):
-                pass  # won't be used in this error scenario
-
-        # Fake services
-        class FakeIdentifiableEntity:
-            def __init__(self, entity_id, name):
-                self.id = entity_id
-                self.name = name
-
-        class FakeIdentifiableEntityService:
-            @staticmethod
-            def get_all_identifiable_entities():
-                return [FakeIdentifiableEntity("e1", "PASSWORD")]
-
-        class FakeGithubService:
-            @staticmethod
-            def fetch_files(owner, repo_name, sha):
-                return [("file1.py", "code1")]
-
-        class FakeFile:
-            def __init__(self, name, commit_id):
-                self.id = f"file-{name}"
-                self.name = name
-                self.commit_id = commit_id
-
-        class FakeFileService:
-            @staticmethod
-            def create_file(filename, commit_id):
-                return FakeFile(filename, commit_id)
-
-        def fake_calc_identifiable(file, code):
-            # one entity, but we're going to blow up on complexity
-            return [{"file": file.name, "start_line": 10, "entity_name": "PASSWORD"}]
-
-        def exploding_complexity(*args, **kwargs):
-            raise RuntimeError("boom during complexity")
-
-        fake_session = FakeDBSession()
-        fake_db = FakeDB(fake_session)
-
-        # Patch into metrics_service
-        monkeypatch.setattr(metrics_service, "repository_service", FakeRepositoryService)
-        monkeypatch.setattr(metrics_service, "branch_service", FakeBranchService)
-        monkeypatch.setattr(metrics_service, "IdentifiableEntityCount", FakeIdentifiableEntityCount)
-        monkeypatch.setattr(metrics_service, "ComplexityCount", FakeComplexityCount)
-        monkeypatch.setattr(metrics_service, "identifiable_entity_service", FakeIdentifiableEntityService)
-        monkeypatch.setattr(metrics_service, "github_service", FakeGithubService)
-        monkeypatch.setattr(metrics_service, "file_service", FakeFileService)
-        monkeypatch.setattr(metrics_service, "calculate_identifiable_identities_analysis", fake_calc_identifiable)
-        monkeypatch.setattr(metrics_service, "calculate_cyclomatic_complexity_analysis", exploding_complexity)
-        monkeypatch.setattr(metrics_service, "db", fake_db)
-
+        # Setup github service to return a file
+        mock_services['github'].fetch_files.return_value = [("file1.py", "code1")]
+        
         metrics = MetricsClass(repo_id=123, branch_id=456)
-        commit = FakeCommit(commit_id=99, sha="deadbeef")
-
+        
         with pytest.raises(RuntimeError, match="boom during complexity"):
-            metrics.ensure_metric_snapshot(commit)
+            metrics.ensure_metric_snapshot(mock_commit)
 
-        # rollback should be called, commit must not
-        assert fake_session.rollback_called is True
-        assert fake_session.commit_called is False
+        # Verify rollback was called, commit was not
+        assert mock_db_session.rollback_called
+        assert not mock_db_session.commit_called

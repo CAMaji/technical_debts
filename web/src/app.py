@@ -98,15 +98,12 @@ def debt_evolution(owner, name):
             
         debt_data = []
         if selected_branch:
-            
             debt_data = metrics_service.calculate_debt_evolution(
                 repo.id, 
                 selected_branch.id, 
                 start_date, 
                 end_date
             )
-
-        print("Print test:", debt_data)
 
         return render_template('debt_evolution.html', 
             repository=repo, 
