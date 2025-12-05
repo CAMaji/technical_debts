@@ -236,7 +236,7 @@ function createDuplicationEvolutionChart() {
             tickangle: -45
         },
         yaxis: {
-            title: 'Number of Duplicate Code Instaces',
+            title: 'Number of Duplicate Code Instances',
             rangemode: 'tozero',
             side: 'left'
         },
