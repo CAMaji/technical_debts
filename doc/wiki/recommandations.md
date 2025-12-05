@@ -95,9 +95,11 @@ Les messages de recommandation sont contenus dans la classe d'énumération `Rec
     - Jumelé à <i>FILE_FUNC_NUMBER_PROBLEM</i>
     - "Decrease the number of functions either by redesigning your architecture or creating a new module. A large number of functions can be signs of high coupling and low cohesion, and usually decreases readability and maintainability."
 
-Les objets retournés par les méthodes de la classe de génération sont de type `Pair[str, str]`. Le premier élément correspond au message de problème, le second à la recommandation. 
+Ces recommandations proviennent d'une analyse de la définition de chacune des métriques et de leur impact dans un projet. 
 
-Le diagramme de classes ci-dessous illustre la relation entre le générateur et les objets de rapport qui contiennent les métriques de dette technique. 
+Par exemple, dans une présentation de M. McCabe (voir dans la section _Références_), auteur de la complexité cyclomatique, on y indique que plus une complexité est élevé, plus il y a un risque de bogue et une sécurité logiciel vulnérable. Rappelons que la complexité est le nombre de chemin indépendant pouvant être exécuté dans une fonction. Les fonctions qui contiennent des branches, des boucles et surtout un mélange de boucles et de branches imbriquées vont augmenter la valeur de complexité. Parallèlement, ces types de fonctions sont souvent intestables et considérées comme "code smell", ou simplement de la dette technique; pour y palier, il faut refactoriser ces fonctions et repenser la logique de celles-ci.
+
+Les objets retournés par les méthodes de la classe de génération sont de type `Pair[str, str]`. Le premier élément correspond au message de problème, le second à la recommandation. Le diagramme de classes ci-dessous illustre la relation entre le générateur et les objets de rapport qui contiennent les métriques de dette technique. 
 
 ---
 ![](puml/recomm_generator.svg)
@@ -138,19 +140,41 @@ Tel que mentionné au début de ce document, l'interface souhaité pour l'affich
 
 #### Interface conçue
 
-Nous avons pris en considération l'interface souhaité lors de la conception de l'interface qui sera utilisée : les problèmes sont liés à un fichier, les problèmes décrivent les facteurs de risques et les métriques problématiques, des actions claires et précises sont suggérées. Toutefois, l'interface conçue est dépourvue d'icônes et d'étiquettes. 
+L'interface conçue reprend la vision illustrée dans l'interface souhaité, mais apporte des détails supplémentaires quant aux problèmes trouvés, justifiant les recommandations émises. Bien qu'il puisse y avoir un volume important d'informations, le but de cet affichage est d'offrir une rétroaction, identifier et expliquer clairement les problèmes trouvés, et offrir des suggestions pour palier à ces problèmes. 
 
-La motivation derrière cette conception était d'afficher des informations précises et pertinentes quant au problème détecté, puis d'émettre des actions claires et réalisables pour guider un utilisateur voulant contrôler la dette technique d'un projet. Les actions suggérées sont basées sur les bonnes pratiques de l'industrie du développement logiciel et du génie logiciel. Selon _OpsLevel_, une entreprise offrant des solutions pour l'intégration du modèle DevOps, une grosse fonction (par exemple, 200 lignes) devrait être déconstruite en plusieurs petites fonctions pour réduire la complexité et augmenter la lisibilité. Notons qu'un effet secondaire ce cette pratique est l'augmentation de la testabilité du code, puisqu'il est plus facile écrire des tests unitaires sur de petites fonctions peu complexes. 
+L'affichage reflète la façon dont le rapport de recommandations est obtenu du serveur : pour chaque fichier, le nom du fichier est affiché et les problèmes et recommandations contenus dans le sommaire du fichiers sont insérés dans la case appropriée du tableau, sous forme de liste numérotée. Une section supplémentaire est affichée pour le sommaire de l'ensemble du commit. 
 
 --- 
 ![](./imgs/proto-recommandations-ui.svg)
 
+---
+
+#### Interface implémentée
+
+L'interface implémentée diffère peu de l'interface conçue. La seule différence est l'ajout d'un bouton pour afficher ou cacher un sommaire, pour éviter de surcharger l'interface lorsqu'il y a plusieurs sommaires. 
+
+---
 ![](./imgs/ui-recommandations.png)
+
 ---
 
 ## Limitations
 
-- À faire
+Le système de recommandation est conçu pour émettre des recommandations pour chaque fichier d'un commit ainsi que pour l'ensemble des fichiers d'un commit. L'implémentation pour les recommandations basées sur la variations des métriques dans le temps est manquante. Nous avons identifiées 4 solutions réalisables : 
+
+- **Même contrôlleur, même service, même générateur**
+    - la fonctionnalité est implémentée en ajoutant les méthodes nécessaires aux classes existantes
+    - aucune modification aux méthodes existantes
+
+- **Même contrôlleur, mais service et générateur différents**
+    - utilisation du contrôlleur `RecommendationController` pour l'accès à la fonctionnalité
+    - aucune modification aux classes `RecommendationService` et `RecommendationGenerator`
+    - création d'un nouveau service et d'un nouveau générateur pour les recommandations basées sur l'historique    
+- **Tout différent**
+    - implémentation complètement séparée du système de recommandations actuel
+- **Refactoriser et intégrer**
+    - amélioration du système de recommandation existant pour le rendre plus extensible et réutilisable
+    - implémentation plus cohésive de la fonctionnalité
 
 ---
 
@@ -161,5 +185,3 @@ https://www.researchgate.net/figure/Cyclomatic-Complexity-Thresholds_tbl2_238659
 
 2. McCabe, T. (2008). Software Quality Metrics to Identify Risk (p. 22, p. 36) [Review of Software Quality Metrics to Identify Risk]. Department of Homeland Security Software Assurance Working Group.
 https://web.archive.org/web/20220329072759/http://www.mccabe.com/ppt/SoftwareQualityMetricsToIdentifyRisk.ppt
-
-3. https://www.opslevel.com/resources/standards-in-software-development-and-9-best-practices
