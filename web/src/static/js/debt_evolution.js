@@ -223,7 +223,7 @@ function createDuplicationEvolutionChart() {
         },
     ];
 
-    // Chart layout with dual y-axes
+    // Chart layout
     const layout = {
         title: {
             text: `Code Duplication Evolution - ${repositoryName}`,
