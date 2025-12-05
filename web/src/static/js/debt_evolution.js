@@ -220,7 +220,7 @@ function createDuplicationEvolutionChart() {
                 'Date: %{x}<br>' +
                 'Count: %{y}<br>' +
                 '<extra></extra>'
-        },
+        }
     ];
 
     // Chart layout
