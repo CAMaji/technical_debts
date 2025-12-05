@@ -97,10 +97,12 @@ function render_global_statistics(cyclomatic_complexity_analysis, identifiable_i
     
     // Generate the total technical debt (all instances of duplicates + identifiable identities, and cylomatic complexity above 10)
     let totalTechnicalDebt = 0;
+    let totalHighRiskFiles = 0;
 
     for (const file of cyclomatic_complexity_analysis) {
         for (const funct of file) {
             if (funct.cyclomatic_complexity > 10) {
+                totalHighRiskFiles++;
                 totalTechnicalDebt++;
             }
         }
@@ -115,16 +117,16 @@ function render_global_statistics(cyclomatic_complexity_analysis, identifiable_i
     document.getElementById("total-technical-debt").innerHTML = totalTechnicalDebt;
 
     // Generate the high risk files
-    let totalHighRiskFiles = 0;
-    
-    const files = duplicated_code_analysis["tech_debt"]["_metrics"];
-
-    for (file of files) {
-
-        if (file.risk[0] === "MEDIUM_RISK" || file.risk[0] === "HIGH_RISK" || file.risk[0] === "VERY_HIGH_RISK") {
-            totalHighRiskFiles++;
-        }
-    }
+    //let totalHighRiskFiles = 0;
+    //
+    //const files = duplicated_code_analysis["tech_debt"]["_metrics"];
+    //
+    //for (file of files) {
+    //
+    //    if (file.risk[0] === "MEDIUM_RISK" || file.risk[0] === "HIGH_RISK" || file.risk[0] === "VERY_HIGH_RISK") {
+    //        totalHighRiskFiles++;
+    //    }
+    //}
 
     document.getElementById("high-risk-files").innerHTML = totalHighRiskFiles;
 }
@@ -259,19 +261,30 @@ function processMetricsData(cyclomatic_complexity_analysis, identifiable_identit
     }
 
     // Process priority score data
-    if (duplicated_code_analysis !== undefined) { 
-        
-        const techDebtMetrics = Object.values(duplicated_code_analysis["tech_debt"]["_metrics"]);
 
-        for (const file of techDebtMetrics) {
-            const fileName = file.filename;
-
-            createNewFileMapSet(fileMap, fileName);
-
-            const fileData = fileMap.get(fileName);
-            fileData.priorityScore = file.priority;
-        }
+    for(key of fileMap.keys()) {
+        createNewFileMapSet(fileMap, key);
     }
+
+    fileMap.forEach((value, key, map) => {
+        const fileData = fileMap.get(key);
+        fileData.priorityScore = (fileData.duplicateCodeCount + fileData.identifiableIdentitiesCount + fileData.avgComplexity).toFixed(2)
+    })
+    
+
+    //if (duplicated_code_analysis !== undefined) { 
+    //    
+    //    const techDebtMetrics = Object.values(duplicated_code_analysis["tech_debt"]["_metrics"]);
+    //
+    //    for (const file of techDebtMetrics) {
+    //        const fileName = file.filename;
+    //
+    //        createNewFileMapSet(fileMap, fileName);
+    //
+    //        const fileData = fileMap.get(fileName);
+    //        fileData.priorityScore = file.priority;
+    //    }
+    //}
 
     return Array.from(fileMap.values());
 }

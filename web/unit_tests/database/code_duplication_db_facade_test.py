@@ -2,7 +2,6 @@ from unit_tests.mock_app import *
 from src.database.code_duplication_db_facade import CodeDuplicationDatabaseFacade
 from src.models.duplication import Duplication
 from src.models.model import *
-from src.utilities.smart_list_iterator import SmartListIterator
 
 def test_insert_many_fragments(): 
     app = init_mock_app()
@@ -74,11 +73,10 @@ def test_get_fragments_for_many_file():
         predef = start_up()
         facade = CodeDuplicationDatabaseFacade()
         files = predef[FILES]
-        iterator = SmartListIterator[File, str](files, lambda f: f.id)
         
         # act 
         try:
-            result = facade.get_fragments_for_many_file(iterator)
+            result = facade.get_fragments_for_many_file(files)
 
         # assert
             assert len(result) == 4

@@ -17,28 +17,26 @@ class CodeDuplicationService:
         return self._facade.get_duplication_by_id(id)
 
     def get_reports_for_many_files(self, file_list : list[File]) -> dict[str, DuplicationReport]:
-        file_id_dict : dict[str, File] = {}
+        file_id_dict = dict[str, File]()
         for f in file_list: 
             file_id_dict[f.id] = f
 
-        iterator = SmartListIterator[File, str](file_list, lambda file: file.id)
-        fragment_list = self._facade.get_fragments_for_many_file(iterator)
-        fragment_id_dict : dict[str, DuplicationReport] = {}
+        fragment_list = self._facade.get_fragments_for_many_file(file_list)
+        report_dict = dict[str, DuplicationReport]()
 
         for element in fragment_list:
             fragment : CodeFragment = element[0]
             duplication : Duplication = element[1]
             file = file_id_dict[duplication.file_id]
 
-            if fragment.id not in fragment_id_dict:
+            if fragment.id not in report_dict:
                 report = DuplicationReport(fragment.line_count, fragment.text)
-                fragment_id_dict[fragment.id] = report
+                report_dict[fragment.id] = report
 
             report_element = DuplicationReport.File(file.name, duplication.lines(), duplication.columns())
-            report = fragment_id_dict[fragment.id]
+            report = report_dict[fragment.id]
             report.add_file(report_element)
-
-        return fragment_id_dict
+        return report_dict
     
     def insert_from_report(self, report_list : list[DuplicationReport], file_list : list[File]):  
         filename_dict : dict[str, File] = {}

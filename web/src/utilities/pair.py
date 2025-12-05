@@ -1,5 +1,5 @@
-from typing import Generic, TypeVar
 from src.utilities.json_encoder import JsonEncoder
+from typing import TypeVar, Generic
 
 Ta = TypeVar('Ta')
 Tb = TypeVar('Tb')
