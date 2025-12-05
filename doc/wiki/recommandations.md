@@ -128,28 +128,38 @@ Puisque l'interface utilisateur est une page web, les recommandations doivent ê
 
 ### Couche frontale
 
-- À faire
+#### Interface souhaitée
+Tel que mentionné au début de ce document, l'interface souhaité pour l'affichage des recommandations comprenait l'utilisation de verbes et d'un sujet, décrivant une action à entreprendre dans le but de contrôler la dette technique. Notons aussi la présence d'étiquettes, de précisions quant aux problèmes, et des icônes pour embellir et améliorer la présentation de l'interface. 
 
 ---
 ![](./imgs/maquette-recommandations.png)
 
 ---
 
-- À faire
+#### Interface conçue
+
+Nous avons pris en considération l'interface souhaité lors de la conception de l'interface qui sera utilisée : les problèmes sont liés à un fichier, les problèmes décrivent les facteurs de risques et les métriques problématiques, des actions claires et précises sont suggérées. Toutefois, l'interface conçue est dépourvue d'icônes et d'étiquettes. 
+
+La motivation derrière cette conception était d'afficher des informations précises et pertinentes quant au problème détecté, puis d'émettre des actions claires et réalisables pour guider un utilisateur voulant contrôler la dette technique d'un projet. Les actions suggérées sont basées sur les bonnes pratiques de l'industrie du développement logiciel et du génie logiciel. Selon _OpsLevel_, une entreprise offrant des solutions pour l'intégration du modèle DevOps, une grosse fonction (par exemple, 200 lignes) devrait être déconstruite en plusieurs petites fonctions pour réduire la complexité et augmenter la lisibilité. Notons qu'un effet secondaire ce cette pratique est l'augmentation de la testabilité du code, puisqu'il est plus facile écrire des tests unitaires sur de petites fonctions peu complexes. 
 
 --- 
 ![](./imgs/proto-recommandations-ui.svg)
 
+![](./imgs/ui-recommandations.png)
 ---
 
 ## Limitations
 
 - À faire
 
-##### Références
+---
+
+#### Références
 
 1. Murphy, James & Robinson III, John. (2007). Design of a Research Platform for En Route Conflict Detection and Resolution. 10.2514/6.2007-7803. 
 https://www.researchgate.net/figure/Cyclomatic-Complexity-Thresholds_tbl2_238659831
 
 2. McCabe, T. (2008). Software Quality Metrics to Identify Risk (p. 22, p. 36) [Review of Software Quality Metrics to Identify Risk]. Department of Homeland Security Software Assurance Working Group.
 https://web.archive.org/web/20220329072759/http://www.mccabe.com/ppt/SoftwareQualityMetricsToIdentifyRisk.ppt
+
+3. https://www.opslevel.com/resources/standards-in-software-development-and-9-best-practices
