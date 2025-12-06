@@ -292,11 +292,11 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
             complexity_count = get_complexity_count_for_commit(commit.id)
             linked_bugs = calculate_bug_counts_in_range(commits_in_range)
 
-            total_number_duplications = 0
             files = File.query.filter_by(commit_id=commit.id).all()
-            for file in files:
-                file_duplication_count = Duplication.query.filter_by(file_id=file.id).count()
-                total_number_duplications += file_duplication_count
+            file_ids = [f.id for f in files]
+            total_number_duplications = Duplication.query.filter(
+                Duplication.file_id.in_(file_ids)
+            ).count()
 
             # Build result data
             debt_evolution.append({
