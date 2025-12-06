@@ -18,6 +18,7 @@ import json
 
 from src.controllers.recommendation_controller import RecommendationController
 from src.controllers.duplication_controller import DuplicationController
+from src.utilities.json_encoder import JsonEncoder
 
 def save_commit_and_analyse(repo : Repository, commit : Commit) -> list[File]: 
     files = file_service.get_files_by_commit_id(commit.id)
@@ -26,7 +27,7 @@ def save_commit_and_analyse(repo : Repository, commit : Commit) -> list[File]:
         # we need to get the files
         remote_files = github_service.fetch_files(repo.owner, repo.name, commit.sha)
 
-        # store the files in db
+        # store the files in db 
         for filename, code in remote_files:
             file = file_service.create_file(filename, commit.id)
 
@@ -93,20 +94,19 @@ def display_metrics_by_commit_id():
     duplication_analysis = get_duplications(files)
     recommendation_analysis = get_recommendations(files, cyclomatic_complexity_analysis, identifiable_identities_analysis, duplication_analysis)
 
-    # add the metrics analysis only if requested
+    # add the metrics analysis only if requested 
     if include_complexity:
         
         metrics["cyclomatic_complexity_analysis"] = cyclomatic_complexity_analysis
 
     if include_identifiable_identities:
         metrics["identifiable_identities_analysis"] = identifiable_identities_analysis
-
+    
+    metrics["duplicated_code_analysis"]["recommendations"] = JsonEncoder.breakdown(recommendation_analysis) 
     if include_code_duplication: 
-        metrics["duplicated_code_analysis"] = {
-            "duplications": JsonEncoder.breakdown(duplication_analysis),
-            "recommendations": JsonEncoder.breakdown(recommendation_analysis),
-            "tech_debt": {}
-        }
+        metrics["duplicated_code_analysis"]["duplications"] = JsonEncoder.breakdown(duplication_analysis)
+    else: 
+        metrics["duplicated_code_analysis"]["duplications"] = {} 
 
     return jsonify(metrics)
 

@@ -68,11 +68,11 @@ def test__global_bug():
     generator = RecommendationGenerator()
 
     # act 
-    result = generator._global_bug(entity, 6)
+    result = generator._global_todofixme(entity, 6)
 
     # assert
-    assert result.first == ProblemEnum.GLOBAL_BUG_PROBLEM.value.replace("@1", str(6)).replace("@2", str(3))
-    assert result.second == RecommendationEnum.GLOBAL_BUG_RECOMMENDATION.value
+    assert result.first == ProblemEnum.GLOBAL_TODOFIXME_PROBLEM.value.replace("@1", str(6)).replace("@2", str(3))
+    assert result.second == RecommendationEnum.GLOBAL_TODOFIXME_RECOMMENDATION.value
 
 def test__file_avg_risk():
     # arrange

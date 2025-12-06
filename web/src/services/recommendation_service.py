@@ -21,7 +21,7 @@ class RecommendationService:
         summary = RecommendationReport.Summary("All")
         summary.add(self._generator._global_risk(complexities))
         summary.add(self._generator._global_duplication(duplications))
-        summary.add(self._generator._global_bug(entities, total_file_nb))
+        summary.add(self._generator._global_todofixme(entities, total_file_nb))
         return summary
     
     def get_file_complexity_summary(self,  

@@ -13,6 +13,9 @@ const commit_sha_display = document.getElementById("commit-sha");
 const commit_date_display = document.getElementById("commit-date");
 const commit_message_display = document.getElementById("commit-message");
 
+let to_export_metrics = {};
+let to_export_global_stats = {}
+
 // once doc is ready
 document.addEventListener("DOMContentLoaded", () => {
     init_period_select();
@@ -94,14 +97,15 @@ function render_commit_info(commit_sha, commit_date, commit_message) {
 }
 
 function render_global_statistics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis) {
-    
     // Generate the total technical debt (all instances of duplicates + identifiable identities, and cylomatic complexity above 10)
     let totalTechnicalDebt = 0;
     let totalHighRiskFiles = 0;
+    let duplication_count = 0
+    const MEDIUM_RISK = 11;
 
     for (const file of cyclomatic_complexity_analysis) {
         for (const funct of file) {
-            if (funct.cyclomatic_complexity > 10) {
+            if (funct.cyclomatic_complexity >= MEDIUM_RISK) {
                 totalHighRiskFiles++;
                 totalTechnicalDebt++;
             }
@@ -111,24 +115,29 @@ function render_global_statistics(cyclomatic_complexity_analysis, identifiable_i
     const identifiableIdentitiesCount = identifiable_identities_analysis.length
     totalTechnicalDebt += identifiableIdentitiesCount;
 
-    const duplicatesCount = Object.values(duplicated_code_analysis["duplications"]).length;
-    totalTechnicalDebt += duplicatesCount;
+    // number of instances of code duplication
+    const duplication_dict = duplicated_code_analysis["duplications"];
+
+    for(const key in duplication_dict) {
+        const duplication_instances = duplication_dict[key]._files.length;
+        duplication_count += duplication_instances;
+    }
+
+    totalTechnicalDebt += duplication_count;
+
+    // adds the global stats to the "to_export_data" object. 
+    // used for exporting to JSON.
+    to_export_global_stats = {
+        "total_technical_debt": totalTechnicalDebt, 
+        "high_risk_files": totalHighRiskFiles, 
+        "__todo_fixme": identifiableIdentitiesCount, 
+        "__duplications": duplication_count
+    };
 
     document.getElementById("total-technical-debt").innerHTML = totalTechnicalDebt;
-
-    // Generate the high risk files
-    //let totalHighRiskFiles = 0;
-    //
-    //const files = duplicated_code_analysis["tech_debt"]["_metrics"];
-    //
-    //for (file of files) {
-    //
-    //    if (file.risk[0] === "MEDIUM_RISK" || file.risk[0] === "HIGH_RISK" || file.risk[0] === "VERY_HIGH_RISK") {
-    //        totalHighRiskFiles++;
-    //    }
-    //}
-
     document.getElementById("high-risk-files").innerHTML = totalHighRiskFiles;
+    document.getElementById("--todo-fixme").innerHTML = identifiableIdentitiesCount;
+    document.getElementById("--duplications").innerHTML = duplication_count;
 }
 
 function render_calculated_metrics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis) {
@@ -270,22 +279,14 @@ function processMetricsData(cyclomatic_complexity_analysis, identifiable_identit
         const fileData = fileMap.get(key);
         fileData.priorityScore = (fileData.duplicateCodeCount + fileData.identifiableIdentitiesCount + fileData.avgComplexity).toFixed(2)
     })
-    
 
-    //if (duplicated_code_analysis !== undefined) { 
-    //    
-    //    const techDebtMetrics = Object.values(duplicated_code_analysis["tech_debt"]["_metrics"]);
-    //
-    //    for (const file of techDebtMetrics) {
-    //        const fileName = file.filename;
-    //
-    //        createNewFileMapSet(fileMap, fileName);
-    //
-    //        const fileData = fileMap.get(fileName);
-    //        fileData.priorityScore = file.priority;
-    //    }
-    //}
-
+    to_export_metrics = {
+        "complexity": cyclomatic_complexity_analysis, 
+        "todo_fixme": identifiable_identities_analysis,
+        "duplication": duplicated_code_analysis["duplications"],
+        "recommendation": duplicated_code_analysis["recommendations"], 
+        "global_stats": {}
+    }
     return Array.from(fileMap.values());
 }
 
@@ -442,7 +443,7 @@ function render_files_recommendations(duplicated_code_analysis) {
             {
                 field: 'filename',
                 title: 'Problems and recommendations',
-                sortable: true,
+                sortable: false,
             },
         ],
         data: recommendations_array,
@@ -475,22 +476,27 @@ function recommendations_detail_formatter(index, row) {
 
     const analysis = row.value;
 
-    let problems_list = '<td style="width: 100%">';
-    let problem_count = 1;
+    //let problems_list = '<td style="width: 100%">';
+    let problem_count = 0;
+    let problems_list = "<ul type='1'>";
     analysis.problems.forEach((problem) => {
-        problems_list += `${problem_count}. ${problem} <br />`;
+        //problems_list += `${problem_count}. ${problem} <br />`;
         problem_count++;
+        problems_list += `<li> ${problem} </li>`;
     });
-    problems_list += '</td>'
+    problems_list += "</ul>";
+    const problems_text = (problem_count > 1) ? "Problems" : "Problem";
+    //problems_list += '</td>'
 
-    let recommendations_list = "";
-    let recommendations_count = 1;
+    let recommendations_list = "<ul type='1'>";
+    let recommendations_count = 0;
     analysis.recommendations.forEach((recommendation) => {
-        recommendations_list += `
-            <td style="width: 100%">${recommendations_count}. ${recommendation}</td>
-        `;
+        //recommendations_list += `<td style="width: 100%">${recommendations_count}. ${recommendation}</td>`;
         recommendations_count++;
+        recommendations_list += `<li> ${recommendation} </li>`;
     });
+    recommendations_list += `</ul>`
+    const recommendations_text = (recommendations_count > 1) ? "Recommendations" : "Recommendation";
 
 
     let html = `
@@ -498,20 +504,12 @@ function recommendations_detail_formatter(index, row) {
             <table class="table table-sm table-striped">
                 <tbody>
                     <tr>
-                        <td>
-                            Problem(s)
-                        </td>
-                        <td>
-                            ${problems_list}
-                        </td>
+                        <td class="d-flex align-center">&nbsp;${problems_text}</td>
+                        <td class="d-flex align-center" style="width: 100%" >${problems_list}</td>
                     </tr>
                     <tr>
-                        <td>
-                            Recommendations(s)
-                        </td>
-                        <td>
-                            ${recommendations_list}
-                        </td>
+                        <td class="d-flex align-center">&nbsp;${recommendations_text}</td>
+                        <td class="d-flex align-center" width: 100%>${recommendations_list}</td>
                     </tr>
                 </tbody>
             </table>
@@ -535,3 +533,30 @@ function createNewFileMapSet(fileMap, fileName) {
         });
     }
 }
+
+function export_to_json() {
+    const data = {
+        "metrics": to_export_metrics,
+        "global_stats": to_export_global_stats,
+        "commit": {
+            "sha": commit_sha_display.textContent,
+            "date": commit_date_display.textContent,
+            "message": commit_message_display.textContent
+        }
+    };
+
+    // https://javascript.plainenglish.io/javascript-create-file-c36f8bccb3be
+    const content = JSON.stringify(data);
+    const file = new File([content], "analysis.json", {type: "text/json"});
+    const url = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    
+    link.href = url;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.remove(link);
+    window.URL.revokeObjectURL(url);
+    window.location.reload()
+}
+
