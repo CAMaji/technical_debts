@@ -1,6 +1,5 @@
 from unit_tests.mock_app import *
 from src.database.code_duplication_db_facade import CodeDuplicationDatabaseFacade
-from src.models.duplication import Duplication
 from src.models.model import *
 
 def test_insert_many_fragments(): 
