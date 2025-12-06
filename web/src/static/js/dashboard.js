@@ -478,7 +478,7 @@ function recommendations_detail_formatter(index, row) {
 
     //let problems_list = '<td style="width: 100%">';
     let problem_count = 0;
-    let problems_list = "<ul type='1'>";
+    let problems_list = "<ul>";
     analysis.problems.forEach((problem) => {
         //problems_list += `${problem_count}. ${problem} <br />`;
         problem_count++;
@@ -488,7 +488,7 @@ function recommendations_detail_formatter(index, row) {
     const problems_text = (problem_count > 1) ? "Problems" : "Problem";
     //problems_list += '</td>'
 
-    let recommendations_list = "<ul type='1'>";
+    let recommendations_list = "<ul>";
     let recommendations_count = 0;
     analysis.recommendations.forEach((recommendation) => {
         //recommendations_list += `<td style="width: 100%">${recommendations_count}. ${recommendation}</td>`;
