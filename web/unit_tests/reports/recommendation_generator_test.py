@@ -62,7 +62,7 @@ def test__global_duplication():
     assert result.first == ProblemEnum.GLOBAL_DUPLICATION_PROBLEM.value.replace("@1", str(12))
     assert result.second == RecommendationEnum.GLOBAL_DUPLICATION_RECOMMENDATION.value
 
-def test__global_bug():
+def test__global_todofixme():
     # arrange
     global entity
     generator = RecommendationGenerator()
