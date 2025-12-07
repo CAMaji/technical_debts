@@ -65,10 +65,9 @@ def safe_walk_source_files(root_dir):
             continue
         for filename in filenames:
             # only yield files with supported source extensions
-            for ext in SUPPORTED_SOURCE_EXTENSIONS:
-                if filename.endswith(ext):
-                    yield root, filename
-                    break
+            _, ext = os.path.splitext(filename)
+            if ext in SUPPORTED_SOURCE_EXTENSIONS:
+                yield root, filename
 
 
 def fetch_files(owner, name, commit_sha):
