@@ -51,15 +51,24 @@ def ensure_local_repo(owner, name):
     return path
 
 
-def safe_walk_py_files(root_dir):
+SUPPORTED_SOURCE_EXTENSIONS = {
+    ".py", ".c", ".cpp", ".h", ".hpp",
+    ".java", ".js", ".ts", ".html", ".go",
+    ".css", ".php", ".xml"
+}
+
+def safe_walk_source_files(root_dir):
     for root, _, filenames in os.walk(root_dir):
         # Skip .git directory
         parts = set(root.replace("\\", "/").split("/"))
         if ".git" in parts:
             continue
         for filename in filenames:
-            if filename.endswith(".py"):
-                yield root, filename
+            # only yield files with supported source extensions
+            for ext in SUPPORTED_SOURCE_EXTENSIONS:
+                if filename.endswith(ext):
+                    yield root, filename
+                    break
 
 
 def fetch_files(owner, name, commit_sha):
@@ -74,7 +83,7 @@ def fetch_files(owner, name, commit_sha):
     except subprocess.CalledProcessError:
         raise
 
-    for root, filename in safe_walk_py_files(repo_path):
+    for root, filename in safe_walk_source_files(repo_path):
         file_path = os.path.join(root, filename)
         try:
             with open(file_path, encoding="utf-8", errors="ignore") as f:
