@@ -257,7 +257,7 @@ def calculate_bug_counts_in_range(commits_in_range):
     return linked_bugs
 
 
-def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
+def calculate_debt_evolution(repo_id, branch_id, start_date, end_date, task_id=None):
     print("Calculating bug-related commit counts...")
     """
     Calculate the evolution of technical debt (identifiable entities) over time.
@@ -267,13 +267,19 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
         branch_id (str): Branch ID
         start_date (str): Start date in format "dd/mm/YYYY HH:MM"
         end_date (str): End date in format "dd/mm/YYYY HH:MM"
+        task_id (str, optional): Task ID for progress reporting
         
     Returns:
         list: List of debt evolution data points
     """
+    from src.services.task_manager import task_manager
+    
     debt_evolution = []
 
     try:
+        if task_id:
+            task_manager.update_progress(task_id, 5, "Fetching commits", "Loading commits in date range...")
+        
         metrics_class = MetricsClass(repo_id, branch_id)
 
         # Get commits in the date range
@@ -284,9 +290,26 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
         total_iterations = len(commits_in_range)
         
         print(f"Processing {total_iterations} commits...")
+        
+        if task_id:
+            task_manager.update_progress(task_id, 10, "Processing commits", f"Analyzing {total_iterations} commits...")
 
         for i, found_commit in enumerate(commits_in_range, 1):
             iteration_start = time.time()
+            
+            # Calculate progress (10% to 90% of the task)
+            progress = 10 + int((i / total_iterations) * 80)
+            
+            # Get SHA from commit (handle both dict and object)
+            commit_sha = found_commit.get('sha') if isinstance(found_commit, dict) else found_commit.sha
+            
+            if task_id:
+                task_manager.update_progress(
+                    task_id, 
+                    progress, 
+                    f"Processing commit {i}/{total_iterations}",
+                    f"Analyzing commit {commit_sha[:7]}..."
+                )
             
             # 1 - Create commit in database, if missing
             step_start = time.time()
@@ -333,6 +356,9 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
             progress_interval = max(1, min(10, total_iterations // 10))
             if i % progress_interval == 0 or i == total_iterations:
                 print(f"Progress: {i}/{total_iterations} commits processed ({i/total_iterations*100:.1f}%)")
+
+        if task_id:
+            task_manager.update_progress(task_id, 95, "Finalizing", "Sorting and preparing results...")
 
         # Print overall timing statistics
         if timing_stats['total_iteration']:
