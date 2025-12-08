@@ -121,7 +121,6 @@ function render_global_statistics(cyclomatic_complexity_analysis, identifiable_i
     totalTechnicalDebt += identifiableIdentitiesCount;
 
     // number of instances of code duplication
-    console.log(duplicated_code_analysis)
     const duplication_dict = duplicated_code_analysis["duplications"];
     for(const key in duplication_dict) {
         const duplication_instances = duplication_dict[key]._files.length;
