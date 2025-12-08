@@ -73,17 +73,11 @@ class TaskManager:
         task = Task(task_id, task_type)
         self.tasks[task_id] = task
         self.task_queues[task_id] = queue.Queue()
-        print(f"[DEBUG TaskManager] Created task {task_id} of type {task_type}")
-        print(f"[DEBUG TaskManager] Total tasks: {len(self.tasks)}")
         return task_id
 
     def get_task(self, task_id: str) -> Task:
         """Get task by ID."""
         task = self.tasks.get(task_id)
-        if task:
-            print(f"[DEBUG TaskManager] Found task {task_id}, status: {task.status}")
-        else:
-            print(f"[DEBUG TaskManager] Task {task_id} NOT FOUND. Available: {list(self.tasks.keys())}")
         return task
 
     def update_task(self, task_id: str, **kwargs):
@@ -111,24 +105,13 @@ class TaskManager:
 
     def complete_task(self, task_id: str, result: Any = None):
         """Mark task as completed with result."""
-        # Don't store large results, just mark as complete
-        # Results should be retrieved from database or cache instead
-        result_summary = None
-        if result is not None:
-            # Only store small metadata, not the actual data
-            if isinstance(result, list):
-                result_summary = f"{len(result)} items"
-            elif isinstance(result, dict):
-                result_summary = f"{len(result)} keys"
-            else:
-                result_summary = "completed"
-        
+        # Store the actual result so it can be retrieved by the frontend
         self.update_task(
             task_id,
             status="completed",
             completed_at=datetime.now(),
             progress=100,
-            result=result_summary
+            result=result
         )
 
     def fail_task(self, task_id: str, error: str):

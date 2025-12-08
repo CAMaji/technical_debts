@@ -19,6 +19,7 @@ import json
 
 from src.controllers.recommendation_controller import RecommendationController
 from src.controllers.duplication_controller import DuplicationController
+from src.utilities.json_encoder import JsonEncoder
 
 def save_commit_and_analyse(repo : Repository, commit : Commit) -> list[File]: 
     files = file_service.get_files_by_commit_id(commit.id)

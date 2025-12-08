@@ -12,15 +12,11 @@ from src.services.task_manager import task_manager, DateTimeEncoder
 @app.route('/api/task/<task_id>', methods=['GET'])
 def get_task_status(task_id):
     """Get the current status of a task."""
-    print(f"[DEBUG] Getting task status for: {task_id}")
-    print(f"[DEBUG] Available tasks: {list(task_manager.tasks.keys())}")
     
     task = task_manager.get_task(task_id)
     if not task:
-        print(f"[DEBUG] Task {task_id} not found!")
         return jsonify({"error": "Task not found"}), 404
-    
-    print(f"[DEBUG] Task {task_id} status: {task.status}")
+
     return jsonify(task.to_dict())
 
 

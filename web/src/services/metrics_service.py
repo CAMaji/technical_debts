@@ -15,6 +15,7 @@ import src.services.branch_service as branch_service
 import src.services.commit_service as commit_service
 import src.services.file_service as file_service
 import re
+from src.controllers.duplication_controller import DuplicationController
 
 
 class MetricsClass:
@@ -57,8 +58,19 @@ class MetricsClass:
             complexity_values = []
 
             # Process each file and accumulate counts
+            files_for_duplication = []
             for filename, code in remote_files:
                 file = file_service.create_file(filename, commit_to_check.id)
+                
+                # Check if duplications already exist for this specific file
+                existing_file_duplications = (
+                    db.session.query(Duplication)
+                    .filter(Duplication.file_id == file.id)
+                    .first()
+                )
+                
+                if not existing_file_duplications:
+                    files_for_duplication.append(file)
 
                 # calculate identifiable entities for this file
                 identifiable_identities_analysis = calculate_identifiable_identities_analysis(file, code)
@@ -82,6 +94,18 @@ class MetricsClass:
                     function_count += 1
                     complexity_values.append(complexity_value)
 
+            # Calculate code duplications for files that don't have them yet
+            if files_for_duplication:
+                try:
+                    # Ensure local repository is available
+                    repo_dir = github_service.ensure_local_repo(self.repo.owner, self.repo.name)
+                    
+                    # Get duplication controller and run analysis
+                    duplication_controller = DuplicationController.singleton()
+                    duplication_controller.find_duplications("pmd_cpd", repo_dir, files_for_duplication)
+                except Exception as e:
+                    print("error calculating duplication")
+
             # Store the entity counts in the database
             if not existing_counts:
                 for entity_id, entity_info in entity_totals.items():
@@ -104,13 +128,10 @@ class MetricsClass:
                 ))
 
             db.session.commit()
-            print(f"Calculated metrics for commit {commit_to_check.sha}: {sum(info['count'] for info in entity_totals.values())} total identifiable entities, {function_count} functions with total complexity {total_complexity}")
 
         except Exception as e:
             db.session.rollback()
-            print(f"Error calculating metrics for commit {commit_to_check.sha}: {str(e)}")
             raise
-
 
 
 def calculate_cyclomatic_complexity_analysis(file, code):
@@ -167,11 +188,6 @@ def calculate_identifiable_identities_analysis(file, code):
 # get all the commits in the specified range of date
 # commits_in_range = github_service.get_commits_in_date_range(repo.owner, repo.name, branch.name, start_date, end_date)
 
-
-
-
-
-    
 
 def get_identifiable_entity_counts_for_commit(commit_id):
     """
@@ -250,15 +266,12 @@ def calculate_bug_counts_in_range(commits_in_range):
         if BUG_COMMIT_PATTERN.search(message):
             count += 1
 
-    linked_bugs["total"] = count
-    print("Linked bugs count:2", linked_bugs["total"])
-    
+    linked_bugs["total"] = count    
 
     return linked_bugs
 
 
 def calculate_debt_evolution(repo_id, branch_id, start_date, end_date, task_id=None):
-    print("Calculating bug-related commit counts...")
     """
     Calculate the evolution of technical debt (identifiable entities) over time.
     
@@ -289,8 +302,6 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date, task_id=N
         timing_stats = defaultdict(list)
         total_iterations = len(commits_in_range)
         
-        print(f"Processing {total_iterations} commits...")
-        
         if task_id:
             task_manager.update_progress(task_id, 10, "Processing commits", f"Analyzing {total_iterations} commits...")
 
@@ -312,28 +323,26 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date, task_id=N
                 )
             
             # 1 - Create commit in database, if missing
-            step_start = time.time()
             commit = commit_service.ensure_commit_exists_by_sha(found_commit, branch_id)
-            timing_stats['ensure_commit'].append(time.time() - step_start)
 
             # 2 - Calculate metrics, if the commit was missing
-            step_start = time.time()
             metrics_class.ensure_metric_snapshot(commit)
-            timing_stats['ensure_metric_snapshot'].append(time.time() - step_start)
 
             # Get entity counts for current commit, if missing
-            step_start = time.time()
             entity_counts = get_identifiable_entity_counts_for_commit(commit.id)
             total_identifiable_entities = 0
             for count in entity_counts.values():
                 total_identifiable_entities += count
-            timing_stats['get_entity_counts'].append(time.time() - step_start)
 
             # Get complexity counts for current commit, if missing
-            step_start = time.time()
             complexity_count = get_complexity_count_for_commit(commit.id)
-            timing_stats['get_complexity_counts'].append(time.time() - step_start)
             linked_bugs = calculate_bug_counts_in_range(commits_in_range)
+
+            files = File.query.filter_by(commit_id=commit.id).all()
+            file_ids = [f.id for f in files]
+            total_number_duplications = Duplication.query.filter(
+                Duplication.file_id.in_(file_ids)
+            ).count()
 
             # Build result data
             step_start = time.time()
@@ -345,28 +354,16 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date, task_id=N
                 "total_identifiable_entities": total_identifiable_entities,
                 "entity_breakdown": entity_counts,
                 "complexity_data": complexity_count,
-                 "linked_bugs_total": linked_bugs["total"],
+                "linked_bugs_total": linked_bugs["total"],
+                "total_number_duplications": total_number_duplications,
             })
             timing_stats['build_result'].append(time.time() - step_start)
             
             iteration_time = time.time() - iteration_start
             timing_stats['total_iteration'].append(iteration_time)
-            
-            # Print progress every 10% or every 10 commits (whichever is more frequent)
-            progress_interval = max(1, min(10, total_iterations // 10))
-            if i % progress_interval == 0 or i == total_iterations:
-                print(f"Progress: {i}/{total_iterations} commits processed ({i/total_iterations*100:.1f}%)")
 
         if task_id:
             task_manager.update_progress(task_id, 95, "Finalizing", "Sorting and preparing results...")
-
-        # Print overall timing statistics
-        if timing_stats['total_iteration']:
-            total_time = sum(timing_stats['total_iteration'])
-            print(f"\n=== Execution Time Analysis ===")
-            print(f"Total execution time: {total_time:.2f} seconds")
-            print(f"Average time per commit: {total_time/total_iterations:.3f} seconds")
-            print(f"\nTime breakdown by function:")
 
         # Sort by date
         debt_evolution.sort(key=lambda x: x["commit_date"] or "")

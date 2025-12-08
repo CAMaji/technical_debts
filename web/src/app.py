@@ -2,6 +2,7 @@ from flask import Flask
 from flask import request, render_template, redirect, url_for, jsonify
 import requests
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 import os
 from datetime import datetime, timedelta
 
@@ -11,7 +12,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-app.config['SECRET_KEY'] = "secret!"
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key-change-this-in-production')
 
 # Database configuration
 POSTGRES_USER = os.getenv('POSTGRES_USER', 'postgres')
@@ -27,6 +28,18 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 from src.models import *
 db.init_app(app)
 
+# Initialize Flask-Login
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+@login_manager.user_loader
+def load_user(user_id):
+    from src.models.model import User
+    return User.query.get(user_id)
+
 import src.services.repository_service as repository_service
 import src.services.branch_service as branch_service
 
@@ -35,17 +48,30 @@ import src.controllers.commit_controller
 import src.controllers.metrics_controller
 import src.controllers.repository_controller
 import src.controllers.task_controller  # Register task routes
+import src.controllers.auth_controller  # Register auth routes
+import src.controllers.user_controller  # Register user management routes
 
 import src.services.metrics_service as metrics_service
+from src.utilities.auth import login_required, repository_access_required
 
 
 @app.route('/', methods=['GET'])
+@login_required
 def index():
     """
         Landing page
     """
     try:
-        repositories = repository_service.get_all_repositories()
+        from flask_login import current_user
+        from src.models.model import RepositoryAccess
+        
+        if current_user.is_admin:
+            # Admins see all repositories
+            repositories = repository_service.get_all_repositories()
+        else:
+            # Regular users see only repositories they have access to
+            access_list = RepositoryAccess.query.filter_by(user_id=current_user.id).all()
+            repositories = [access.repository for access in access_list if access.can_read]
     except Exception:
         repositories = []
 
@@ -53,6 +79,8 @@ def index():
 
 
 @app.route('/dashboard/<owner>/<name>/', methods=['GET'])
+@login_required
+@repository_access_required('read')
 def dashboard(owner, name):
     """
         Return the dashboard for a repository. Repo needs to be created first.
@@ -68,8 +96,9 @@ def dashboard(owner, name):
 
 
 @app.route('/debt_evolution/<owner>/<name>/', methods=['GET'])
+@login_required
+@repository_access_required('read')
 def debt_evolution(owner, name):
-    
     """
         Return the debt evolution page for a repository with Plotly visualization.
     """
@@ -109,15 +138,8 @@ def debt_evolution(owner, name):
                 task = task_manager.get_task(task_id)
                 if task:
                     if task.status == "completed":
-                        # Don't use task.result (too large), recalculate from DB
-                        # The data is already cached in the database from the background task
-                        debt_data = metrics_service.calculate_debt_evolution(
-                            repo.id, 
-                            selected_branch.id, 
-                            start_date, 
-                            end_date,
-                            task_id=None  # Don't report progress, just fetch
-                        )
+                        # Use the result from the task
+                        debt_data = task.result if task.result else []
                     elif task.status == "failed":
                         return render_template('debt_evolution.html', 
                             repository=repo, 
@@ -185,8 +207,6 @@ def debt_evolution(owner, name):
                     start_date=start_date,
                     end_date=end_date,
                     branch=selected_branch.name))
-
-        print("Print test:", debt_data)
 
         return render_template('debt_evolution.html', 
             repository=repo, 

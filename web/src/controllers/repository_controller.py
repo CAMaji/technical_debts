@@ -2,6 +2,7 @@ import requests
 
 from flask import request, redirect, url_for
 from src.app import app
+from src.utilities.auth import login_required
 
 from datetime import datetime
 
@@ -14,6 +15,7 @@ import src.services.commit_service as commit_service
 
 
 @app.route('/create_repository', methods=['POST'])
+@login_required
 def create_repository():
     """
         Create a new repository
