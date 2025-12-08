@@ -52,10 +52,10 @@ Les modèles sont contenus dans la classe d'énumération `ProblemEnum`. La list
 - <b>GLOBAL_RISK_PROBLEM</b> = "50% of files in this commit have an average complexity ranked at or above @1."
     - Condition : la médiane de la complexité de l'ensemble des fichiers d'un commit doit être supérieure à 10 (complexité modérée)
     - `@1`: le niveau de complexité (`MEDIUM_COMPLEXIY`, `HIGH_COMPLEXITY` ou `VERY_HIGH_COMPLEXITY`). 
-- <b>GLOBAL_DUPLICATION_PROBLEM</b> = "@1 instances of code duplication has been detected in this commit. Details in 'Duplication' section."
+- <b>GLOBAL_DUPLICATION_PROBLEM</b> = "@1 instances of code duplication have been detected in this commit. Details in 'Duplication' section."
     - Condition : le nombre d'instances de duplication, pour l'ensemble du commit, doit être supérieur à 4. 
     - `@1`: le nombre d'instances de duplication détecté. 
-- <b>GLOBAL_BUG_PROBLEM</b> = "For a total of @1 files, @2 files reported at least one bug."
+- <b>GLOBAL_TODOFIXME_PROBLEM</b> = "For a total of @1 files, @2 files reported at least one bug."
     - Condition : il doit y avoir au moins 7% des fichiers du commit qui contiennent au moins un bogue (bogue = commentaire "todo" ou "fixme")
     - `@1`: le nombre de fichiers total du commit.
     - `@2`: le nombre de fichiers dans le commit ayant au moins un bogue
@@ -84,9 +84,9 @@ Les messages de recommandation sont contenus dans la classe d'énumération `Rec
 - <b>GLOBAL_DUPLICATION_RECOMMENDATION</b>     
     - Jumelé à <i>GLOBAL_DUPLICATION_PROBLEM</i>
     - "Move duplicated code into new coherent and cohesive functions and modules for reusability, readability, maintainability and testability."
-- <b>GLOBAL_BUG_RECOMMENDATION</b> 
-    - Jumelé à <i>GLOBAL_BUG_PROBLEM</i>
-    - "Dedicate more ressources to bug fixing. Consider refactoring and improving tests coverage."
+- <b>GLOBAL_TODOFIXME_RECOMMENDATION</b> 
+    - Jumelé à <i>GLOBAL_TODOFIXME_PROBLEM</i>
+    - "Dedicate more ressources to fix bugs and implement missing features. Consider writing tests."
 - <b>FILE_RISK_RECOMMENDATION</b> 
     - Jumelé à <i>FILE_AVG_RISK_PROBLEM</i>
     - Jumelé à <i>FILE_FUNC_RISK_PROBLEM</i>
