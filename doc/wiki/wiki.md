@@ -187,8 +187,11 @@ Lorsque l'utilisateur aura cliqué sur le bouton menant à la page de l'évoluti
 ## Lectures supplémentaires : 
 
 [Wiki - Interface souhaitée par le superviseur](./interface-souhaite.md)
+
 [Wiki - Base de donnée](./base-de-donnee.md)
+
 [Wiki - Duplication de code](./duplication-de-code.md)
+
 [Wiki - Recommandations](./recommandations.md)
 
 
