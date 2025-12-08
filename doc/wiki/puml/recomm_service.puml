@@ -57,7 +57,7 @@ RecommendationController -right-> RecommendationService
 RecommendationController -down-> CompatibilityService
 RecommendationService .down.> RecommendationReport : "Crée"
 RecommendationService .down.> RRSummary : "Crée"
-RecommendationReport -right-o RRSummary : "Aggrégation"
+RecommendationReport -right-o RRSummary : "Agrégation"
 RecommendationService -right-> RecommendationGenerator
 
 @enduml

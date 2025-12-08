@@ -40,7 +40,7 @@ class "DuplicationReport.File" as DRFile {
     + ctor(filename, lines, columns)
 }
 
-DuplicationReport -down-o DRFile : "Aggrégation"
+DuplicationReport -down-o DRFile : "Agrégation"
 PMD_CopyPasteDetector .up.|> DuplicationToolInterface : "Implémente"
 PMD_CopyPasteDetector .down.> PMD_CPD_XMLTag : "Utilise"
 PMD_CopyPasteDetector .down.> DuplicationReport : "Crée"
