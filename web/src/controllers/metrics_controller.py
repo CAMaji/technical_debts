@@ -28,7 +28,7 @@ def save_commit_and_analyse(repo : Repository, commit : Commit) -> list[File]:
         # we need to get the files
         remote_files = github_service.fetch_files(repo.owner, repo.name, commit.sha)
 
-        # store the files in db
+        # store the files in db 
         for filename, code in remote_files:
             file = file_service.create_file(filename, commit.id)
 
@@ -111,12 +111,11 @@ def _run_metrics_calculation(task_id, repository_id, branch_id, commit_id, inclu
         if include_identifiable_identities:
             metrics["identifiable_identities_analysis"] = identifiable_identities_analysis
 
+        metrics["duplicated_code_analysis"]["recommendations"] = JsonEncoder.breakdown(recommendation_analysis) 
         if include_code_duplication: 
-            metrics["duplicated_code_analysis"] = {
-                "duplications": JsonEncoder.breakdown(duplication_analysis),
-                "recommendations": JsonEncoder.breakdown(recommendation_analysis),
-                "tech_debt": {}
-            }
+            metrics["duplicated_code_analysis"]["duplications"] = JsonEncoder.breakdown(duplication_analysis)
+        else: 
+            metrics["duplicated_code_analysis"]["duplications"] = {} 
 
         task_manager.update_progress(task_id, 100, "Complete", "Metrics calculation complete!")
         return metrics

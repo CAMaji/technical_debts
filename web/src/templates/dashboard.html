@@ -85,6 +85,9 @@
 				<div class="col-md-4 d-flex align-items-end ms-auto">
 					<button class="btn btn-primary w-100" onclick="display_metrics()">Calculate Metrics</button>
 				</div>
+				<div class="col-md-4 d-flex align-items-end ms-auto">
+					<button class="btn btn-primary w-100" onclick="export_to_json()">Export to JSON</button>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -122,14 +125,32 @@
 	<div class="card shadow-sm">
 		<div class="card-body">
 			<h3 class="card-title fw-bold mb-4">Global Statistics</h3>
-			<div class="card-body">
+			<table class="table" style="text-align: center;">
+				<thead>
+					<tr>
+						<th scope="col"> <i class="bi bi-exclamation-triangle-fill" style="color: red;"></i> Total Technical Debt</th>
+						<th scope="col"> <i class="bi bi-graph-up"></i> High Risk Files</th>
+						<th scope="col"> <i class="bi bi-check-lg"></i> Total Todo-Fixme</th>
+						<th scope="col"> <i class="bi bi-file-text-fill"></i> Total Duplications</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td id="total-technical-debt"></td>
+						<td id="high-risk-files"></td>
+						<td id="--todo-fixme"></td>
+						<td id="--duplications"></td>
+					</tr>
+				</tbody>
+			</table>
+			<!-- <div class="card-body">
 				<h4 class="card-title">Total Technical Debt</h4>
 				<p id="total-technical-debt" class="card-text"></p>
 			</div>
 			<div class="card-body">
 				<h4 class="card-title">High Risk Files</h4>
 				<p id="high-risk-files" class="card-text"></p>
-			</div>
+			</div> -->
 		</div>
 	</div>
 </div>
@@ -147,7 +168,6 @@
 		</div>
 	</div>
 </div>
-
 <!-- Technical Debt Metrics Table Section -->
 <div class="container my-4">
 	<div class="card shadow-sm">

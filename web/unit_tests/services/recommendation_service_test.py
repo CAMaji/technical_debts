@@ -11,8 +11,8 @@ class LocalGeneratorMock(RecommendationGenerator):
                 RecommendationEnum.GLOBAL_RISK_RECOMMENDATION.value)
     duplication = Pair(ProblemEnum.GLOBAL_DUPLICATION_PROBLEM.value.replace("@1", str(12)),
                        RecommendationEnum.GLOBAL_DUPLICATION_RECOMMENDATION.value)
-    bug = Pair(ProblemEnum.GLOBAL_BUG_PROBLEM.value.replace("@1", str(6)).replace("@2", str(3)),
-               RecommendationEnum.GLOBAL_BUG_RECOMMENDATION.value)
+    bug = Pair(ProblemEnum.GLOBAL_TODOFIXME_PROBLEM.value.replace("@1", str(6)).replace("@2", str(3)),
+               RecommendationEnum.GLOBAL_TODOFIXME_RECOMMENDATION.value)
     file_risk = Pair(ProblemEnum.FILE_AVG_RISK_PROBLEM.value.replace("@1", "abc.py").replace("@2", RiskEnum.MEDIUM_RISK.name),
                      RecommendationEnum.FILE_RISK_RECOMMENDATION.value)
     func_risk = Pair(ProblemEnum.FILE_FUNC_RISK_PROBLEM.value.replace("@1", "def.py").replace("@2", "func2()").replace("@3", RiskEnum.HIGH_RISK.name), 
@@ -26,7 +26,7 @@ class LocalGeneratorMock(RecommendationGenerator):
     def _global_duplication(self, duplications):
         return LocalGeneratorMock.duplication
 
-    def _global_bug(self, entities, total_file_nb):
+    def _global_todofixme(self, entities, total_file_nb):
         return LocalGeneratorMock.bug
     
     def _file_avg_risk(self, complexity):

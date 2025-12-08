@@ -230,7 +230,7 @@ def get_complexity_count_for_commit(commit_id):
     }
 
 
-BUG_COMMIT_PATTERN = re.compile(
+LINKED_BUGS_KEYWORDS = re.compile(
     r"""
     \b(
         bug|bugs|bugfix|bugfixes|
@@ -263,7 +263,7 @@ def calculate_bug_counts_in_range(commits_in_range):
         message = message.strip().lower()
 
         # Only count meaningful bug-related terms, not debug/prefix/etc.
-        if BUG_COMMIT_PATTERN.search(message):
+        if LINKED_BUGS_KEYWORDS.search(message):
             count += 1
 
     linked_bugs["total"] = count    
