@@ -1,6 +1,6 @@
 import requests
 
-from flask import request, redirect, url_for, jsonify
+from flask import request, redirect, url_for
 from flask_login import current_user
 from src.app import app, db
 from src.utilities.auth import login_required

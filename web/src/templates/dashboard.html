@@ -32,7 +32,7 @@
 					<label class="form-label">Branch</label>
 					<select class="form-select cursor-pointer" id="branch_select">
 						{% for branch in branches %}
-							<option data-id="{{ branch.id }}" data-name="{{ branch.name }}" {% if loop.first %}selected{% endif %}>
+							<option data-id="{{ branch.id }}" {% if loop.first %}selected{% endif %}>
 								{{ branch.name }}
 							</option>
 						{% endfor %}
@@ -43,11 +43,6 @@
 					<select class="form-select cursor-pointer" id="commit_select">
 
 					</select>
-				</div>
-				<div class="col-md-3 d-flex align-items-end gap-2">
-					<button class="btn btn-outline-secondary" type="button" id="fetch_more_commits_btn" title="Fetch more commits from GitHub">
-						<i class="bi bi-cloud-download"></i> More Commits
-					</button>
 				</div>
 			</div>
 			<div class="row g-3 align-items-center mt-2">

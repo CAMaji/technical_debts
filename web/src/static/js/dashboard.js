@@ -1,7 +1,6 @@
 // search container elements
 const branch_select = document.getElementById("branch_select");
 const commit_select = document.getElementById("commit_select");
-const fetch_more_commits_btn = document.getElementById("fetch_more_commits_btn");
 
 const include_identifiable_identities_label = document.getElementById("include_identifiable_identities_label");
 const include_identifiable_identities_input = document.getElementById("include_identifiable_identities_input");
@@ -31,13 +30,6 @@ document.addEventListener("DOMContentLoaded", () => {
             set_commit_select_options(commits);
         });
     });
-
-    // Fetch more commits button
-    if (fetch_more_commits_btn) {
-        fetch_more_commits_btn.addEventListener("click", () => {
-            fetch_more_commits_from_github();
-        });
-    }
 
     // init the identifiable identities list to show the users the ones he can select/deselect
     
@@ -613,60 +605,5 @@ function export_to_json() {
     document.body.remove(link);
     window.URL.revokeObjectURL(url);
     window.location.reload()
-}
-
-async function fetch_more_commits_from_github() {
-    const btn = fetch_more_commits_btn;
-    const originalHtml = btn.innerHTML;
-    const selectedOption = branch_select.options[branch_select.selectedIndex];
-    const branch_name = selectedOption.getAttribute('data-name');
-    
-    // Get repository info from the page
-    const pathParts = window.location.pathname.split('/');
-    const owner = pathParts[2];
-    const name = pathParts[3];
-    
-    // Disable button and show loading state
-    btn.disabled = true;
-    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Loading...';
-    
-    try {
-        const response = await fetch('/api/fetch_more_commits', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                owner: owner,
-                name: name,
-                branch_name: branch_name
-            })
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            // Update the commit select with new commits
-            set_commit_select_options(data.commits);
-            
-            // Show success message
-            if (data.new_commits > 0) {
-                alert(`Successfully fetched ${data.new_commits} new commit(s). Total: ${data.total_commits}`);
-            } else {
-                alert('No new commits found. All commits are up to date.');
-            }
-        } else {
-            throw new Error(data.error || 'Failed to fetch commits');
-        }
-    } catch (error) {
-        console.error('Error fetching commits:', error);
-        alert('Failed to fetch commits: ' + error.message);
-    } finally {
-        // Re-enable button and restore original state
-        btn.disabled = false;
-        btn.innerHTML = originalHtml;
-    }
 }
 
