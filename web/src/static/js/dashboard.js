@@ -48,6 +48,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function set_commit_select_options(commits) {
+    console.log('Setting commit options, received commits:', commits);
+    console.log('Number of commits:', commits ? commits.length : 0);
+    
     commit_select.innerHTML = "";
     commits.forEach((commit) => {
         const { id, message } = commit;
@@ -59,6 +62,8 @@ function set_commit_select_options(commits) {
 
         commit_select.appendChild(container);
     });
+    
+    console.log('Commit select now has', commit_select.options.length, 'options');
 }
 
 function display_metrics() {

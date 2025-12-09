@@ -29,22 +29,6 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 from src.models import *
 db.init_app(app)
 
-# Initialize database with default entities
-with app.app_context():
-    from src.models.model import IdentifiableEntity
-    db.create_all()
-    
-    # Seed default identifiable entities if they don't exist
-    if not IdentifiableEntity.query.filter_by(name='TODO').first():
-        db.session.add(IdentifiableEntity(id=str(uuid.uuid4()),name='TODO'))
-    if not IdentifiableEntity.query.filter_by(name='FIXME').first():
-        db.session.add(IdentifiableEntity(id=str(uuid.uuid4()),name='FIXME'))
-    
-    try:
-        db.session.commit()
-    except Exception:
-        db.session.rollback()
-
 # Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -55,7 +39,11 @@ login_manager.login_message_category = 'info'
 @login_manager.user_loader
 def load_user(user_id):
     from src.models.model import User
-    return User.query.get(user_id)
+    try:
+        return User.query.get(user_id)
+    except Exception:
+        # Table doesn't exist yet or database error
+        return None
 
 import src.services.repository_service as repository_service
 import src.services.branch_service as branch_service

@@ -41,3 +41,28 @@ def cleanup_database(app):
         # Clean up after the test
         db.session.remove()
         db.drop_all()
+
+
+@pytest.fixture(scope='session', autouse=True)
+def cleanup_session(app):
+    """
+    Cleanup database after entire test session and initialize default entities
+    This ensures database is clean even if tests are interrupted
+    """
+    yield  # All tests run here
+    
+    # Final cleanup after all tests
+    with app.app_context():
+        db.session.remove()
+        db.drop_all()
+        db.create_all()
+        
+        # Add default identifiable entities
+        todo_entity = IdentifiableEntity(name='TODO')
+        fixme_entity = IdentifiableEntity(name='FIXME')
+        
+        db.session.add(todo_entity)
+        db.session.add(fixme_entity)
+        db.session.commit()
+        
+        print("\n✓ Database cleaned and initialized with default entities (TODO, FIXME)")
