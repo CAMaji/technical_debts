@@ -18,7 +18,7 @@ let to_export_global_stats = {}
 
 // once doc is ready
 document.addEventListener("DOMContentLoaded", () => {
-    init_period_select();
+    //init_period_select();
 
     // init the commits select
     const branch_id = get_selected_branch_id();
@@ -99,34 +99,74 @@ function render_commit_info(commit_sha, commit_date, commit_message) {
 function render_global_statistics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis) {
     // Generate the total technical debt (all instances of duplicates + identifiable identities, and cylomatic complexity above 10)
     let totalTechnicalDebt = 0;
-    let totalHighRiskFiles = 0;
-    let duplication_count = 0
-    const MEDIUM_RISK = 11;
+    //let totalHighRiskFiles = 0;
+    //let duplication_count = 0
+    //const MEDIUM_RISK = 11;
 
-    // Process cyclomatic complexity data
-    if (cyclomatic_complexity_analysis && Array.isArray(cyclomatic_complexity_analysis)) {
-        for (const file of cyclomatic_complexity_analysis) {
-            if (Array.isArray(file)) {
-                for (const funct of file) {
-                    if (funct.cyclomatic_complexity > MEDIUM_RISK) {
-                        totalHighRiskFiles++;
-                        totalTechnicalDebt++;
-                    }
-                }
+    function nb_high_risk_files(analysis) {
+        if (!analysis || !Array.isArray(analysis)) {
+            return 0;
+        }
+
+        let count = 0;
+        const MEDIUM_RISK = 11;
+        for(const file of analysis) {
+            if (!Array.isArray(file)) {
+                continue;
             }
+
+            let sum = 0;
+            file.forEach((funct, index) => sum += funct.cyclomatic_complexity);
+            sum /= file.length;
+            count = (sum >= MEDIUM_RISK) ? count + 1 : count;
+        }
+
+        return count;
+    }
+
+    function nb_duplications(analysis) {
+        try {
+            const duplication_dict = analysis["duplications"];
+            let sum = 0;
+            for(const key in duplication_dict) {
+                const duplication_instances = duplication_dict[key]._files.length;
+                sum += duplication_instances;
+            }
+            return sum;
+        }
+        catch (error) {
+            return 0;
         }
     }
+
+    // Process cyclomatic complexity data
+    //if (cyclomatic_complexity_analysis && Array.isArray(cyclomatic_complexity_analysis)) {
+    //    for (const file of cyclomatic_complexity_analysis) {
+    //        if (Array.isArray(file)) {
+    //            for (const funct of file) {
+    //                if (funct.cyclomatic_complexity > MEDIUM_RISK) {
+    //                    totalHighRiskFiles++;
+    //                    totalTechnicalDebt++;
+    //                }
+    //            }
+    //        }
+    //    }
+    //}
+
+    const totalHighRiskFiles = nb_high_risk_files(cyclomatic_complexity_analysis);
+    totalTechnicalDebt += totalHighRiskFiles;
 
     const identifiableIdentitiesCount = identifiable_identities_analysis.length;
     totalTechnicalDebt += identifiableIdentitiesCount;
 
     // number of instances of code duplication
-    const duplication_dict = duplicated_code_analysis["duplications"];
-    for(const key in duplication_dict) {
-        const duplication_instances = duplication_dict[key]._files.length;
-        duplication_count += duplication_instances;
-    }
+    //const duplication_dict = duplicated_code_analysis["duplications"];
+    //for(const key in duplication_dict) {
+    //    const duplication_instances = duplication_dict[key]._files.length;
+    //    duplication_count += duplication_instances;
+    //}
 
+    const duplication_count = nb_duplications(duplicated_code_analysis);
     totalTechnicalDebt += duplication_count;
 
     // adds the global stats to the "to_export_data" object. 
