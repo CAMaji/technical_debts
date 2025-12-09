@@ -20,6 +20,7 @@
 					{% endwith %}
 					
 					<form method="POST" action="{{ url_for('login') }}">
+						{{ form.csrf_token }}
 						<div class="mb-3">
 							<label for="username" class="form-label">Username or Email</label>
 							<input type="text" class="form-control" id="username" name="username" required autofocus>
