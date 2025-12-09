@@ -3,7 +3,6 @@ Controller for task management and Server-Sent Events (SSE) for progress trackin
 """
 from flask import Response, jsonify, stream_with_context
 import json
-import time
 
 from src.app import app
 from src.services.task_manager import task_manager, DateTimeEncoder
