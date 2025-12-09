@@ -1,4 +1,6 @@
 import uuid
+import time
+from collections import defaultdict
 
 from src.models import db
 from src.models.model import *
@@ -101,12 +103,8 @@ class MetricsClass:
                     # Get duplication controller and run analysis
                     duplication_controller = DuplicationController.singleton()
                     duplication_controller.find_duplications("pmd_cpd", repo_dir, files_for_duplication)
-                    print(f"Calculated duplications for commit {commit_to_check.sha}: analyzed {len(files_for_duplication)} new files")
                 except Exception as e:
-                    print(f"Error calculating duplications for commit {commit_to_check.sha}: {str(e)}")
-                    # Continue with the rest of the processing even if duplication detection fails
-            else:
-                print(f"Skipping duplication calculation for commit {commit_to_check.sha}: all files already have duplication data")
+                    print("error calculating duplication")
 
             # Store the entity counts in the database
             if not existing_counts:
@@ -130,11 +128,9 @@ class MetricsClass:
                 ))
 
             db.session.commit()
-            print(f"Calculated metrics for commit {commit_to_check.sha}: {sum(info['count'] for info in entity_totals.values())} total identifiable entities, {function_count} functions with total complexity {total_complexity}")
 
         except Exception as e:
             db.session.rollback()
-            print(f"Error calculating metrics for commit {commit_to_check.sha}: {str(e)}")
             raise
 
 
@@ -270,15 +266,12 @@ def calculate_bug_counts_in_range(commits_in_range):
         if LINKED_BUGS_KEYWORDS.search(message):
             count += 1
 
-    linked_bugs["total"] = count
-    print("Linked bugs count:2", linked_bugs["total"])
-    
+    linked_bugs["total"] = count    
 
     return linked_bugs
 
 
-def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
-    print("Calculating bug-related commit counts...")
+def calculate_debt_evolution(repo_id, branch_id, start_date, end_date, task_id=None):
     """
     Calculate the evolution of technical debt (identifiable entities) over time.
     
@@ -287,19 +280,48 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
         branch_id (str): Branch ID
         start_date (str): Start date in format "dd/mm/YYYY HH:MM"
         end_date (str): End date in format "dd/mm/YYYY HH:MM"
+        task_id (str, optional): Task ID for progress reporting
         
     Returns:
         list: List of debt evolution data points
     """
+    from src.services.task_manager import task_manager
+    
     debt_evolution = []
 
     try:
+        if task_id:
+            task_manager.update_progress(task_id, 5, "Fetching commits", "Loading commits in date range...")
+        
         metrics_class = MetricsClass(repo_id, branch_id)
 
         # Get commits in the date range
         commits_in_range = metrics_class.get_commits_in_date_range(start_date, end_date)
 
+        # Initialize timing statistics
+        timing_stats = defaultdict(list)
+        total_iterations = len(commits_in_range)
+        
+        if task_id:
+            task_manager.update_progress(task_id, 10, "Processing commits", f"Analyzing {total_iterations} commits...")
+
         for i, found_commit in enumerate(commits_in_range, 1):
+            iteration_start = time.time()
+            
+            # Calculate progress (10% to 90% of the task)
+            progress = 10 + int((i / total_iterations) * 80)
+            
+            # Get SHA from commit (handle both dict and object)
+            commit_sha = found_commit.get('sha') if isinstance(found_commit, dict) else found_commit.sha
+            
+            if task_id:
+                task_manager.update_progress(
+                    task_id, 
+                    progress, 
+                    f"Processing commit {i}/{total_iterations}",
+                    f"Analyzing commit {commit_sha[:7]}..."
+                )
+            
             # 1 - Create commit in database, if missing
             commit = commit_service.ensure_commit_exists_by_sha(found_commit, branch_id)
 
@@ -323,6 +345,7 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
             ).count()
 
             # Build result data
+            step_start = time.time()
             debt_evolution.append({
                 "commit_sha": commit.sha,
                 "commit_date": commit.date,
@@ -334,6 +357,13 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date):
                 "linked_bugs_total": linked_bugs["total"],
                 "total_number_duplications": total_number_duplications,
             })
+            timing_stats['build_result'].append(time.time() - step_start)
+            
+            iteration_time = time.time() - iteration_start
+            timing_stats['total_iteration'].append(iteration_time)
+
+        if task_id:
+            task_manager.update_progress(task_id, 95, "Finalizing", "Sorting and preparing results...")
 
         # Sort by date
         debt_evolution.sort(key=lambda x: x["commit_date"] or "")

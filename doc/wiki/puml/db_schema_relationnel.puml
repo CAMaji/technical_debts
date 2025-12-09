@@ -8,12 +8,43 @@ skinparam classAttributeIconSize 0
 !define cl <b><color:#000000>   \\t</color></b>
 !define nl <b><color:#098229> N \\t</color></b>
 
+object user {
+    pk id : string(36)
+    ---
+    username : text
+    email : text
+    password_hash : text
+    first_name : text
+    last_name : text
+    is_active : bool
+    is_admin : bool
+    created_at : datetime
+    last_login : datetime
+    reset_token : text
+    reset_token_expiry : datetime
+}
+user "0..*" -right-> "1" repository_access : accède
+
+object repository_access {
+    pk id : string(36)
+    ---
+    fk user_id : string(35)
+    fk repository_id : string(36)
+    ---
+    can_read : bool
+    can_write : bool
+    granted_at : datetime
+    granted_by_id : string(36)
+}
+
 object repository {
     pk id : string(36)
     ---
     cl owner : text
     cl name : text
 }
+repository "0..*" -left-> "1" repository_access : est accédé par
+
 
 object branch {
     pk id : string(36)

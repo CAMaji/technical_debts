@@ -71,7 +71,7 @@ function display_metrics() {
     const include_complexity = include_complexity_input.checked;
     const include_duplication = include_duplication_input.checked;
 
-    display_metrics_by_commit_id(repository_id, branch_id, commit_id, include_identifiable_identities, include_complexity, include_duplication).then((metrics) => {
+    display_metrics_by_commit_id(repository_id, branch_id, commit_id, include_complexity, include_identifiable_identities, include_duplication).then((metrics) => {
         const { commit_date, commit_message, commit_sha, cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis } = metrics;
         render_commit_info(commit_sha, commit_date, commit_message);
         render_global_statistics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis);
@@ -103,21 +103,25 @@ function render_global_statistics(cyclomatic_complexity_analysis, identifiable_i
     let duplication_count = 0
     const MEDIUM_RISK = 11;
 
-    for (const file of cyclomatic_complexity_analysis) {
-        for (const funct of file) {
-            if (funct.cyclomatic_complexity >= MEDIUM_RISK) {
-                totalHighRiskFiles++;
-                totalTechnicalDebt++;
+    // Process cyclomatic complexity data
+    if (cyclomatic_complexity_analysis && Array.isArray(cyclomatic_complexity_analysis)) {
+        for (const file of cyclomatic_complexity_analysis) {
+            if (Array.isArray(file)) {
+                for (const funct of file) {
+                    if (funct.cyclomatic_complexity > MEDIUM_RISK) {
+                        totalHighRiskFiles++;
+                        totalTechnicalDebt++;
+                    }
+                }
             }
         }
     }
 
-    const identifiableIdentitiesCount = identifiable_identities_analysis.length
+    const identifiableIdentitiesCount = identifiable_identities_analysis.length;
     totalTechnicalDebt += identifiableIdentitiesCount;
 
     // number of instances of code duplication
     const duplication_dict = duplicated_code_analysis["duplications"];
-
     for(const key in duplication_dict) {
         const duplication_instances = duplication_dict[key]._files.length;
         duplication_count += duplication_instances;
@@ -335,6 +339,26 @@ function render_code_duplication(duplicated_code_analysis) {
         $table.bootstrapTable('destroy');
     }
 
+    // Check if duplicated_code_analysis exists and has duplications
+    if (!duplicated_code_analysis || !duplicated_code_analysis["duplications"]) {
+        // Initialize empty table if no data
+        $table.bootstrapTable({
+            columns: [
+                {
+                    field: 'duplication_number',
+                    title: 'Duplications',
+                    sortable: true,
+                },
+            ],
+            data: [],
+            detailView: true,
+            detailFormatter: duplication_detail_formatter,
+            detailViewIcon: true,
+            detailViewByClick: false,
+        });
+        return;
+    }
+
     // we need to extract the number duplications and format it
     const values = Object.values(duplicated_code_analysis["duplications"]);
     let duplication_name_array = [];
@@ -427,15 +451,36 @@ function render_files_recommendations(duplicated_code_analysis) {
         $table.bootstrapTable('destroy');
     }
 
+    // Check if duplicated_code_analysis exists and has recommendations
+    if (!duplicated_code_analysis || !duplicated_code_analysis["recommendations"]) {
+        // Initialize empty table if no data
+        $table.bootstrapTable({
+            columns: [
+                {
+                    field: 'filename',
+                    title: 'Problems and recommendations',
+                    sortable: true,
+                },
+            ],
+            data: [],
+            detailView: true,
+        });
+        return;
+    }
+
     let recommendations_array = [];
-    recommendations_array.push({ filename: "Global", value: duplicated_code_analysis["recommendations"]["_global"] });
+    if (duplicated_code_analysis["recommendations"]["_global"]) {
+        recommendations_array.push({ filename: "Global", value: duplicated_code_analysis["recommendations"]["_global"] });
+    }
     
-    const values = Object.values(duplicated_code_analysis["recommendations"]["_files"]);
-    values.forEach((value) => {
-        if (value.problems.length > 0) {
-            recommendations_array.push({ filename: value.subject, value: value});
-        }
-    });
+    if (duplicated_code_analysis["recommendations"]["_files"]) {
+        const values = Object.values(duplicated_code_analysis["recommendations"]["_files"]);
+        values.forEach((value) => {
+            if (value.problems && value.problems.length > 0) {
+                recommendations_array.push({ filename: value.subject, value: value});
+            }
+        });
+    }
 
     // Initialize the table with data
     $table.bootstrapTable({

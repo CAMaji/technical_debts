@@ -175,11 +175,6 @@ class ProjectSearchHandler:
             else:
                 missing_commits.append(commit_data["sha"])
         
-        if missing_commits:
-            print(f"Warning: {len(missing_commits)} commits were not found in database: {missing_commits[:5]}{'...' if len(missing_commits) > 5 else ''}")
-        
-        print(f"Processing {len(commit_ids)} commits found in database")
-        
         # Store as attributes
         self.commit_ids = commit_ids
         self.commit_lookup = commit_lookup

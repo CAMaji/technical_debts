@@ -198,7 +198,8 @@ function createDuplicationEvolutionChart() {
     
     debtData.forEach(commit => {
         dates.push(new Date(commit.commit_date));
-        duplicated_instances.push(commit.total_number_duplications);
+        const dupCount = commit.total_number_duplications || 0;
+        duplicated_instances.push(dupCount);
     });
 
     const traces = [

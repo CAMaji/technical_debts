@@ -1,7 +1,10 @@
 import requests
 
 from flask import request, redirect, url_for
-from src.app import app
+from flask_login import current_user
+from src.app import app, db
+from src.utilities.auth import login_required
+from src.models.model import RepositoryAccess
 
 from datetime import datetime
 
@@ -14,6 +17,7 @@ import src.services.commit_service as commit_service
 
 
 @app.route('/create_repository', methods=['POST'])
+@login_required
 def create_repository():
     """
         Create a new repository
@@ -28,6 +32,18 @@ def create_repository():
     
     # store the repo
     repo = repository_service.create_repository(owner, name)
+
+    # Grant the creator automatic access to the repository (unless admin)
+    if not current_user.is_admin:
+        access = RepositoryAccess(
+            user_id=current_user.id,
+            repository_id=repo.id,
+            can_read=True,
+            can_write=True,
+            granted_by_id=current_user.id
+        )
+        db.session.add(access)
+        db.session.commit()
 
     # store all the branches
     branches = branch_service.create_branches_from_repository(repo.id)

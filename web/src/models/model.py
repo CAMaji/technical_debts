@@ -1,13 +1,15 @@
 from sqlalchemy import (
-    Column, String, Integer, Float, Text, ForeignKey, DateTime
+    Column, String, Integer, Float, Text, ForeignKey, DateTime, Boolean, Table
 )
 from sqlalchemy import inspect
+from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
 import uuid
 from src.models import db
 from typing import TypeAlias
 from src.utilities.value_range import ValueRange
+from flask_login import UserMixin
 
 ID : TypeAlias = str
 
@@ -174,4 +176,75 @@ class Complexity(ModelMixin, db.Model):
     value = Column(Integer)
 
     function_id = Column(String(36), ForeignKey("function.id"))
+
+
+# ---------------- AUTHENTICATION & AUTHORIZATION TABLES ---------------- #
+
+class User(UserMixin, ModelMixin, db.Model):
+    """User account model"""
+    __tablename__ = "user"
+    
+    id = Column(String(36), primary_key=True)
+    username = Column(String(80), unique=True, nullable=False)
+    email = Column(String(120), unique=True, nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    first_name = Column(String(100))
+    last_name = Column(String(100))
+    is_active = Column(Boolean, default=True, nullable=False)
+    is_admin = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    last_login = Column(DateTime)
+    reset_token = Column(String(255))
+    reset_token_expiry = Column(DateTime)
+    
+    # Relationships
+    repository_access = relationship("RepositoryAccess", foreign_keys="RepositoryAccess.user_id", back_populates="user", cascade="all, delete-orphan")
+    
+    def __init__(self, username, email, password_hash, first_name=None, last_name=None, is_admin=False):
+        self.id = str(uuid.uuid4())
+        self.username = username
+        self.email = email
+        self.password_hash = password_hash
+        self.first_name = first_name
+        self.last_name = last_name
+        self.is_admin = is_admin
+        self.is_active = True
+        self.created_at = datetime.utcnow()
+    
+    def get_id(self):
+        """Required by Flask-Login"""
+        return str(self.id)
+    
+    def __repr__(self):
+        return f'<User {self.username}>'
+
+
+class RepositoryAccess(ModelMixin, db.Model):
+    """Association table for user-repository access control"""
+    __tablename__ = "repository_access"
+    
+    id = Column(String(36), primary_key=True)
+    user_id = Column(String(36), ForeignKey("user.id"), nullable=False)
+    repository_id = Column(String(36), ForeignKey("repository.id"), nullable=False)
+    can_read = Column(Boolean, default=True, nullable=False)
+    can_write = Column(Boolean, default=False, nullable=False)
+    granted_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    granted_by_id = Column(String(36), ForeignKey("user.id"))
+    
+    # Relationships
+    user = relationship("User", foreign_keys=[user_id], back_populates="repository_access")
+    repository = relationship("Repository")
+    granted_by = relationship("User", foreign_keys=[granted_by_id])
+    
+    def __init__(self, user_id, repository_id, can_read=True, can_write=False, granted_by_id=None):
+        self.id = str(uuid.uuid4())
+        self.user_id = user_id
+        self.repository_id = repository_id
+        self.can_read = can_read
+        self.can_write = can_write
+        self.granted_by_id = granted_by_id
+        self.granted_at = datetime.utcnow()
+    
+    def __repr__(self):
+        return f'<RepositoryAccess user={self.user_id} repo={self.repository_id}>'
 
