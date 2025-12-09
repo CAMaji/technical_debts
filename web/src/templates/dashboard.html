@@ -32,9 +32,9 @@
 					<label class="form-label">Branch</label>
 					<select class="form-select cursor-pointer" id="branch_select">
 						{% for branch in branches %}
-						<option data-id="{{ branch.id }}" {% if loop.first %}selected{% endif %}>
-							{{ branch.name }}
-						</option>
+							<option data-id="{{ branch.id }}" {% if loop.first %}selected{% endif %}>
+								{{ branch.name }}
+							</option>
 						{% endfor %}
 					</select>
 				</div>
@@ -44,32 +44,23 @@
 
 					</select>
 				</div>
-				<div class="col-md-3">
-					<label class="form-label">Date/Time</label>
-					<input type="datetime-local" class="form-control cursor-pointer" id="period_select" />
-				</div>
 			</div>
 			<div class="row g-3 align-items-center mt-2">
 				<div class="col-md-4 d-flex align-items-end">
 					<div class="form-check form-switch">
-						<input class="form-check-input cursor-pointer" type="checkbox"
-							id="include_identifiable_identities_input" checked>
-						<label class="form-check-label text-decoration-underline"
-							for="include_identifiable_identities_input"
-							id="include_identifiable_identities_label">Inclure Identitées Remarquables</label>
+						<input class="form-check-input cursor-pointer" type="checkbox" id="include_identifiable_identities_input" checked>
+						<label class="form-check-label text-decoration-underline" for="include_identifiable_identities_input" id="include_identifiable_identities_label">Inclure Identitées Remarquables</label>
 					</div>
 				</div>
 				<div class="col-md-3 d-flex align-items-end">
 					<div class="form-check form-switch">
-						<input class="form-check-input cursor-pointer" type="checkbox" id="include_complexity_input"
-							checked>
+						<input class="form-check-input cursor-pointer" type="checkbox" id="include_complexity_input" checked>
 						<label class="form-check-label" for="include_complexity_input">Inclure Complexité</label>
 					</div>
 				</div>
 				<div class="col-md-3 d-flex align-items-end">
 					<div class="form-check form-switch">
-						<input class="form-check-input cursor-pointer" type="checkbox" id="include_duplication_input"
-							checked>
+						<input class="form-check-input cursor-pointer" type="checkbox" id="include_duplication_input" checked>
 						<label class="form-check-label" for="include_duplication_input">Inclure Duplication Code</label>
 					</div>
 				</div>
@@ -93,33 +84,6 @@
 	</div>
 </div>
 
-
-
-<!-- <div class="container my-4">
-	<div class="card shadow-sm">
-		<div class="card-body">
-			<h3 class="card-title fw-bold mb-4">Fichiers à prioriser</h3>
-
-			<div class="table-responsive">
-				<table class="table table-hover table-sm align-middle" id="metrics-container">
-					<thead>
-						<tr id="metrics-container-header">
-							<th>Nom de fichier</th>
-							<th class="text-center d-none d-lg-table-cell">DEBT</th>
-							<th class="text-center d-none d-lg-table-cell">BUGS</th>
-							<th class="text-center">COMPLEXITY</th>
-							<th class="text-center d-none d-md-table-cell">Progress</th>
-						</tr>
-					</thead>
-					<tbody>
-
-					</tbody>
-				</table>
-			</div>
-		</div>
-	</div>
-</div> -->
-
 <!-- Global Statistics Table Section -->
 <div class="container my-4">
 	<div class="card shadow-sm">
@@ -128,10 +92,10 @@
 			<table class="table" style="text-align: center;">
 				<thead>
 					<tr>
-						<th scope="col"> <i class="bi bi-exclamation-triangle-fill" style="color: red;"></i> Total Technical Debt</th>
-						<th scope="col"> <i class="bi bi-graph-up"></i> High Risk Files</th>
-						<th scope="col"> <i class="bi bi-check-lg"></i> Total Todo-Fixme</th>
-						<th scope="col"> <i class="bi bi-file-text-fill"></i> Total Duplications</th>
+						<th scope="col"><i class="bi bi-exclamation-triangle-fill" style="color: red;"></i> Total Technical Debt</th>
+						<th scope="col"><i class="bi bi-graph-up"></i> High Risk Files</th>
+						<th scope="col"><i class="bi bi-check-lg"></i> Total Todo-Fixme</th>
+						<th scope="col"><i class="bi bi-file-text-fill"></i> Total Duplications</th>
 					</tr>
 				</thead>
 				<tbody>
