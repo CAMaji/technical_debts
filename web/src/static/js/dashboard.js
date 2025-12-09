@@ -1,6 +1,5 @@
 // search container elements
 const branch_select = document.getElementById("branch_select");
-const period_select = document.getElementById("period_select");
 const commit_select = document.getElementById("commit_select");
 
 const include_identifiable_identities_label = document.getElementById("include_identifiable_identities_label");
@@ -18,8 +17,6 @@ let to_export_global_stats = {}
 
 // once doc is ready
 document.addEventListener("DOMContentLoaded", () => {
-    init_period_select();
-
     // init the commits select
     const branch_id = get_selected_branch_id();
     get_commits_by_branch_id(branch_id).then((commits) => {
