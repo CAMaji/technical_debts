@@ -6,7 +6,6 @@ from flask_login import current_user
 from src.app import app, db
 from src.models.model import User, Repository, RepositoryAccess
 from src.utilities.auth import admin_required, hash_password
-from datetime import datetime
 
 
 @app.route('/admin/users')
