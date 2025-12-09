@@ -96,14 +96,9 @@ function render_commit_info(commit_sha, commit_date, commit_message) {
     commit_message_display.textContent = commit_message || "";
 }
 
+// Generate the total technical debt (all instances of duplicates + identifiable identities, and cylomatic complexity above 10)
 function render_global_statistics(cyclomatic_complexity_analysis, identifiable_identities_analysis, duplicated_code_analysis) {
-    // Generate the total technical debt (all instances of duplicates + identifiable identities, and cylomatic complexity above 10)
-    let totalTechnicalDebt = 0;
-    //let totalHighRiskFiles = 0;
-    //let duplication_count = 0
-    //const MEDIUM_RISK = 11;
-
-    function nb_high_risk_files(analysis) {
+        function nb_high_risk_files(analysis) {
         if (!analysis || !Array.isArray(analysis)) {
             return 0;
         }
@@ -139,32 +134,13 @@ function render_global_statistics(cyclomatic_complexity_analysis, identifiable_i
         }
     }
 
-    // Process cyclomatic complexity data
-    //if (cyclomatic_complexity_analysis && Array.isArray(cyclomatic_complexity_analysis)) {
-    //    for (const file of cyclomatic_complexity_analysis) {
-    //        if (Array.isArray(file)) {
-    //            for (const funct of file) {
-    //                if (funct.cyclomatic_complexity > MEDIUM_RISK) {
-    //                    totalHighRiskFiles++;
-    //                    totalTechnicalDebt++;
-    //                }
-    //            }
-    //        }
-    //    }
-    //}
+    let totalTechnicalDebt = 0;
 
     const totalHighRiskFiles = nb_high_risk_files(cyclomatic_complexity_analysis);
     totalTechnicalDebt += totalHighRiskFiles;
 
     const identifiableIdentitiesCount = identifiable_identities_analysis.length;
     totalTechnicalDebt += identifiableIdentitiesCount;
-
-    // number of instances of code duplication
-    //const duplication_dict = duplicated_code_analysis["duplications"];
-    //for(const key in duplication_dict) {
-    //    const duplication_instances = duplication_dict[key]._files.length;
-    //    duplication_count += duplication_instances;
-    //}
 
     const duplication_count = nb_duplications(duplicated_code_analysis);
     totalTechnicalDebt += duplication_count;
