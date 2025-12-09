@@ -5,7 +5,7 @@ import pytest
 from unit_tests.mock_app import init_mock_app
 from src.models import db
 from src.models.model import IdentifiableEntity
-
+import uuid
 
 @pytest.fixture(scope='session')
 def app():
@@ -58,11 +58,9 @@ def cleanup_session(app):
         db.create_all()
         
         # Add default identifiable entities
-        todo_entity = IdentifiableEntity(name='TODO')
-        fixme_entity = IdentifiableEntity(name='FIXME')
+        todo_entity = IdentifiableEntity(id = str(uuid.uuid4()), name='TODO')
+        fixme_entity = IdentifiableEntity(id = str(uuid.uuid4()), name='FIXME')
         
         db.session.add(todo_entity)
         db.session.add(fixme_entity)
         db.session.commit()
-        
-        print("\n✓ Database cleaned and initialized with default entities (TODO, FIXME)")
