@@ -24,7 +24,7 @@ function display_metrics_by_commit_id(repository_id, branch_id, commit_id, inclu
         if (data.task_id) {
             return new Promise((resolve, reject) => {
                 // Show progress modal
-                const modal = showProgressModal('Calculating Metrics');
+                showProgressModal('Calculating Metrics');
                 
                 // Create task tracker
                 const tracker = new TaskTracker(data.task_id);
