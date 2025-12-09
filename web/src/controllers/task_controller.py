@@ -1,7 +1,7 @@
 """
 Controller for task management and Server-Sent Events (SSE) for progress tracking.
 """
-from flask import Response, request, jsonify, stream_with_context
+from flask import Response, jsonify, stream_with_context
 import json
 import time
 
