@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 import os
 from datetime import datetime, timedelta
+import uuid
 
 from dotenv import load_dotenv
 
@@ -27,6 +28,22 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 from src.models import *
 db.init_app(app)
+
+# Initialize database with default entities
+with app.app_context():
+    from src.models.model import IdentifiableEntity
+    db.create_all()
+    
+    # Seed default identifiable entities if they don't exist
+    if not IdentifiableEntity.query.filter_by(name='TODO').first():
+        db.session.add(IdentifiableEntity(id=str(uuid.uuid4()),name='TODO'))
+    if not IdentifiableEntity.query.filter_by(name='FIXME').first():
+        db.session.add(IdentifiableEntity(id=str(uuid.uuid4()),name='FIXME'))
+    
+    try:
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
 # Initialize Flask-Login
 login_manager = LoginManager()

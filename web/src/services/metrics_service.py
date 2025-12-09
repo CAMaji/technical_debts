@@ -407,6 +407,7 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date, task_id=N
             # Get entity counts for current commit, if missing
             step_start = time.time()
             entity_counts = get_identifiable_entity_counts_for_commit(commit.id)
+            print(f"[DEBUG] Commit {commit.sha[:7]} - Entity counts: {entity_counts}")
             total_identifiable_entities = 0
             for count in entity_counts.values():
                 total_identifiable_entities += count
@@ -430,7 +431,7 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date, task_id=N
             step_start = time.time()
             debt_evolution.append({
                 "commit_sha": commit.sha,
-                "commit_date": commit.date,
+                "commit_date": commit.date.isoformat() if commit.date else None,
                 "commit_author": commit.author,
                 "commit_message": commit.message,
                 "total_identifiable_entities": total_identifiable_entities,
