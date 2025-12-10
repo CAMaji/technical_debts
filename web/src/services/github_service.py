@@ -328,7 +328,7 @@ def get_latest_commits(owner, name, branch_name):
             f"Branch '{branch_name}' not found. Available refs: {[r.name for r in repo.references]}"
         )
 
-    commits = list(repo.iter_commits(ref, max_count=11))
+    commits = list(repo.iter_commits(ref, max_count=100))
 
     return [
         {

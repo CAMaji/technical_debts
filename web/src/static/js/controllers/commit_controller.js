@@ -20,6 +20,7 @@ function get_commits_by_branch_name(branch_name) {
 }
 
 function get_commits_by_branch_id(branch_id) {
+    console.log('Fetching commits for branch_id:', branch_id);
     return fetch(GET_COMMITS_BY_BRANCH_ID, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -36,6 +37,7 @@ function get_commits_by_branch_id(branch_id) {
         return response.json();
     })
     .then(data => {
+        console.log('Received commit data from API:', data);
         return data;
     });
 }

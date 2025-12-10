@@ -1,6 +1,5 @@
 // search container elements
 const branch_select = document.getElementById("branch_select");
-const period_select = document.getElementById("period_select");
 const commit_select = document.getElementById("commit_select");
 
 const include_identifiable_identities_label = document.getElementById("include_identifiable_identities_label");
@@ -18,8 +17,6 @@ let to_export_global_stats = {}
 
 // once doc is ready
 document.addEventListener("DOMContentLoaded", () => {
-    init_period_select();
-
     // init the commits select
     const branch_id = get_selected_branch_id();
     get_commits_by_branch_id(branch_id).then((commits) => {
@@ -51,6 +48,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function set_commit_select_options(commits) {
+    console.log('Setting commit options, received commits:', commits);
+    console.log('Number of commits:', commits ? commits.length : 0);
+    
     commit_select.innerHTML = "";
     commits.forEach((commit) => {
         const { id, message } = commit;
@@ -62,6 +62,8 @@ function set_commit_select_options(commits) {
 
         commit_select.appendChild(container);
     });
+    
+    console.log('Commit select now has', commit_select.options.length, 'options');
 }
 
 function display_metrics() {

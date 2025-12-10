@@ -47,7 +47,7 @@ def get_commit_by_sha(commit_sha):
 
 
 def get_commits_by_branch_id(branch_id):
-    commits = Commit.query.filter_by(branch_id=branch_id).all()
+    commits = Commit.query.filter_by(branch_id=branch_id).order_by(Commit.date.desc()).all()
 
     return [commit.as_dict() for commit in commits]
 
@@ -55,6 +55,6 @@ def get_commits_by_branch_id(branch_id):
 def get_commits_by_branch_name(branch_name):
     branch = Branch.query.filter_by(branch_name=branch_name).first()
 
-    commits = Commit.query.filter_by(branch_id=branch.id).all()
+    commits = Commit.query.filter_by(branch_id=branch.id).order_by(Commit.date.desc()).all()
 
     return [commit.as_dict() for commit in commits]
