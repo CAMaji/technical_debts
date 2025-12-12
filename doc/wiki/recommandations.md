@@ -55,10 +55,10 @@ Les modèles sont contenus dans la classe d'énumération `ProblemEnum`. La list
 - <b>GLOBAL_DUPLICATION_PROBLEM</b> = "@1 instances of code duplication have been detected in this commit. Details in 'Duplication' section."
     - Condition : le nombre d'instances de duplication, pour l'ensemble du commit, doit être supérieur à 4. 
     - `@1`: le nombre d'instances de duplication détecté. 
-- <b>GLOBAL_TODOFIXME_PROBLEM</b> = "For a total of @1 files, @2 files reported at least one bug."
-    - Condition : il doit y avoir au moins 7% des fichiers du commit qui contiennent au moins un bogue (bogue = commentaire "todo" ou "fixme")
+- <b>GLOBAL_TODOFIXME_PROBLEM</b> = "For a total of @1 files, @2 files contained at least one 'todo' or 'fixme'."
+    - Condition : il doit y avoir au moins 7% des fichiers du commit qui contiennent au moins commentaire "todo" ou "fixme".
     - `@1`: le nombre de fichiers total du commit.
-    - `@2`: le nombre de fichiers dans le commit ayant au moins un bogue
+    - `@2`: le nombre de fichiers dans le commit ayant au moins un commentaire "todo" ou "fixme".
 - <b>FILE_AVG_RISK_PROBLEM</b> = "File @1 has an average complexity ranked at or above @2."
     - Condition : la complexité d'un fichier doit être supérieure à 10 (complexité modérée).
     - `@1`: nom du fichier.
