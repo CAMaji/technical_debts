@@ -37,7 +37,7 @@ class "RecommendationReport.Summary" as RRSummary {
 
 RecommendationReport -down-|> JEInterface : "Étend"
 RRSummary -down-|> JEInterface : "Étend"
-RecommendationReport -left-o RRSummary : "Aggrégation"
+RecommendationReport -left-o RRSummary : "Agrégation"
 JEInterface ... JsonEncoder : "Utilise"
 
 
