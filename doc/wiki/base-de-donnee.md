@@ -2,13 +2,13 @@
 
 ## Mise en contexte et Objectif
 
-Dans le cadre du développement d'un outil pour analyser et suivre la dette technique, nous utilisions des outils et des librairies pour obtenir et analyser des projets versionnés sur Github. Pour éviter de devoir tout recalculer à chaque fois, nous avons fait l'usage d'une base de donnée pour persister ces informations. Dans ce projet, une base de donnée Postgres est utilisé pour réaliser la persistence des données. 
+Dans le cadre du développement d'un outil pour analyser et suivre la dette technique, nous utilisions des outils et des librairies pour obtenir et analyser des projets versionnés sur Github. Pour éviter de devoir tout recalculer à chaque fois, nous avons fait l'usage d'une base de données pour persister ces informations. Dans ce projet, une base de donnée Postgres est utilisée pour réaliser la persistance des données. 
 
 ## Analyse
 
 **Hiérarchie de versionnage**
 
-Le système est intrinsèquement lié à la structure de versionnage git puisque cette technologie est utilisée pour cloner sur le serveur des projets. Ainsi, la conception de la base de donnée s'est inspirée de la hiérarchie du versionnage Git pour modéliser les entités principales du système. 
+Le système est intrinsèquement lié à la structure de versionnage git puisque cette technologie est utilisée sur les plateformes de versionnage. Ainsi, la conception de la base de données s'est inspirée de la hiérarchie du versionnage Git pour modéliser les entités principales du système. 
 
 Nous avons identifiés les entités suivantes: 
 - Repository
@@ -44,7 +44,7 @@ Les complexités sont obtenues pour chaque fonction contenue dans un fichier. Vo
 - Complexity
     - Indique la valeur de la complexité pour une fonction
 
-## Implémentation
+## Conception
 
 Voici le schéma relationnel résultant de l'analyse précédente: 
 
@@ -59,6 +59,6 @@ Deux tables supplémentaires ont été ajoutées pour l'évolution de la dette t
 
 Le modèle relationnel peut être moins préférable dans un contexte analytique étant donné le nombre de jointures et de sélections à faire pour obtenir certaines données. 
 
-D'un point de vu analytique, l'événement à analyser serait l'ajout d'une version au répertoire du projet (autrement dit, un commit), et cet événement serait décrit par les différentes métriques et entitées hiérarchique du répertoire.  Étant donné la nature analytique du projet, un schéma moins normalisé, tel qu'un schéma en étoile, pourrait être une piste de solution.
+D'un point de vue analytique, l'événement à analyser serait l'ajout d'une version au répertoire du projet (autrement dit, un commit), et cet événement serait décrit par les différentes métriques et entitées hiérarchiques du répertoire.  Étant donné la nature analytique du projet, un schéma moins normalisé, tel qu'un schéma en étoile, pourrait être une piste de solution.
 
 
