@@ -151,13 +151,14 @@ Puisque l'interface utilisateur est une page web, les données de duplications d
 Initialement, il était planifié d'afficher le nombre de duplication par fichier pour un commmit. Toutefois, avec les données que nous pouvions obtenir et les données que nous sauvgardions, nous avons décidé d'ajouter un composant de visualisation des duplications de code par fichiers à l'interface utilisateur. 
 
 ---
-<u>Prototype d'interface - réalisé avec LibreOffice Draw</u>
 
 ![](imgs/proto-duplications-ui.svg)
 
 --- 
 
-- insérer image page web
+![](imgs/ui-duplication.png)
+
+---
 
 ## Limitations
 
