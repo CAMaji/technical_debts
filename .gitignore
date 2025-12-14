@@ -9,3 +9,4 @@ web/.repo_cache/*
 .pytest_cache
 .coverage
 plantuml
+doc/wiki/puml/*.png

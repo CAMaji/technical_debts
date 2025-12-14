@@ -154,7 +154,7 @@ L'affichage reflète la façon dont le rapport de recommandations est obtenu du 
 L'interface implémentée diffère peu de l'interface conçue. La seule différence est l'ajout d'un bouton pour afficher ou cacher un sommaire, pour éviter de surcharger l'interface lorsqu'il y a plusieurs sommaires. 
 
 ---
-![](./imgs/ui-recommandations.png)
+![](./imgs/ui-recommandations-2.png)
 
 ---
 
