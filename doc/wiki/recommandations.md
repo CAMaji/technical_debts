@@ -55,10 +55,10 @@ Les modèles sont contenus dans la classe d'énumération `ProblemEnum`. La list
 - <b>GLOBAL_DUPLICATION_PROBLEM</b> = "@1 instances of code duplication have been detected in this commit. Details in 'Duplication' section."
     - Condition : le nombre d'instances de duplication, pour l'ensemble du commit, doit être supérieur à 4. 
     - `@1`: le nombre d'instances de duplication détecté. 
-- <b>GLOBAL_TODOFIXME_PROBLEM</b> = "For a total of @1 files, @2 files reported at least one bug."
-    - Condition : il doit y avoir au moins 7% des fichiers du commit qui contiennent au moins un bogue (bogue = commentaire "todo" ou "fixme")
+- <b>GLOBAL_TODOFIXME_PROBLEM</b> = "For a total of @1 files, @2 files contained at least one 'todo' or 'fixme'."
+    - Condition : il doit y avoir au moins 7% des fichiers du commit qui contiennent au moins commentaire "todo" ou "fixme".
     - `@1`: le nombre de fichiers total du commit.
-    - `@2`: le nombre de fichiers dans le commit ayant au moins un bogue
+    - `@2`: le nombre de fichiers dans le commit ayant au moins un commentaire "todo" ou "fixme".
 - <b>FILE_AVG_RISK_PROBLEM</b> = "File @1 has an average complexity ranked at or above @2."
     - Condition : la complexité d'un fichier doit être supérieure à 10 (complexité modérée).
     - `@1`: nom du fichier.
@@ -97,7 +97,7 @@ Les messages de recommandation sont contenus dans la classe d'énumération `Rec
 
 Ces recommandations proviennent d'une analyse de la définition de chacune des métriques et de leur impact dans un projet. 
 
-Par exemple, dans une présentation de M. McCabe (voir dans la section _Références_), auteur de la complexité cyclomatique, on y indique que plus une complexité est élevé, plus il y a un risque de bogue et une sécurité logiciel vulnérable. Rappelons que la complexité est le nombre de chemin indépendant pouvant être exécuté dans une fonction. Les fonctions qui contiennent des branches, des boucles et surtout un mélange de boucles et de branches imbriquées vont augmenter la valeur de complexité. Parallèlement, ces types de fonctions sont souvent intestables et considérées comme "code smell", ou simplement de la dette technique; pour y palier, il faut refactoriser ces fonctions et repenser la logique de celles-ci.
+Par exemple, dans une présentation de M. McCabe (voir dans la section _Références_), auteur de la complexité cyclomatique, on y indique que plus une complexité est élevée, plus il y a un risque de bogue et une sécurité logiciel vulnérable. Rappelons que la complexité est le nombre de chemins indépendants pouvant être exécutés dans une fonction. Les fonctions qui contiennent des branches, des boucles et surtout un mélange de boucles et de branches imbriquées vont augmenter la valeur de complexité. Parallèlement, ces types de fonctions sont souvent intestables et considérées comme "code smell", ou simplement de la dette technique; pour y palier, il faut refactoriser ces fonctions et repenser la logique de celles-ci.
 
 Les objets retournés par les méthodes de la classe de génération sont de type `Pair[str, str]`. Le premier élément correspond au message de problème, le second à la recommandation. Le diagramme de classes ci-dessous illustre la relation entre le générateur et les objets de rapport qui contiennent les métriques de dette technique. 
 
@@ -108,7 +108,7 @@ Les objets retournés par les méthodes de la classe de génération sont de typ
 
 #### Service & contrôlleur
 
-La classe `RecommendationService` est responsable d'acheminer les données structurées de dette technique au générateur de recommandation (`RecommendationGenerator`), puis de construire un rapport de recommandations (`RecommendationReport`) contenant une collection de sommaires (`RecommendationReport.Summary`) pour chacun des fichiers fournis au service. Le controlleur `RecommendationController` est responsable du déclenchement de la conversion des données (`CompatibilityService`) provenant des autres services en données structurées, puis de déclancher la génération d'un rapport de recommandation en fournissant les données structurées au service de recommandations. 
+La classe `RecommendationService` est responsable d'acheminer les données structurées de dette technique au générateur de recommandation (`RecommendationGenerator`), puis de construire un rapport de recommandations (`RecommendationReport`) contenant une collection de sommaires (`RecommendationReport.Summary`) pour chacun des fichiers fournis au service. Le controlleur `RecommendationController` est responsable du déclenchement de la conversion des données (`CompatibilityService`) provenant des autres services en données structurées, puis de déclencher la génération d'un rapport de recommandation en fournissant les données structurées au service de recommandations. 
 
 Le controlleur permet d'éviter du couplage entre le service de recommandation et les autres services du système, offre une interface simplifiée et abstracte les détails de l'implémentation de la fonctionnalité. Le générateur a été séparé du service pour limiter la complexité des méthodes, faciliter l'écriture de tests unitaires et assurer une bonne séparation des responsabilités. 
 
@@ -121,7 +121,7 @@ Le controlleur permet d'éviter du couplage entre le service de recommandation e
 
 Étant donné l'approche client-serveur de la solution logicielle, nous devions transmettre au client un rapport contenant les problèmes et solutions recommandées pour chaque fichier dans le but d'intégrer ces informations à une page web. L'objet retourné par la méthode `get_recommendations()`, de la classe `RecommendationController`, est de type `RecommendationReport`, soit une instance de classe contenant une collection de sommaires (`RecommendationReport.Summary`) pour chacun des fichiers d'un commit. 
 
-Puisque l'interface utilisateur est une page web, les recommandations doivent être envoyées au client en format JSON. Étant donné que seuls les types de base de Python sont supportés par la fonctionnalité `json.dumps`, nous avons créé une classe utilitaire `JsonEncoder` qui converti des instances de classes et des types plus complexes en objets Python sérialisables. Cette classe permet d'automatiser la sérialisation et éviter d'écrire manuellement un dictionnaire de clés-valeurs sérialisable. Par exemple, la classe `RecommendationReport` étend la classe `JsonEncoder.Interface`, ce qui permet aux instances de types `RecommendationReport` d'être convertis en dictionnaire sérialisable par `json.dumps`, puis d'être trasmis par le réseau au client. 
+Puisque l'interface utilisateur est une page web, les recommandations doivent être envoyées au client en format JSON. Étant donné que seuls les types de base de Python sont supportés par la fonctionnalité `json.dumps`, nous avons créé une classe utilitaire `JsonEncoder` qui convertit des instances de classes et des types plus complexes en objets Python sérialisables. Cette classe permet d'automatiser la sérialisation et éviter d'écrire manuellement un dictionnaire de clés-valeurs sérialisable. Par exemple, la classe `RecommendationReport` étend la classe `JsonEncoder.Interface`, ce qui permet aux instances de types `RecommendationReport` d'être convertis en dictionnaire sérialisable par `json.dumps`, puis d'être trasmis par le réseau au client. 
 
 ---
 ![](puml/recomm_json_encoder.svg)
@@ -131,7 +131,7 @@ Puisque l'interface utilisateur est une page web, les recommandations doivent ê
 ### Couche frontale
 
 #### Interface souhaitée
-Tel que mentionné au début de ce document, l'interface souhaité pour l'affichage des recommandations comprenait l'utilisation de verbes et d'un sujet, décrivant une action à entreprendre dans le but de contrôler la dette technique. Notons aussi la présence d'étiquettes, de précisions quant aux problèmes, et des icônes pour embellir et améliorer la présentation de l'interface. 
+Tel que mentionné au début de ce document, l'interface souhaitée pour l'affichage des recommandations comprenait l'utilisation de verbes et d'un sujet, décrivant une action à entreprendre dans le but de contrôler la dette technique. Notons aussi la présence d'étiquettes, de précisions quant aux problèmes, et des icônes pour embellir et améliorer la présentation de l'interface. 
 
 ---
 ![](./imgs/maquette-recommandations.png)
@@ -140,9 +140,9 @@ Tel que mentionné au début de ce document, l'interface souhaité pour l'affich
 
 #### Interface conçue
 
-L'interface conçue reprend la vision illustrée dans l'interface souhaité, mais apporte des détails supplémentaires quant aux problèmes trouvés, justifiant les recommandations émises. Bien qu'il puisse y avoir un volume important d'informations, le but de cet affichage est d'offrir une rétroaction, identifier et expliquer clairement les problèmes trouvés, et offrir des suggestions pour palier à ces problèmes. 
+L'interface conçue reprend la vision illustrée dans l'interface souhaitée, mais apporte des détails supplémentaires quant aux problèmes trouvés, justifiant les recommandations émises. Bien qu'il puisse y avoir un volume important d'informations, le but de cet affichage est d'offrir une rétroaction, identifier et expliquer clairement les problèmes trouvés, et offrir des suggestions pour pallier à ces problèmes. 
 
-L'affichage reflète la façon dont le rapport de recommandations est obtenu du serveur : pour chaque fichier, le nom du fichier est affiché et les problèmes et recommandations contenus dans le sommaire du fichiers sont insérés dans la case appropriée du tableau, sous forme de liste numérotée. Une section supplémentaire est affichée pour le sommaire de l'ensemble du commit. 
+L'affichage reflète la façon dont le rapport de recommandations est obtenu du serveur : pour chaque fichier, le nom du fichier est affiché et les problèmes et recommandations contenus dans le sommaire du fichier sont insérés dans la case appropriée du tableau, sous forme de liste numérotée. Une section supplémentaire est affichée pour le sommaire de l'ensemble du commit. 
 
 --- 
 ![](./imgs/proto-recommandations-ui.svg)
@@ -154,7 +154,7 @@ L'affichage reflète la façon dont le rapport de recommandations est obtenu du 
 L'interface implémentée diffère peu de l'interface conçue. La seule différence est l'ajout d'un bouton pour afficher ou cacher un sommaire, pour éviter de surcharger l'interface lorsqu'il y a plusieurs sommaires. 
 
 ---
-![](./imgs/ui-recommandations.png)
+![](./imgs/ui-recommandations-2.png)
 
 ---
 
