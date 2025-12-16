@@ -51,7 +51,7 @@ class ValueRange< T > {
 DRFile --|> JEInterface : Étend
 DuplicationReport --|> JEInterface : Étend
 JEInterface ... JsonEncoder : Utilise
-DuplicationReport -right-o DRFile : Aggrégation
+DuplicationReport -right-o DRFile : Agrégation
 ValueRange ..|> JEInterface : Implémente
 DRFile -right-* ValueRange : Composition
 

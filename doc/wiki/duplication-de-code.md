@@ -2,13 +2,13 @@
 
 ## Mise en contexte 
 
-Dans le cadre du développement d'un outil pour analyser et suivre la dette technique, nous avions à détecter les duplications dans un ou plusieurs fichiers. Selon **Houssem Sebouai, de Axify**, la duplication de code est souvent indicateur de mauvaise pratiques (copiés-collés), d'une mauvaise architecture ou de déficiences en lisibilité. 
+Dans le cadre du développement d'un outil pour analyser et suivre la dette technique, nous avions à détecter les duplications dans un ou plusieurs fichiers. Selon **Houssem Sebouai, de Axify**, la duplication de code est souvent indicateur de mauvaises pratiques (copiés-collés), d'une mauvaise architecture ou de déficiences en lisibilité. 
 
 Ajoutons que la duplication de code peut aussi réduire la maintenabilité d'un logiciel lorsqu'un ou plusieurs  développeurs copie-collent une logique défaillante (bogues) à travers le code source : il faudra corriger la logique défaillante à chaque endroit où elle a été dupliquée, ce qui augmente considérablement le temps nécessaire pour corriger les bogues et, conséquemment, réduit le temps disponible pour le développement.  
 
 ## Objectif
 
-L'objectif était d'ajouter une fonctionnalité qui répertoriait les duplications de code contenues dans les fichiers d'un commit Git, dans le but d'aider les mainteneurs ou développeurs à garder trace des duplications et suivre l'évolution de celle-ci à travers le temps. 
+L'objectif était d'ajouter une fonctionnalité qui répertorie les duplications de code contenues dans les fichiers d'un commit Git, dans le but d'aider les mainteneurs ou développeurs à garder trace des duplications et suivre l'évolution de celle-ci à travers le temps. 
 
 ## Analyse
 
@@ -51,7 +51,7 @@ Les paramètres utilisés pour exécuter CPD sont:
 - le nombre minimal de jeton pour détecter une duplication: `--minimum-tokens <un nombre entier>` 
 - le langage sélectionné : `--language <un langage>` (voir note 1 & 2)
 - le format utilisé (XML): `--format XML`
-- le dossier où se situant les fichiers à analyser: `--dir <un chemin>`
+- le dossier où se situent les fichiers à analyser: `--dir <un chemin>`
 
 _Note 1: les identifiants de chaque langage supportés sont identifiés [_--ici--_](https://pmd.github.io/pmd/tag_CpdCapableLanguage.html)._
 _Note 2: l'argument `--langage` est limité qu'à un seul langage de programmation. Pour chaque langage d'un projet, relancer PMD._
@@ -62,8 +62,8 @@ Bien que CPD peut générer un rapport dans d'autres formats, il est conseillé 
 
 La structure d'un rapport XML est la suivante: 
 - `<pmd-cpd ...>` : C'est le noeud racine du document. Les paramètres de balises sont omis pour simplicité. 
-    - `<file path="" totalNumberOfTokens="">` : Indique le chemin d'un fichier et son nombre de jetons. Le nombre de noeuds de ce type sera égal au nombre de fichiers trouvé par PMD dans le dossier sélectionné. 
-    - `<duplication lines="" tokens="">`: Indique le nombre de lignes et le nombre de tokens pour un bout de code dupliqué. Le nombre de noeud de ce type sera égal au nombre de duplications distinctes que PMD détectera. 
+    - `<file path="" totalNumberOfTokens="">` : Indique le chemin d'un fichier et son nombre de jetons. Le nombre de noeuds de ce type sera égal au nombre de fichiers trouvés par PMD dans le dossier sélectionné. 
+    - `<duplication lines="" tokens="">`: Indique le nombre de lignes et le nombre de tokens pour un bout de code dupliqué. Le nombre de noeuds de ce type sera égal au nombre de duplications distinctes que PMD détectera. 
         - `<file begintoken="" column="" endcolumn="" endline="" endtoken="" line="" path="">`: Indique l'emplacement d'une duplication. Le nombre de noeuds de ce type sera égal au nombre de fois qu'un même bout de code est dupliqué. Il peut y avoir plusieurs fois le même fichier si un fichier contient plusieurs fois le même bout de code. 
         - `<codefragment>`: Échantillon du bout de code dupliqué. 
 
@@ -95,7 +95,7 @@ def duplicate_three():
 
 ### Base de données
 
-Nous nous sommes inspirés du rapport XML généré par PMD pour organiser les métriques dans la base de donnée. Initialement, la base de données avait une table `file` contenant un identifiant unique, le nom du fichier et l'identifiant du commit Git associé. Les métriques de duplications sont conservées dans deux tables: `duplication` et `code_fragment`. La table `duplication` représente l'occurence et l'emplacement d'un fragment de code situé dans un fichier, alors que la table `code_fragment` représente le contenu d'un bout de code unique, repéré dans de multiples fichiers. Puisque la relation entre `file` et `code_fragment` est de type plusieurs-à-plusieurs, `duplication` agit en tant que table d'association. 
+Nous nous sommes inspirés du rapport XML généré par PMD pour organiser les métriques dans la base de données. Initialement, la base de données avait une table `file` contenant un identifiant unique, le nom du fichier et l'identifiant du commit Git associé. Les métriques de duplications sont conservées dans deux tables: `duplication` et `code_fragment`. La table `duplication` représente l'occurrence et l'emplacement d'un fragment de code situé dans un fichier, alors que la table `code_fragment` représente le contenu d'un bout de code unique, repéré dans de multiples fichiers. Puisque la relation entre `file` et `code_fragment` est de type plusieurs-à-plusieurs, `duplication` agit en tant que table d'association. 
 
 ---
 ![](puml/duplication_db.svg)
@@ -106,7 +106,7 @@ Nous nous sommes inspirés du rapport XML généré par PMD pour organiser les m
 
 #### Classes enveloppantes (Wrapper classes)
 
-Bien que peu d'alternatives à PMD existent pour détecter le code dupliqué, nous voulions éviter d'introduire un fort couplage avec PMD afin de permettre et faciliter l'intégration d'un ou plusieurs autres logiciels de détection de duplications. Pour assurer un faible couplage, nous avons créé l'interface `DuplicationToolInterface` avec la méthode abstraite `run(dir, file_extensions) : list<DuplicationReport>`  à implémenter. Cette structure permet d'aisément créer une nouvelle sous-classe pour l'ajout d'un outil : les modifications nécessaire à l'extérieur de l'enveloppe seront inexistantes, ou très mineures. 
+Bien que peu d'alternatives à PMD existent pour détecter le code dupliqué, nous voulions éviter d'introduire un fort couplage avec PMD afin de permettre et faciliter l'intégration d'un ou plusieurs autres logiciels de détection de duplications. Pour assurer un faible couplage, nous avons créé l'interface `DuplicationToolInterface` avec la méthode abstraite `run(dir, file_extensions) : list<DuplicationReport>`  à implémenter. Cette structure permet de aisément créer une nouvelle sous-classe pour l'ajout d'un outil : les modifications nécessaires à l'extérieur de l'enveloppe seront inexistantes, ou très mineures. 
 
 Dans le diagramme de classe ci-dessous, la classe `PMD_CopyPasteDetector` implémente la méthode `run` de l'interface `DuplicationToolInterface`. Cette sous-classe est responsable d'obtenir le rapport généré par PMD, puis de le convertir en un objet Python `DuplicationReport`. La classe `DuplicationReport` contraint les sous-classes enveloppantes à respecter l'organisation attendue des données par le système : les sous-classes enveloppant les outils ne doivent pas insérer eux-mêmes les données afin de respecter la responsabilité des classes et assurer une haute cohérence. 
 
@@ -128,7 +128,7 @@ Nous avons utilisé une façade pour plusieurs raisons :
 - Les tests unitaires du service peuvent utiliser un mock de façade pour éviter de dépendre de la base de données
 - La façade permet de convertir les objets non-mappés SQL Alchemy (`Row`) en objets natifs Python (`tuple`)
 
-La classe `DuplicationController` est responsable du lancement de l'exécution de l'outil d'analyse, d'assurer la transmission les données provenant de l'outil vers le service de duplication et d'obtenir les rapports de duplications obtenus du service de duplication. Cette classe permet d'abstraire le service de duplication et l'exécution de l'outil dernière une interface simplifiée, afin de réduire le couplage entre les routes web, le service de duplication et les outils d'analyse (comme PMD). 
+La classe `DuplicationController` est responsable du lancement de l'exécution de l'outil d'analyse, d'assurer la transmission des données provenant de l'outil vers le service de duplication et d'obtenir les rapports de duplication obtenus du service de duplication. Cette classe permet d'abstraire le service de duplication et l'exécution de l'outil dernière une interface simplifiée, afin de réduire le couplage entre les routes web, le service de duplication et les outils d'analyse (comme PMD). 
 
 ---
 ![](puml/duplication_service.svg)
@@ -139,7 +139,7 @@ La classe `DuplicationController` est responsable du lancement de l'exécution d
 
 Étant donné l'approche client-serveur de la solution logicielle, nous devions transmettre au client les métriques, statistiques et données liées aux duplication de code, dans le but d'intégrer ces informations à une page web. L'objet retourné par la méthode `get_report_dict`, de la classe `DuplicationController`, est de type `dict[str, DuplicationReport]`, soit un dictionnaire liant un ID de fragment de code à une instance de classe `DuplicationReport`. 
 
-Puisque l'interface utilisateur est une page web, les données de duplications doivent être envoyées au client en format JSON. Étant donné que seuls les types de base de Python sont supportés par la fonctionnalité `json.dumps`, nous avons créé une classe utilitaire `JsonEncoder` qui converti des instances de classes et des types plus complexes en objets Python sérialisables. Cette classe permet d'automatiser la sérialisation et éviter d'écrire manuellement un dictionnaire de clés-valeurs sérialisable. Par exemple, la classe `DuplicationReport` étend la classe `JsonEncoder.Interface`, ce qui permet aux instances de types `DuplicationReport` d'être convertis en dictionnaire sérialisable par `json.dumps`, puis d'être trasmis par le réseau au client.  
+Puisque l'interface utilisateur est une page web, les données de duplications doivent être envoyées au client en format JSON. Étant donné que seuls les types de base de Python sont supportés par la fonctionnalité `json.dumps`, nous avons créé une classe utilitaire `JsonEncoder` qui convertit des instances de classes et des types plus complexes en objets Python sérialisables. Cette classe permet d'automatiser la sérialisation et d'éviter d'écrire manuellement un dictionnaire de clés-valeurs sérialisable. Par exemple, la classe `DuplicationReport` étend la classe `JsonEncoder.Interface`, ce qui permet aux instances de types `DuplicationReport` d'être convertis en dictionnaire sérialisable par `json.dumps`, puis d'être trasmis par le réseau au client.  
 
 ---
 ![](puml/duplication_json_encoder.svg)
@@ -151,13 +151,14 @@ Puisque l'interface utilisateur est une page web, les données de duplications d
 Initialement, il était planifié d'afficher le nombre de duplication par fichier pour un commmit. Toutefois, avec les données que nous pouvions obtenir et les données que nous sauvgardions, nous avons décidé d'ajouter un composant de visualisation des duplications de code par fichiers à l'interface utilisateur. 
 
 ---
-<u>Prototype d'interface - réalisé avec LibreOffice Draw</u>
 
 ![](imgs/proto-duplications-ui.svg)
 
 --- 
 
-- insérer image page web
+![](imgs/ui-duplication.png)
+
+---
 
 ## Limitations
 

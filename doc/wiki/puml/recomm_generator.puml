@@ -57,7 +57,7 @@ RecommendationGenerator .up.> EntityReport : "Utilise"
 RecommendationGenerator .down.> FileComplexityReport : "Utilise"
 RecommendationGenerator .down.> FunctionComplexityReport : "Utilise"
 RecommendationGenerator .up.> DuplicationReport : "Utilise"
-FileComplexityReport -right-o FunctionComplexityReport: "Aggrégation"
+FileComplexityReport -right-o FunctionComplexityReport: "Agrégation"
 
 
 @enduml

@@ -41,5 +41,5 @@ class CompatibilityService {
 CompatibilityService .down.> FileComplexityReport : "Crée"
 CompatibilityService .down.> FunctionComplexityReport : "Crée"
 CompatibilityService .down.> EntityReport : "Crée"
-FileComplexityReport -right-o FunctionComplexityReport : "Aggrégation"
+FileComplexityReport -right-o FunctionComplexityReport : "Agrégation"
 @enduml

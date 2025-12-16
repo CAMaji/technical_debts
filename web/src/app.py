@@ -5,6 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 import os
 from datetime import datetime, timedelta
+import uuid
 
 from dotenv import load_dotenv
 
@@ -38,7 +39,11 @@ login_manager.login_message_category = 'info'
 @login_manager.user_loader
 def load_user(user_id):
     from src.models.model import User
-    return User.query.get(user_id)
+    try:
+        return User.query.get(user_id)
+    except Exception:
+        # Table doesn't exist yet or database error
+        return None
 
 import src.services.repository_service as repository_service
 import src.services.branch_service as branch_service
@@ -227,7 +232,7 @@ def debt_evolution(owner, name):
             error=str(e))
 
 import src.services.identifiable_entity_service as identifiable_entity_service
-#with app.app_context():
+# with app.app_context():
 #   print('dropping...')
 #   db.drop_all()
 #   db.reflect()

@@ -1,6 +1,9 @@
 import uuid
 import time
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
+from flask import current_app
 
 from src.models import db
 from src.models.model import *
@@ -16,6 +19,57 @@ import src.services.commit_service as commit_service
 import src.services.file_service as file_service
 import re
 from src.controllers.duplication_controller import DuplicationController
+
+# Thread-safe database operation lock
+_db_lock = Lock()
+
+
+def _process_single_file_for_metrics(filename, code, commit_id, identifiable_entities, app):
+    """
+    Process a single file for metrics analysis in parallel.
+    
+    Args:
+        filename: Name of the file
+        code: Source code content
+        commit_id: ID of the commit
+        identifiable_entities: List of identifiable entities to search for
+        app: Flask application instance for context
+        
+    Returns:
+        dict: Contains file object, analysis results, and metrics
+    """
+    with app.app_context():
+        # Create file record (thread-safe)
+        with _db_lock:
+            file = file_service.create_file(filename, commit_id)
+            
+            # Check if duplications already exist for this specific file
+            existing_file_duplications = (
+                db.session.query(Duplication)
+                .filter(Duplication.file_id == file.id)
+                .first()
+            )
+        
+        needs_duplication = not existing_file_duplications
+        
+        # Calculate identifiable entities for this file
+        identifiable_identities_analysis = calculate_identifiable_identities_analysis(file, code)
+        
+        # Calculate complexity for this file
+        complexity_analysis = calculate_cyclomatic_complexity_analysis(file, code)
+        
+        # Compute metrics
+        file_complexity = sum(c["cyclomatic_complexity"] for c in complexity_analysis)
+        file_function_count = len(complexity_analysis)
+        
+        return {
+            'file': file,
+            'needs_duplication': needs_duplication,
+            'identifiable_identities': identifiable_identities_analysis,
+            'complexity_analysis': complexity_analysis,
+            'total_complexity': file_complexity,
+            'function_count': file_function_count
+        }
 
 
 class MetricsClass:
@@ -55,44 +109,50 @@ class MetricsClass:
             # Initialize complexity tracking
             total_complexity = 0
             function_count = 0
-            complexity_values = []
-
-            # Process each file and accumulate counts
             files_for_duplication = []
-            for filename, code in remote_files:
-                file = file_service.create_file(filename, commit_to_check.id)
+
+            # Get Flask app for context in threads
+            try:
+                app = current_app._get_current_object()
+            except RuntimeError:
+                # Fallback if not in app context
+                from src.app import app as flask_app
+                app = flask_app
+
+            # Process files in parallel using ThreadPoolExecutor
+            max_workers = min(8, len(remote_files)) if remote_files else 1
+            
+            with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                # Submit all file processing tasks
+                future_to_file = {
+                    executor.submit(_process_single_file_for_metrics, filename, code, commit_to_check.id, identifiable_entities, app): (filename, code)
+                    for filename, code in remote_files
+                }
                 
-                # Check if duplications already exist for this specific file
-                existing_file_duplications = (
-                    db.session.query(Duplication)
-                    .filter(Duplication.file_id == file.id)
-                    .first()
-                )
-                
-                if not existing_file_duplications:
-                    files_for_duplication.append(file)
-
-                # calculate identifiable entities for this file
-                identifiable_identities_analysis = calculate_identifiable_identities_analysis(file, code)
-
-                # Count occurrences by entity type
-                for entity_analysis in identifiable_identities_analysis:
-                    entity_name = entity_analysis["entity_name"]
-                    # Find the entity ID by name
-                    for entity_id, entity_info in entity_totals.items():
-                        if entity_info["name"] == entity_name:
-                            entity_totals[entity_id]["count"] += 1
-                            break
-
-                # calculate complexity for this file
-                complexity_analysis = calculate_cyclomatic_complexity_analysis(file, code)
-
-                # Accumulate complexity data
-                for complexity_data in complexity_analysis:
-                    complexity_value = complexity_data["cyclomatic_complexity"]
-                    total_complexity += complexity_value
-                    function_count += 1
-                    complexity_values.append(complexity_value)
+                # Collect results as they complete
+                for future in as_completed(future_to_file):
+                    try:
+                        result = future.result()
+                        
+                        # Accumulate entity counts
+                        for entity_analysis in result['identifiable_identities']:
+                            entity_name = entity_analysis["entity_name"]
+                            for entity_id, entity_info in entity_totals.items():
+                                if entity_info["name"] == entity_name:
+                                    entity_totals[entity_id]["count"] += 1
+                                    break
+                        
+                        # Accumulate complexity metrics
+                        total_complexity += result['total_complexity']
+                        function_count += result['function_count']
+                        
+                        # Track files needing duplication analysis
+                        if result['needs_duplication']:
+                            files_for_duplication.append(result['file'])
+                            
+                    except Exception as e:
+                        filename, code = future_to_file[future]
+                        print(f"Error processing file {filename}: {str(e)}")
 
             # Calculate code duplications for files that don't have them yet
             if files_for_duplication:
@@ -287,16 +347,25 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date, task_id=N
     """
     from src.services.task_manager import task_manager
     
+    # Start timing the entire function
+    function_start_time = time.time()
+    print(f"[TIMING] calculate_debt_evolution started at {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    
     debt_evolution = []
 
     try:
         if task_id:
             task_manager.update_progress(task_id, 5, "Fetching commits", "Loading commits in date range...")
         
+        # Time: Creating MetricsClass instance
+        step_start = time.time()
         metrics_class = MetricsClass(repo_id, branch_id)
+        print(f"[TIMING] MetricsClass initialization took {time.time() - step_start:.2f}s")
 
-        # Get commits in the date range
+        # Time: Fetching commits
+        step_start = time.time()
         commits_in_range = metrics_class.get_commits_in_date_range(start_date, end_date)
+        print(f"[TIMING] Fetching {len(commits_in_range)} commits took {time.time() - step_start:.2f}s")
 
         # Initialize timing statistics
         timing_stats = defaultdict(list)
@@ -305,6 +374,9 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date, task_id=N
         if task_id:
             task_manager.update_progress(task_id, 10, "Processing commits", f"Analyzing {total_iterations} commits...")
 
+        # Time: Processing all commits
+        all_commits_start = time.time()
+        
         for i, found_commit in enumerate(commits_in_range, 1):
             iteration_start = time.time()
             
@@ -323,32 +395,43 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date, task_id=N
                 )
             
             # 1 - Create commit in database, if missing
+            step_start = time.time()
             commit = commit_service.ensure_commit_exists_by_sha(found_commit, branch_id)
+            timing_stats['ensure_commit'].append(time.time() - step_start)
 
             # 2 - Calculate metrics, if the commit was missing
+            step_start = time.time()
             metrics_class.ensure_metric_snapshot(commit)
+            timing_stats['ensure_metric_snapshot'].append(time.time() - step_start)
 
             # Get entity counts for current commit, if missing
+            step_start = time.time()
             entity_counts = get_identifiable_entity_counts_for_commit(commit.id)
+            print(f"[DEBUG] Commit {commit.sha[:7]} - Entity counts: {entity_counts}")
             total_identifiable_entities = 0
             for count in entity_counts.values():
                 total_identifiable_entities += count
+            timing_stats['get_entity_counts'].append(time.time() - step_start)
 
             # Get complexity counts for current commit, if missing
+            step_start = time.time()
             complexity_count = get_complexity_count_for_commit(commit.id)
             linked_bugs = calculate_bug_counts_in_range(commits_in_range)
+            timing_stats['get_complexity_and_bugs'].append(time.time() - step_start)
 
+            step_start = time.time()
             files = File.query.filter_by(commit_id=commit.id).all()
             file_ids = [f.id for f in files]
             total_number_duplications = Duplication.query.filter(
                 Duplication.file_id.in_(file_ids)
             ).count()
+            timing_stats['get_duplications'].append(time.time() - step_start)
 
             # Build result data
             step_start = time.time()
             debt_evolution.append({
                 "commit_sha": commit.sha,
-                "commit_date": commit.date,
+                "commit_date": commit.date.isoformat() if commit.date else None,
                 "commit_author": commit.author,
                 "commit_message": commit.message,
                 "total_identifiable_entities": total_identifiable_entities,
@@ -362,16 +445,34 @@ def calculate_debt_evolution(repo_id, branch_id, start_date, end_date, task_id=N
             iteration_time = time.time() - iteration_start
             timing_stats['total_iteration'].append(iteration_time)
 
+        all_commits_time = time.time() - all_commits_start
+        print(f"[TIMING] Processing all {total_iterations} commits took {all_commits_time:.2f}s (avg {all_commits_time/max(total_iterations, 1):.2f}s per commit)")
+
         if task_id:
             task_manager.update_progress(task_id, 95, "Finalizing", "Sorting and preparing results...")
 
         # Sort by date
+        step_start = time.time()
         debt_evolution.sort(key=lambda x: x["commit_date"] or "")
+        print(f"[TIMING] Sorting results took {time.time() - step_start:.2f}s")
+
+        # Print detailed timing statistics
+        print("\n[TIMING] Detailed statistics per commit:")
+        for operation, times in timing_stats.items():
+            if times:
+                avg_time = sum(times) / len(times)
+                max_time = max(times)
+                min_time = min(times)
+                print(f"  {operation}: avg={avg_time:.3f}s, min={min_time:.3f}s, max={max_time:.3f}s, total={sum(times):.2f}s")
 
         #Bug: this line breaks the a part in debt_evolution.js because it is not json
         #debt_evolution.append({"linked_bugs_total": linked_bugs["total"]})
     except Exception as e:
         print(f"Error calculating debt evolution: {str(e)}")
         raise
+    finally:
+        total_time = time.time() - function_start_time
+        print(f"[TIMING] calculate_debt_evolution TOTAL TIME: {total_time:.2f}s ({total_time/60:.2f} minutes)")
+        print(f"[TIMING] calculate_debt_evolution ended at {time.strftime('%Y-%m-%d %H:%M:%S')}\n")
 
     return debt_evolution
