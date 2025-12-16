@@ -71,14 +71,14 @@ web
 
 **Image docker**
 
-Lancez la construction de l'image docker en faisant la commande `docker compose build .` 
+Lancez la construction de l'image docker en faisant la commande `docker compose build` 
 
 À noter qu'il est normal que l'image prenne beaucoup de temps à construire : l'image est basé sur ubuntu et installe plusieurs dépendances tels que l'interpréteur Python, le gestionnaire de paquets Pip, tous les paquets Python, un outil nommé PMD et le JDK de Java pour exécuter l'outil PMD. 
 
 **Lancement de l'application web**
 
 Il y a deux façons de lancer l'application web : 
-1. écrire la commande `docker compose up .` (monte tous les conteneurs)
+1. écrire la commande `docker compose up` (monte tous les conteneurs)
 2. exécuter le script `run-web.bat` (sur Windows) ou `run-web.sh` sur linux (monte seulement les conteneurs nécessaires)
 
 La page web est accessible par votre navigateur à l'adresse http://localhost. 
@@ -86,7 +86,7 @@ Pour fermer l'application, vous pouvez soit fermer le terminal ou faire la combi
 
 **Lancement des tests unitaires**
 
-Les tests unitaires sont lancés automatiquement si l'application est démarrée avec `docker compose up .` Il est possible d'exécuter seulement les tests en lançant le script `run-pytest.bat` (sur Window) ou `run-pytest.sh` (sur Linux). 
+Les tests unitaires sont lancés automatiquement si l'application est démarrée avec `docker compose up` Il est possible d'exécuter seulement les tests en lançant le script `run-pytest.bat` (sur Window) ou `run-pytest.sh` (sur Linux). 
 
 **Gestion de la DB** 
 
@@ -181,7 +181,7 @@ L'utilisateur peut aussi exporter les résultats de l'analyse en cliquant sur le
 Lorsque l'utilisateur aura cliqué sur le bouton menant à la page de l'évolution de la dette technique, il est normal que le chargement de la page soit long : le système doit analyser plusieurs commit. 
 
 --- 
-- à faire
+![](./imgs/ui-evolution.png)
 --- 
 
 ## Lectures supplémentaires : 
