@@ -186,7 +186,7 @@ Initialement, il était planifié d'afficher le nombre de duplications par fichi
 
 - L'organisation des données dans la base de données est un facteur limitant. La normalisation prévient la duplication des informations, mais peut ralentir substentiellement les requêtes sur de larges plages de données.
 
-- L'utilisation de PMD est limitant, puisque cet outil analyse un projet un langage à la fois, ce qui peut ralentir substentiellement l'analyse de plusieurs commits pour visualiser l'évolution de la duplication de code.
+- L'utilisation de PMD est limitante, puisque cet outil analyse un projet un langage à la fois, ce qui peut ralentir substentiellement l'analyse de plusieurs commits pour visualiser l'évolution de la duplication de code.
 
 - L'utilisation de classes utilitaires "fait maison" peut devenir problématique lors des transferts de responsabilités d'une équipe à la suivante, surtout si elles sont insuffisamment documentées : il est généralement préférable d'utiliser des librairies ou cadriciels bien documentés, testés et surtout maintenus.
 
@@ -221,5 +221,3 @@ https://teamscale.com/hubfs/Publications/2010-code-similarities-beyond-copy-past
 7. GeeksforGeeks. (2018, July 30). Coupling and Cohesion Software Engineering. GeeksforGeeks.
 
 https://www.geeksforgeeks.org/software-engineering/software-engineering-coupling-and-cohesion/#types-of-coupling
-
-‌

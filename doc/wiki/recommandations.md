@@ -1,4 +1,4 @@
-# Recommandations
+﻿# Recommandations
 
 ## Mise en contexte
 
@@ -12,7 +12,7 @@ L'objectif était d'afficher une liste d'actions recommandées, en lien avec la 
 
 Nous avons dirigé notre analyse selon les besoins exprimés dans une maquette, fournie au début du projet. L'image présentée ci-dessous est un extrait de la maquette fournie et présente les lignes directrices de la fonctionnalité de recommandations.
 
-Comme indiqué dans cet extrait, les recommandations devaient être générées sur la base des métriques de dette technique : on y voit des étiquettes indiquant la/les catégorie(s) problématique(s), une suggestion d'action et une brève justification.
+Comme indiqué dans cet extrait, les recommandations devaient être générées sur la base des métriques de dette technique : on y voit des étiquettes indiquant la ou les catégories problématiques, une suggestion d'action et une brève justification.
 
 ---
 
@@ -22,7 +22,7 @@ Comme indiqué dans cet extrait, les recommandations devaient être générées 
 
 Afin de réaliser cette fonctionnalité, il a été décidé que les recommandations seraient générées, dans un premier temps, pour l'ensemble des fichiers d'un commit, puis dans un second temps, pour chaque fichier individuellement d'un commit. Les données de dette techniques détermineraient si une recommandation serait générée ou non en vérifiant si la donnée dépasse un seuil préétabli.
 
-## Conception et Implémentation
+## Conception et implémentation
 
 Cette fonctionnalité est supportée par une implémentation dans la couche dorsale (le serveur) ainsi qu'une implémentation dans la couche frontale (l'interface web).
 
@@ -140,7 +140,7 @@ Les messages de recommandation sont contenus dans la classe d'énumération `Rec
 
 Ces recommandations proviennent d'une analyse de la définition de chacune des métriques et de leur impact dans un projet.
 
-Par exemple, dans une présentation de M. McCabe (voir dans la section _Références_), auteur de la complexité cyclomatique, on indique que plus une complexité est élevée, plus il y a un risque de bogue et une sécurité logicielle vulnérable. Rappelons que la complexité est le nombre de chemins indépendants pouvant être exécutés dans une fonction. Les fonctions qui contiennent des branches, des boucles et surtout un mélange de boucles et de branches imbriquées vont augmenter la valeur de complexité. Parallèlement, ces types de fonctions sont souvent intestables et considérées comme "code smell", ou simplement de la dette technique; pour y pallier, il faut refactoriser ces fonctions et repenser la logique de celles-ci.
+Par exemple, dans une présentation de M. McCabe (voir dans la section _Références_), auteur de la complexité cyclomatique, on indique que plus une complexité est élevée, plus il y a un risque de bogue et une sécurité logicielle vulnérable. Rappelons que la complexité est le nombre de chemins indépendants pouvant être exécutés dans une fonction. Les fonctions qui contiennent des branches, des boucles et surtout un mélange de boucles et de branches imbriquées vont augmenter la valeur de complexité. Parallèlement, ces types de fonctions sont souvent intestables et considérées comme "code smell", ou simplement de la dette technique; pour y remédier, il faut refactoriser ces fonctions et repenser la logique de celles-ci.
 
 Les objets retournés par les méthodes de la classe de génération sont de type `Pair[str, str]`. Le premier élément correspond au message de problème, le second à la recommandation. Le diagramme de classes ci-dessous illustre la relation entre le générateur et les objets de rapport qui contiennent les métriques de dette technique.
 
